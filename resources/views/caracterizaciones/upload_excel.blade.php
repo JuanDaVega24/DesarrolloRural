@@ -38,11 +38,7 @@
                     <label class="form-label fw-semibold text-success">
                         <i class="bi bi-file-earmark-spreadsheet me-1"></i> Seleccionar archivo Excel
                     </label>
-                    <input type="file"
-                           name="excel_file"
-                           class="form-control"
-                           accept=".xlsx,.xls"
-                           required>
+                    <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                     <small class="text-muted d-block mt-1">
                         Formatos permitidos: .xlsx, .xls (máximo 10MB)
                     </small>

@@ -1173,6 +1173,7 @@ html.alto-contraste button.contrast::after {
   margin-bottom: 1.25rem;
   position: relative;
   background-color: var(--govcolor-white);
+  margin-top: 20rem;
 }
 
 .pie-pagina-govco h4 {

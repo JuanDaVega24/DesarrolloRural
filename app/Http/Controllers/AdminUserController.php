@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
 {
@@ -95,9 +96,25 @@ class AdminUserController extends Controller
         return redirect()->route('usuarios.index')->with('ok', 'Usuario actualizado');
     }
 
-    public function destroy(User $usuario)
+    public function destroy($id)
     {
-        $usuario->delete();
+        // Busca el usuario si llega como ID, o usa el modelo si llega inyectado
+        $usuario = ($id instanceof User) ? $id : User::find($id);
+
+        if (!$usuario) {
+            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado.');
+        }
+
+        if (Auth::check() && Auth::id() == $usuario->id) {
+            return redirect()->route('usuarios.index')->with('error', 'No puedes eliminar tu propio usuario.');
+        }
+
+        try {
+            $usuario->delete();
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')->with('error', 'No se puede eliminar el usuario porque tiene registros asociados.');
+        }
+
         return redirect()->route('usuarios.index')->with('ok', 'Usuario eliminado');
     }
 }

@@ -141,9 +141,10 @@
     </p>
 
     <form action="{{ route('caracterizaciones.process-excel', $caracterizacion) }}" method="POST" enctype="multipart/form-data" class="upload-form">
-               class="form-control"
-               accept=".xlsx,.xls"
-               required>
+        
+          @csrf
+        
+        <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
         <button type="submit" class="upload-btn">
             <i class="fas fa-upload me-2"></i>Subir Excel
         </button>
