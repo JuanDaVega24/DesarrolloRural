@@ -20,7 +20,18 @@
             --azul-govco: #3366CC;
             --gris-texto: #333333;
             --gris-claro: #F5F5F5;
+              --govcolor-cobalt: #0943B5;
+  --govcolor-white: #FFFFFF;
+  --govcolor-havelock-lue: #4672C8;
         }
+
+
+/* Nunito_Sans-Regular */
+@font-face {
+  font-family: 'Nunito_Sans-Regular';
+  src: url('../assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf');
+}
+
 
         body {
             background: linear-gradient(135deg, #f0f4f8, #ffffff);
@@ -29,11 +40,10 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding-top: 60px;
         }
 
         .login-box {
-            margin-top: 50px;
+            margin-top: 120px;
             width: 100%;
             max-width: 420px;
             background: white;
@@ -150,17 +160,98 @@
             color: white;
             font-size: 5rem;
         }
+
+     
+
+.barra-superior-govco {
+  background-color: var(--govcolor-cobalt);
+  width: 100%;
+  height: 3.5rem;
+  padding-left: 3.75rem;
+  position: fixed;
+  display: flex;
+  align-items: center;
+}
+
+.barra-superior-govco a {
+  content: url('https://cdn.www.gov.co/layout-govco-v5/assets/images/logo.svg');
+  height: calc(1.5rem * 1.5);
+}
+
+.barra-superior-govco a:focus-visible {
+  outline: 0.125rem solid var(--govcolor-white);
+  border-radius: 0.313rem;
+}
+
+.barra-superior-govco .idioma-btn-barra-superior-govco {
+  height: 1.5rem;
+  width: 1.5rem;
+  border-radius: 0.313rem;
+  background-color: var(--govcolor-white);
+  cursor: pointer;
+  padding: 0;
+  border: 0.063rem solid var(--govcolor-white);
+  font-size: 0.625rem;
+  position: absolute;
+  right: 5.375rem;
+  top: 1rem;
+}
+
+.barra-superior-govco .idioma-btn-barra-superior-govco:hover,
+.barra-superior-govco .idioma-btn-barra-superior-govco:focus-visible {
+  background-color: var(--govcolor-havelock-lue);
+}
+
+.barra-superior-govco .idioma-btn-barra-superior-govco:focus-visible {
+  outline: 0.063rem solid var(--govcolor-white);
+  outline-offset: max(0.188rem, 0.188rem);
+}
+
+.barra-superior-govco .idioma-btn-barra-superior-govco::before {
+  font-family: "Nunito_Sans-Regular";
+  content: 'EN';
+  color: var(--govcolor-cobalt);
+  font-size: 12px;
+}
+
+.barra-superior-govco .idioma-btn-barra-superior-govco:hover::before,
+.barra-superior-govco .idioma-btn-barra-superior-govco:focus-visible::before {
+  color: var(--govcolor-white);
+}
+
+@media (max-width: 600px) {
+  .barra-superior-govco {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .barra-superior-govco .idioma-btn-barra-superior-govco {
+    right: 1.25rem;
+  }
+}
+
+        /* Ajustar el body para que no se oculte bajo la barra fija */
+       
+        
     </style>
 </head>
 <body>
 
-<!-- GOV.CO HEADER -->
+<!-- GOV.CO HEADER 
 <div class="gov-header">
     <div class="container d-flex justify-content-between align-items-center">
         <span class="gov-logo">
             <i class="fas fa-landmark"></i> GOV.CO
         </span>
     </div>
+</div>
+
+-->
+
+<div class="barra-superior-govco">
+  <a href="https://www.gov.co/" target="_blank" rel=noopener
+    aria-label="Portal del Estado Colombiano - GOV.CO"><img src="{{ asset('images/logo.svg') }}" alt="logo"></a> 
+
 </div>
 
 <div class="login-box">
@@ -212,6 +303,350 @@
 @endif
 
 </div>
+
+<!-- Barra de Accesibilidad GOV.CO -->
+<div class="barra-accesibilidad-govco-container">
+    <div class="barra-accesibilidad-govco">
+        <button class="contrast" aria-label="Cambiar contraste">
+            <span class="govco-contrast"></span>
+        </button>
+        <button class="decrease-font-size" aria-label="Disminuir letra" data-decrease-limit="-5">
+            <span class="govco-font-minimize"></span>
+        </button>
+        <button class="increase-font-size" aria-label="Aumentar letra" data-increase-limit="5">
+            <span class="govco-font-maximize"></span>
+        </button>
+    </div>
+</div>
+
+
+
+<style>
+    .barra-accesibilidad-govco-container {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 1050;
+    }
+
+    .barra-accesibilidad-govco {
+        background-color: var(--govcolor-cobalt);
+        display: flex;
+        flex-direction: column;
+        border-radius: 0.625rem 0 0 0.625rem;
+        width: 3rem;
+        height: 8.938rem;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 0;
+        position: relative;
+    }
+
+    .barra-accesibilidad-govco button {
+        width: 3rem;
+        height: 2.5rem;
+        border: 0;
+        padding: 0;
+        background-color: var(--govcolor-cobalt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-family: 'Nunito_Sans-Regular';
+    }
+
+    .barra-accesibilidad-govco button span {
+        z-index: 1;
+        filter: invert(21%) sepia(98%) saturate(1529%) hue-rotate(209deg) brightness(95%) contrast(118%);
+        min-width: 1rem;
+        min-height: 1rem;
+        display: inline-block;
+        background-repeat: no-repeat;
+        background-size: 1rem 1rem;
+    }
+
+    .barra-accesibilidad-govco button span.govco-contrast {
+        background-image: url('{{ asset('assets/icons/adjust.svg') }}');
+    }
+    .barra-accesibilidad-govco button span.govco-font-minimize {
+        background-image: url('{{ asset('assets/icons/font-minimize.svg') }}');
+    }
+
+    .barra-accesibilidad-govco button span.govco-font-maximize {
+        background-image: url('{{ asset('assets/icons/font-maximize.svg') }}');
+    }
+
+    .barra-accesibilidad-govco button::before {
+        position: absolute;
+        right: 0;
+        min-width: 10.75rem;
+        height: 2.5rem;
+        padding-right: 3rem;
+        border-radius: 0.625rem 0 0 0.625rem;
+        align-items: center;
+        padding-left: 0.625rem;
+        color: var(--govcolor-white);
+        background-color: var(--govcolor-havelock-lue);
+        white-space: nowrap;
+        display: none;
+        opacity: 0;
+    }
+
+    .barra-accesibilidad-govco button::after {
+        content: "";
+        width: 1.5rem;
+        height: 1.5rem;
+        background-color: var(--govcolor-white);
+        border: 0;
+        border-radius: 0.313rem;
+        position: absolute;
+        display: block;
+    }
+
+    .barra-accesibilidad-govco button.contrast::before {
+        content: "Contraste";
+    }
+
+    .barra-accesibilidad-govco button.decrease-font-size::before {
+        content: "Reducir letra";
+    }
+
+    .barra-accesibilidad-govco button.increase-font-size::before {
+        content: "Aumentar letra";
+    }
+
+    .barra-accesibilidad-govco button:hover,
+    .barra-accesibilidad-govco button:focus-visible {
+        background-color: var(--govcolor-havelock-lue);
+    }
+
+    .barra-accesibilidad-govco button:hover::before,
+    .barra-accesibilidad-govco button:focus-visible::before {
+        opacity: 1;
+        display: flex;
+    }
+
+    .barra-accesibilidad-govco button:focus-visible {
+        outline: 0;
+    }
+
+    .barra-accesibilidad-govco button:focus-visible::before {
+        outline: max(0.125rem, 0.125rem) solid var(--govcolor-cobalt);
+        outline-offset: max(0.188rem, 0.188rem);
+    }
+
+    .barra-accesibilidad-govco button.active {
+        background-color: #B5C7E9;
+        box-shadow: 0 0.188rem 0.375rem #00000029;
+    }
+
+    .contrast-govco .accesibility-example {
+        background-color: var(--govcolor-cobalt);
+    }
+
+    .contrast-govco .accesibility-example p {
+        color: var(--govcolor-white);
+    }
+
+    
+
+    /* Verdana-Regular */
+    @font-face {
+      font-family: 'Nunito_Sans-Regular';
+      src: url('{{ asset('assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf') }}');
+    }
+</style>
+
+<script>
+// Funciones de accesibilidad con localStorage
+function methodAssign(event, method, elements) {
+    for (let i of elements) {
+        i.addEventListener(event, method, false);
+    }
+}
+
+function addEventHandler(el, evt, sel, handler) {
+    for (const currEvt of evt.split(' ')) {
+        el.addEventListener(currEvt, function (event) {
+            let t = event.target;
+            while (t && t !== this) {
+                for (const currSel of sel.split(',') ) {
+                    if (t.matches(currSel)) {
+                        handler.call(t, event);
+                    }
+                }
+                t = t.parentNode;
+            }
+        });
+    }
+}
+
+// Función para guardar el estado de accesibilidad
+function guardarTamañoLetra() {
+    // Guardar el estado actual del contraste
+    const contrasteActivo = document.body.classList.contains('contrast-govco');
+    localStorage.setItem('accesibilidad_contraste', contrasteActivo);
+
+    // Guardar el contador actual del tamaño de fuente
+    localStorage.setItem('accesibilidad_contador_fuente', window.accesibilityBarCounterFontSize || 0);
+}
+
+// Función para aplicar el estado guardado de accesibilidad
+function aplicarTamañoLetraGuardado() {
+    // Aplicar contraste guardado
+    const contrasteGuardado = localStorage.getItem('accesibilidad_contraste');
+    if (contrasteGuardado === 'true') {
+        document.body.classList.add('contrast-govco');
+    }
+
+    // Aplicar contador de fuente guardado y reconstruir cambios
+    const contadorGuardado = parseInt(localStorage.getItem('accesibilidad_contador_fuente')) || 0;
+    if (contadorGuardado !== 0) {
+        window.accesibilityBarCounterFontSize = contadorGuardado;
+        // Aplicar todos los cambios acumulados
+        aplicarCambiosPersistentes(contadorGuardado);
+    }
+
+    updateActiveButtons();
+}
+
+// Función para aplicar cambios persistentes de fuente
+function aplicarCambiosPersistentes(contador) {
+    const elementos = document.querySelectorAll('body *');
+    elementos.forEach(elemento => {
+        // Aplicar el cambio acumulado (contador * 1px por click)
+        const cambioTotal = contador * 1; // 1px por cada unidad del contador
+        if (cambioTotal !== 0) {
+            let fontSize = getFontSize(elemento);
+            fontSize = (fontSize + cambioTotal) + 'px';
+            elemento.style.fontSize = fontSize;
+        }
+    });
+}
+
+function updateActiveButtons() {
+    // Remover clase active de todos los botones
+    document.querySelectorAll('.barra-accesibilidad-govco button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Activar contraste si está activo
+    if (document.body.classList.contains('contrast-govco')) {
+        document.querySelector('.barra-accesibilidad-govco button.contrast')?.classList.add('active');
+    }
+
+    // Activar botones de fuente según el contador
+    const counter = window.accesibilityBarCounterFontSize || 0;
+    if (counter < 0) {
+        document.querySelector('.barra-accesibilidad-govco button.decrease-font-size')?.classList.add('active');
+    } else if (counter > 0) {
+        document.querySelector('.barra-accesibilidad-govco button.increase-font-size')?.classList.add('active');
+    }
+}
+
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    initAccessibilityBar();
+    // Aplicar configuración guardada con un pequeño delay para asegurar que todo esté renderizado
+    setTimeout(aplicarTamañoLetraGuardado, 50);
+});
+
+function initAccessibilityBar() {
+    addEventsAccessibilityBar();
+
+    addEventHandler(
+        document.body,
+        'click keydown',
+        '.barra-accesibilidad-govco',
+        function(event) {
+            addEventsAccessibilityBar(event);
+        }
+    );
+}
+
+function addEventsAccessibilityBar(event = null) {
+    const bars = document.querySelectorAll('.barra-accesibilidad-govco:not(.actived-events-govco)');
+    for (const bar of bars) {
+        bar.classList.add('actived-events-govco');
+
+        const constrast = bar.querySelectorAll('button.contrast');
+        methodAssign("click", activeContrast, constrast);
+
+        const decrease = bar.querySelectorAll('button.decrease-font-size');
+        methodAssign("click", activeFontSize, decrease);
+
+        const increase = bar.querySelectorAll('button.increase-font-size');
+        methodAssign("click", activeFontSize, increase);
+    }
+
+    if (event == null || bars.length == 0) {
+        return false;
+    }
+
+    let element = '';
+    if (event.target.classList.contains('button.contrast', 'button.decrease-font-size', 'button.increase-font-size')) {
+        element = event.target;
+    } else if (event.target.closest('.barra-accesibilidad-govco')) {
+        element = event.target.closest('button');
+    }
+
+    if (element) {
+        element.click();
+    }
+}
+
+function activeContrast() {
+    const element = document.querySelector('body');
+    if (element.classList.contains('contrast-govco')) {
+        element.classList.remove('contrast-govco');
+    } else {
+        element.classList.add('contrast-govco');
+    }
+    activeButtonAccessibility(this);
+    guardarTamañoLetra(); // Guardar estado
+}
+
+let accesibilityBarCounterFontSize = 0;
+
+function activeFontSize() {
+    let addition = this.classList.contains('decrease-font-size') ? -1 : 1;
+    const decreaseLimit = parseInt(this.getAttribute('data-decrease-limit')) || -5;
+    const increaseLimit = parseInt(this.getAttribute('data-increase-limit')) || 5;
+
+    accesibilityBarCounterFontSize += addition;
+
+    if (accesibilityBarCounterFontSize >= decreaseLimit && accesibilityBarCounterFontSize <= increaseLimit) {
+        const elements = document.querySelectorAll('body *');
+        for (const element of elements) {
+            changeFontSize(element, addition);
+        }
+    } else {
+        accesibilityBarCounterFontSize = addition > 0 ? increaseLimit : decreaseLimit;
+    }
+
+    activeButtonAccessibility(this);
+    guardarTamañoLetra(); // Guardar estado
+}
+
+function changeFontSize(element, increse) {
+    let fontSize = getFontSize(element);
+    fontSize = (fontSize + increse) + 'px';
+    element.style.fontSize = fontSize;
+}
+
+function getFontSize(element) {
+    const fontSize = window.getComputedStyle(element, null).getPropertyValue('font-size');
+    return parseFloat(fontSize);
+}
+
+function activeButtonAccessibility(element) {
+    element.parentNode.querySelector('.active')?.classList.remove('active');
+    element.classList.add('active');
+}
+
+
+</script>
 
 </body>
 </html>

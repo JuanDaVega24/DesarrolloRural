@@ -29,9 +29,12 @@ class Afectacion extends Model
 
     protected $casts = [
         'anio' => 'integer',
-        'hectareas' => 'decimal:2',
-        'unidades_afectadas' => 'integer',
         'actividad_productiva' => 'array', // Cast to array para manejar JSON de checkboxes
+        'soluciones' => 'array',
+        'actividades' => 'array',
+        'afectacion' => 'array',
+        'hectareas' => 'array',
+        'unidades_afectadas' => 'array',
         'detalles' => 'array',
     ];
 

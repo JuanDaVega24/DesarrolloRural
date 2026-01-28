@@ -1,10 +1,27 @@
 <x-app-layout>
+    @vite(['resources/css/pages/usuarios/index.css'])
+
     
+    <div class="usuarios-container">
+        <div class="content-wrapper">
 
-    <div class="py-4" >
-        <div class="container">
+            {{-- === COMPACT HEADER === --}}
+            <div class="page-header">
+                <div class="header-content">
+                    <h1>Gestión de Usuarios</h1>
+                    <p>Administra y consulta los usuarios del sistema</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Volver
+                    </a>
+                    <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Crear Usuario
+                    </a>
+                </div>
+            </div>
 
-            {{-- Alertas --}}
+            {{-- === ALERTS === --}}
             @if (session('ok'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i>{{ session('ok') }}
@@ -18,158 +35,110 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
-{{-- Header con título y botón --}}
-<div class="mb-2">
-    <div class="d-flex justify-content-between align-items-center">
-        <h3 class="mb-0" style="color: #2d5f3f; font-weight: 600;">
-            <i class="bi bi-people-fill me-2"></i>Lista de Usuarios
-        </h3>
 
-        <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Crear Usuario
-        </a>
-    </div>
+            {{-- === MINIMAL FILTERS === --}}
+            <div class="filter-minimal">
+                <form method="GET" action="{{ route('usuarios.index') }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-search me-1"></i> Buscar usuario
+                            </label>
+                            <input type="text"
+                                   name="buscar"
+                                   class="form-control"
+                                   placeholder="Escribe un nombre..."
+                                   value="{{ request('buscar') }}">
+                        </div>
 
-    {{-- Botón volver debajo del título --}}
-    <div class="mt-3">
-        <a href="{{ route('dashboard') }}" class="btn btn-secondary px-4">
-        <i class="fas fa-arrow-left"></i> Volver
-    </a>
-    </div>
-</div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-people-fill me-1"></i> Rol del usuario
+                            </label>
+                            <select name="rol" class="form-select">
+                                <option value="">Todos los roles</option>
+                                <option value="Administrador" {{ request('rol') == 'Administrador' ? 'selected' : '' }}>Administrador</option>
+                                <option value="Tabulador" {{ request('rol') == 'Tabulador' ? 'selected' : '' }}>Tabulador</option>
+                            </select>
+                        </div>
 
-           {{-- Buscador y filtros mejorado --}}
-<div class="card shadow-sm border-0 mb-4 filtro-card">
-    <div class="card-body">
-
-        <form method="GET" action="{{ route('usuarios.index') }}">
-            <div class="row g-3 align-items-end">
-
-                {{-- Buscar por nombre --}}
-                <div class="col-md-5">
-                    <label class="form-label fw-semibold text-success">
-                        <i class="bi bi-search me-1"></i> Buscar nombre
-                    </label>
-                    <input type="text"
-                           name="buscar"
-                           class="form-control filtro-input"
-                           placeholder="Escribe un nombre..."
-                           value="{{ request('buscar') }}">
-                </div>
-
-                {{-- Filtro por Rol --}}
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-success">
-                        <i class="bi bi-people-fill me-1"></i> Rol del usuario
-                    </label>
-                    <select name="rol" class="form-select filtro-input">
-                        <option value="">Todos los roles</option>
-                        <option value="Administrador" {{ request('rol') == 'Administrador' ? 'selected' : '' }}>
-                            Administrador
-                        </option>
-                        <option value="Tabulador" {{ request('rol') == 'Tabulador' ? 'selected' : '' }}>
-                            Tabulador
-                        </option>
-                    </select>
-                </div>
-
-                {{-- Botón buscar --}}
-                <div class="col-md-3 d-grid">
-                    <button class="btn btn-primary">
-                        <i class="bi bi-funnel-fill me-2"></i> Aplicar filtros
-                    </button>
-                </div>
-
+                        <div class="form-group">
+                            <button class="btn btn-primary w-100">
+                                <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
 
-    </div>
-</div>
+            {{-- === TABLE FOCUSED === --}}
+            <div class="table-card">
+                <div class="table-header">
+                    <h4>
+                        <i class="bi bi-people-fill me-2"></i>
+                        Usuarios Registrados
+                    </h4>
+                    <span>{{ $usuarios->total() ?? count($usuarios) }} usuarios</span>
+                </div>
 
-
-            {{-- Card con tabla --}}
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-0">
-
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead style="background-color: #2d5f3f;">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($usuarios as $u)
                                 <tr>
-                                    <th class="text-black fw-semibold py-3">ID</th>
-                                    <th class="text-black fw-semibold py-3">Nombre</th>
-                                    <th class="text-black fw-semibold py-3">Email</th>
-                                    <th class="text-black fw-semibold py-3">Rol</th>
-                                    <th class="text-black fw-semibold py-3 text-center">Acciones</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @forelse ($usuarios as $u)
-                                    <tr>
-                                        <td class="align-middle py-3">{{ $u->id }}</td>
-
-                                        <td class="align-middle py-3">
-                                            <strong>{{ $u->name }}</strong>
-                                        </td>
-
-                                        <td class="align-middle py-3">
-                                            <i class="bi bi-envelope me-1 text-muted"></i>{{ $u->email }}
-                                        </td>
-
-                                        <td class="align-middle py-3">
-                                            <span class="badge"
-                                                  style="background-color: #1e5a7d;">
-                                                {{ $u->role }}
-                                            </span>
-                                        </td>
-
-                                        <td class="align-middle py-3 text-center">
-
-                                            {{-- Botón Editar --}}
+                                    <td>{{ $u->id }}</td>
+                                    <td>
+                                        <strong>{{ $u->name }}</strong>
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-envelope me-1 text-muted"></i>{{ $u->email }}
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $u->role == 'Administrador' ? 'badge-admin' : 'badge-tabulador' }}">
+                                            {{ $u->role }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="actions-cell">
                                             <a href="{{ route('usuarios.edit', $u) }}"
-                                               class="btn btn-sm px-3 me-2"
-                                               style="background-color: #ffc107; color: #000; border: none;"
-                                               title="Editar usuario">
-                                                <i class="bi bi-pencil-square me-1"></i>Editar
+                                               class="btn bg-white btn-sm"
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
                                             </a>
 
-                                            {{-- Botón Eliminar --}}
-                                            <form action="{{ route('usuarios.destroy', $u) }}"
-                                                  method="POST"
-                                                  class="d-inline-block"
-                                                  onsubmit="return confirm('¿Está seguro de eliminar este usuario?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm px-3"
-                                                    style="background-color: #dc3545; color: white; border: none;"
-                                                    title="Eliminar usuario">
-                                                    <i class="bi bi-trash-fill me-1"></i>Eliminar
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5">
-                                            <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                            <span class="text-muted fs-5">
-                                                No hay usuarios registrados.
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-
-                        </table>
-                    </div>
-
+                                            <button class="btn btn-danger btn-sm"
+                                                    title="Eliminar"
+                                                    onclick="confirmarEliminacion('{{ route('usuarios.destroy', $u) }}', '{{ $u->name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        <i class="bi bi-inbox display-4 d-block"></i>
+                                        <p>No hay usuarios registrados.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {{-- Paginación si aplica --}}
+            {{-- Paginación --}}
             @if(method_exists($usuarios, 'links'))
-                <div class="mt-4">
+                <div class="mt-3">
                     {{ $usuarios->links() }}
                 </div>
             @endif
@@ -177,107 +146,221 @@
         </div>
     </div>
 
-    {{-- Estilos personalizados --}}
-    <style>
-        :root {
-            --verde: #4A7C2F;
-            --verde-hover: #3d6625;
-            --verde-claro: #E8F5E0;
-            --azul: #3366CC;
-            --azul-hover: #2952a3;
-            --azul-claro: #E3ECFA;
-            --negro: #1A1A1A;
-            --gris: #666666;
-            --gris-claro: #f8f9fa;
-            --gris-medio: #e9ecef;
-            --beige: #F8F6F3;
-            --blanco: #FFFFFF;
+    {{-- === JAVASCRIPT === --}}
+    <script>
+        // Función para mostrar modal de éxito
+        window.mostrarModalGovco = function(modalId, mensaje) {
+            const modal = document.getElementById(modalId);
+            const titulo = modal.querySelector('.modal-title-govco');
+            const texto = modal.querySelector('.modal-text-govco');
+            const btnAceptar = modal.querySelector('.btn-exito-aceptar');
+
+            // Personalizar según el mensaje
+            if (mensaje.includes('creado') || mensaje.includes('guardado') || mensaje.includes('registrado')) {
+                titulo.textContent = '¡Usuario Creado!';
+                texto.textContent = mensaje;
+            } else if (mensaje.includes('eliminado')) {
+                titulo.textContent = '¡Usuario Eliminado!';
+                texto.textContent = mensaje;
+            } else if (mensaje.includes('actualizado') || mensaje.includes('modificado')) {
+                titulo.textContent = '¡Usuario Actualizado!';
+                texto.textContent = mensaje;
+            } else {
+                titulo.textContent = '¡Operación Exitosa!';
+                texto.textContent = mensaje;
+            }
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            let backdrop = document.querySelector('.modal-backdrop-govco');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop-govco';
+                document.body.appendChild(backdrop);
+            }
+            backdrop.style.display = 'block';
+
+            const cerrarModal = function() {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+                if (backdrop) backdrop.style.display = 'none';
+                document.removeEventListener('keydown', handleEscapeKey);
+            };
+
+            const handleEscapeKey = function(event) {
+                if (event.key === 'Escape') cerrarModal();
+            };
+            document.addEventListener('keydown', handleEscapeKey);
+
+            if (btnAceptar) {
+                const nuevoBtn = btnAceptar.cloneNode(true);
+                btnAceptar.parentNode.replaceChild(nuevoBtn, btnAceptar);
+                nuevoBtn.addEventListener('click', cerrarModal);
+            }
+
+            if (backdrop) backdrop.addEventListener('click', cerrarModal);
+        };
+
+        // Función para confirmar eliminación
+        function confirmarEliminacion(url, usuarioNombre) {
+            const modal = document.getElementById('exampleModalConfirmacion');
+            const titulo = modal.querySelector('.modal-title-govco');
+            const texto = modal.querySelector('.modal-text-govco');
+            const btnConfirmar = document.querySelector('.btn-eliminar-confirmar');
+            const btnCancelar = document.querySelector('.btn-eliminar-cancelar');
+
+            // Personalizar contenido del modal
+            titulo.textContent = '¿Eliminar Usuario?';
+            texto.innerHTML = '¿Está seguro de que desea eliminar al usuario "<strong>' + usuarioNombre + '</strong>"? Esta acción no se puede deshacer.';
+
+            // Mostrar modal y backdrop
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            let backdrop = document.querySelector('.modal-backdrop-govco');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop-govco';
+                document.body.appendChild(backdrop);
+            }
+            backdrop.style.display = 'block';
+
+            // Función para cerrar modal
+            const cerrarModal = function() {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+                if (backdrop) {
+                    backdrop.style.display = 'none';
+                }
+                document.removeEventListener('keydown', handleEscapeKey);
+            };
+
+            // Event listener para Escape
+            const handleEscapeKey = function(event) {
+                if (event.key === 'Escape') {
+                    cerrarModal();
+                }
+            };
+            document.addEventListener('keydown', handleEscapeKey);
+
+            // Configurar botón confirmar
+            if (btnConfirmar) {
+                const nuevoBtnConfirmar = btnConfirmar.cloneNode(true);
+                btnConfirmar.parentNode.replaceChild(nuevoBtnConfirmar, btnConfirmar);
+                nuevoBtnConfirmar.addEventListener('click', function() {
+                    // Crear formulario de eliminación
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.style.display = 'none';
+
+                    // Token CSRF
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    form.appendChild(csrfToken);
+
+                    // Método DELETE
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+
+                    // Enviar formulario
+                    document.body.appendChild(form);
+                    form.submit();
+
+                    cerrarModal();
+                });
+            }
+
+            // Configurar botón cancelar
+            if (btnCancelar) {
+                const nuevoBtnCancelar = btnCancelar.cloneNode(true);
+                btnCancelar.parentNode.replaceChild(nuevoBtnCancelar, btnCancelar);
+                nuevoBtnCancelar.addEventListener('click', cerrarModal);
+            }
+
+            // Cerrar con click en backdrop
+            if (backdrop) {
+                backdrop.addEventListener('click', cerrarModal);
+            }
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--verde) 0%, #5a9c3f 100%) !important;
-            border: none !important;
-            color: white !important;
-            padding: 0.5rem 1.25rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 600 !important;
-            font-size: 0.9rem !important;
-            transition: all 0.3s ease !important;
-        }
+        // Mostrar modal de éxito al cargar la página si hay mensaje de sesión
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('ok'))
+                mostrarModalGovco('exampleModalExito', "{{ session('ok') }}");
+            @endif
+        });
+    </script>
 
-        .btn-primary:hover {
-            transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(74, 124, 47, 0.25) !important;
-        }
+    {{-- === MODAL GOV.CO - Confirmación === --}}
+    <div class="container-modal-govco">
+        <div class="modal-container-govco" id="exampleModalConfirmacion" tabindex="-1" aria-hidden="true" role="dialog">
+            <div class="modal-dialog modal-dialog-govco">
+                <div class="modal-content modal-content-govco">
+                    <div class="modal-header modal-header-govco">
+                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                    </div>
+                    <div class="modal-body modal-body-govco center-elements-govco">
+                        <div class="modal-icon">
+                            <span class="govco-icon govco-info-circle"></span>
+                        </div>
+                        <h3 class="modal-title-govco confirmation-govco">
+                            ¿Eliminar Usuario?
+                        </h3>
+                        <p class="modal-text-govco modal-text-center-govco">
+                            ¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                    <div class="modal-footer-govco">
+                        <div class="modal-buttons-govco">
+                            <button type="button" class="btn-modal-govco btn-eliminar-confirmar">
+                                Eliminar
+                            </button>
+                            <button type="button" class="btn-modal-govco btn-contorno btn-eliminar-cancelar">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transition: all 0.3s ease;
-        }
-
-        .card {
-            transition: all 0.3s ease;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .table tbody tr {
-            transition: background-color 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .badge {
-            padding: 0.5em 0.8em;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        thead th {
-            border: none !important;
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
-           /* Card del filtro */
-    .filtro-card {
-        border-left: 5px solid #2d5f3f;
-        border-radius: 10px;
-        background: #fdfdfd;
-    }
-
-    /* Inputs */
-    .filtro-input {
-        border-radius: 6px;
-        border: 1px solid #cfd8d3;
-        padding: 10px;
-        transition: all 0.2s ease;
-    }
-
-    .filtro-input:focus {
-        border-color: #2d5f3f;
-        box-shadow: 0 0 0 0.15rem rgba(45, 95, 63, 0.25);
-    }
-
-    /* Botón */
-    .filtro-btn {
-        background-color: #2d5f3f;
-        border-radius: 6px;
-        padding: 10px 12px;
-        transition: 0.3s ease;
-    }
-
-    .filtro-btn:hover {
-        background-color: #244d34;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-    </style>
+    {{-- === MODAL GOV.CO - Éxito === --}}
+    <div class="container-modal-govco">
+        <div class="modal-container-govco" id="exampleModalExito" tabindex="-1" aria-hidden="true" role="dialog">
+            <div class="modal-dialog modal-dialog-govco">
+                <div class="modal-content modal-content-govco">
+                    <div class="modal-header modal-header-govco">
+                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                    </div>
+                    <div class="modal-body modal-body-govco center-elements-govco">
+                        <div class="modal-icon">
+                            <span class="govco-icon govco-check-circle"></span>
+                        </div>
+                        <h3 class="modal-title-govco success-govco">
+                            ¡Operación Exitosa!
+                        </h3>
+                        <p class="modal-text-govco modal-text-center-govco">
+                            La operación se realizó correctamente.
+                        </p>
+                    </div>
+                    <div class="modal-footer-govco">
+                        <div class="modal-buttons-govco">
+                            <button type="button" class="btn-modal-govco btn-exito-aceptar">
+                                Aceptar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </x-app-layout>

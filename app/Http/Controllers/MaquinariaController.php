@@ -123,6 +123,7 @@ class MaquinariaController extends Controller
 
             // Asesoría
             'entidad_asesoria' => 'nullable|string',
+            'entidad_asesoria_nombre' => 'nullable|string',
             'recibio_asesoria_ultimo_anio' => 'nullable|boolean',
         ]);
 
@@ -157,6 +158,22 @@ class MaquinariaController extends Controller
         // Usamos los datos procesados (con JSON) en lugar de los validados
         $data = array_merge($data, array_intersect_key($input, array_flip(array_merge($camposMaquinaria, $camposConstruccion))));
 
+        // Limpiar datos de maquinaria si el usuario marcó "No"
+        if (isset($data['maquinaria']) && $data['maquinaria'] == '0') {
+            $data['tipo_maquinaria'] = null;
+            $data['cantidad_maquinaria'] = null;
+            $data['antiguedad_maquinaria'] = null;
+            $data['estado_maquinaria'] = null;
+        }
+
+        // Limpiar datos de construcción si el usuario marcó "No"
+        if (isset($data['tiene_construccion']) && $data['tiene_construccion'] == '0') {
+            $data['tipo_construccion'] = null;
+            $data['antiguedad_construccion'] = null;
+            $data['cantidad_construccion'] = null;
+            $data['area_construccion'] = null;
+        }
+
         // Insertamos el ID de encuesta
         $data['encuesta_id'] = $encuesta_id;
 
@@ -176,6 +193,7 @@ class MaquinariaController extends Controller
      */
     public function show(Maquinaria $maquinaria)
     {
+        session(['encuesta_id' => $maquinaria->encuesta_id]);
         $maquinaria->load('encuesta');
         return view('encuestas.maquinaria_show', compact('maquinaria'));
     }
@@ -186,6 +204,28 @@ class MaquinariaController extends Controller
     public function edit(Maquinaria $maquinaria)
     {
         $maquinaria->load('encuesta');
+
+        // Convertir campos JSON a arrays para la vista de edición
+        $camposMaquinaria = [
+            'tipo_maquinaria', 'cantidad_maquinaria', 'antiguedad_maquinaria', 'estado_maquinaria'
+        ];
+
+        foreach ($camposMaquinaria as $campo) {
+            if ($maquinaria->$campo && is_string($maquinaria->$campo)) {
+                $maquinaria->$campo = json_decode($maquinaria->$campo, true) ?: $maquinaria->$campo;
+            }
+        }
+
+        $camposConstruccion = [
+            'tipo_construccion', 'antiguedad_construccion', 'cantidad_construccion', 'area_construccion'
+        ];
+
+        foreach ($camposConstruccion as $campo) {
+            if ($maquinaria->$campo && is_string($maquinaria->$campo)) {
+                $maquinaria->$campo = json_decode($maquinaria->$campo, true) ?: $maquinaria->$campo;
+            }
+        }
+
         return view('encuestas.maquinaria_edit', compact('maquinaria'));
     }
 
@@ -297,6 +337,22 @@ class MaquinariaController extends Controller
 
         // Usamos los datos procesados (con JSON) en lugar de los validados
         $data = array_merge($data, array_intersect_key($input, array_flip(array_merge($camposMaquinaria, $camposConstruccion))));
+
+        // Limpiar datos de maquinaria si el usuario marcó "No"
+        if (isset($data['maquinaria']) && $data['maquinaria'] == '0') {
+            $data['tipo_maquinaria'] = null;
+            $data['cantidad_maquinaria'] = null;
+            $data['antiguedad_maquinaria'] = null;
+            $data['estado_maquinaria'] = null;
+        }
+
+        // Limpiar datos de construcción si el usuario marcó "No"
+        if (isset($data['tiene_construccion']) && $data['tiene_construccion'] == '0') {
+            $data['tipo_construccion'] = null;
+            $data['antiguedad_construccion'] = null;
+            $data['cantidad_construccion'] = null;
+            $data['area_construccion'] = null;
+        }
 
         // Actualizar registro
         $maquinaria->update($data);

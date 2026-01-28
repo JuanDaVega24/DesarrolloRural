@@ -81,6 +81,17 @@ class Encuesta extends Model
     ];
 
     /**
+     * ACCESORES
+     */
+    public function getEdadAttribute()
+    {
+        if ($this->fecha_nacimiento) {
+            return $this->fecha_nacimiento->age;
+        }
+        return null;
+    }
+
+    /**
      * RELACIONES  (18 TABLAS HIJAS)
      */
 
@@ -139,5 +150,21 @@ public function maquinaria()
 {
     return $this->hasMany(Familiar::class);
 }
+
+    /**
+     * Relación con el encuestador
+     */
+    public function encuestador()
+    {
+        return $this->hasOne(Encuestador::class);
+    }
+
+    /**
+     * Relación con afectaciones
+     */
+    public function afectaciones()
+    {
+        return $this->hasMany(Afectacion::class);
+    }
 
 }

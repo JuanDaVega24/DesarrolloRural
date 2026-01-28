@@ -1,0 +1,66 @@
+ /* === ESTILOS ESPECÍFICOS DE ESTA PÁGINA === */
+
+       
+        .module-card:not(.module-card-disabled):hover .card-link {
+            gap: 0.75rem;
+        }
+
+        .card-link i {
+            font-size: 0.875rem;
+            transition: transform 0.3s ease;
+        }
+
+        .module-card:not(.module-card-disabled):hover .card-link i {
+            transform: translateX(2px);
+        }
+
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 1.875rem;
+            }
+            
+            .section-subtitle {
+                font-size: 1rem;
+            }
+
+            .module-card {
+                padding: 1.5rem;
+            }
+
+            .card-icon {
+                width: 3.5rem;
+                height: 3.5rem;
+                font-size: 1.5rem;
+            }
+
+            .card-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .module-card {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .module-card:nth-child(1) { animation-delay: 0.1s; }
+        .module-card:nth-child(2) { animation-delay: 0.15s; }
+        .module-card:nth-child(3) { animation-delay: 0.2s; }
+        .module-card:nth-child(4) { animation-delay: 0.25s; }
+
+        .alcaldia-header {
+            margin-top: 1px;
+            text-align: center;
+        }
+
+       

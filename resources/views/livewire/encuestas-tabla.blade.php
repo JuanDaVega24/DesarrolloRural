@@ -138,7 +138,7 @@
                 @forelse ($encuestas as $e)
                     <tr>
                         <td><strong>#{{ $e->id }}</strong></td>
-                        <td>{{ $e->nombre_encuestador }}</td>
+                        <td>{{ $e->encuestador->nombre_encuestador ?? '—' }}</td>
                         <td>{{ \Carbon\Carbon::parse($e->fecha_encuesta)->format('d/m/Y') }}</td>
                         <td>{{ $e->nombre_identidad }}</td>
                         <td>{{ $e->primer_apellido }}</td>
@@ -153,25 +153,22 @@
 
                             <div class="actions-cell">
                                 <a href="{{ route('encuestas.show', $e) }}" 
-                                   class="btn btn-white btn-sm" 
+                                   class="btn bg-white btn-sm" 
                                    title="Ver">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('encuestas.edit', $e) }}" 
-                                   class="btn btn-white btn-sm" 
+                                   class="btn bg-white btn-sm" 
                                    title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('encuestas.destroy', $e) }}" 
-                                      method="POST" 
-                                      onsubmit="return confirm('¿Eliminar esta encuesta?')" 
-                                      style="display: inline;">
-                                    @csrf 
-                                    @method('DELETE')
-                                    <button class="btn btn-danger btn-sm" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                
+                             
+                                <button class="btn btn-danger btn-sm"
+                                        title="Eliminar"
+                                        onclick="confirmarEliminacion('{{ route('encuestas.destroy', $e) }}', '{{ $e->numero_documento }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                             @endif
                         </td>
@@ -200,9 +197,98 @@
         function toggleFilters() {
             const toggle = document.querySelector('.filter-toggle');
             const body = document.getElementById('filterBody');
-            
+
             toggle.classList.toggle('active');
             body.classList.toggle('active');
+        }
+
+        function confirmarEliminacion(url, encuestaId) {
+            // Configurar el modal de confirmación GOV.CO
+            const modal = document.getElementById('exampleModalConfirmacion');
+            const titulo = modal.querySelector('.modal-title-govco');
+            const texto = modal.querySelector('.modal-text-govco');
+            const btnConfirmar = document.querySelector('.btn-eliminar-confirmar');
+            const btnCancelar = document.querySelector('.btn-eliminar-cancelar');
+
+            // Personalizar contenido del modal
+            titulo.textContent = '¿Eliminar Caracterización?';
+            texto.innerHTML = '¿Está seguro de que desea eliminar la caracterización con numero de documento  "<strong>' + encuestaId + '</strong>" ? Esta acción no se puede deshacer.';
+
+            // Mostrar modal y backdrop
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            // Agregar backdrop
+            let backdrop = document.querySelector('.modal-backdrop-govco');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop-govco';
+                document.body.appendChild(backdrop);
+            }
+            backdrop.style.display = 'block';
+
+            // Configurar cierre del modal
+            const cerrarModal = function() {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+                if (backdrop) {
+                    backdrop.style.display = 'none';
+                }
+                // Remover event listener de teclado
+                document.removeEventListener('keydown', handleEscapeKey);
+            };
+
+            // Event listener para la tecla Escape
+            const handleEscapeKey = function(event) {
+                if (event.key === 'Escape') {
+                    cerrarModal();
+                }
+            };
+            document.addEventListener('keydown', handleEscapeKey);
+
+            // Limpiar event listeners anteriores y configurar nuevos
+            if (btnConfirmar) {
+                const nuevoBtnConfirmar = btnConfirmar.cloneNode(true);
+                btnConfirmar.parentNode.replaceChild(nuevoBtnConfirmar, btnConfirmar);
+                nuevoBtnConfirmar.addEventListener('click', function() {
+                    // Crear y enviar formulario de eliminación
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.style.display = 'none';
+
+                    // Agregar token CSRF
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    form.appendChild(csrfToken);
+
+                    // Agregar método DELETE
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+
+                    // Agregar al DOM y enviar
+                    document.body.appendChild(form);
+                    form.submit();
+
+                    cerrarModal();
+                });
+            }
+
+            if (btnCancelar) {
+                const nuevoBtnCancelar = btnCancelar.cloneNode(true);
+                btnCancelar.parentNode.replaceChild(nuevoBtnCancelar, btnCancelar);
+                nuevoBtnCancelar.addEventListener('click', cerrarModal);
+            }
+
+            // Cerrar al hacer click en el backdrop
+            if (backdrop) {
+                backdrop.addEventListener('click', cerrarModal);
+            }
         }
     </script>
 </div>

@@ -38,6 +38,14 @@ class AdminUserController extends Controller
             'email'    => ['required','email', Rule::unique('users')],
             'password' => 'required|min:6',
             'role'     => 'required'
+        ],[
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico debe tener un formato válido.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'role.required' => 'El rol es obligatorio.',
         ]);
 
         User::create([
@@ -60,14 +68,29 @@ class AdminUserController extends Controller
         $request->validate([
             'name'  => 'required',
             'email' => ['required','email', Rule::unique('users')->ignore($usuario->id)],
+            'password' => 'nullable|min:6',
             'role'  => 'required'
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico debe tener un formato válido.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'role.required' => 'El rol es obligatorio.',
         ]);
 
-        $usuario->update([
+        $updateData = [
             'name'  => $request->name,
             'email' => $request->email,
             'role'  => $request->role,
-        ]);
+        ];
+
+        // Solo actualizar contraseña si se proporciona
+        if ($request->filled('password')) {
+            $updateData['password'] = bcrypt($request->password);
+        }
+
+        $usuario->update($updateData);
 
         return redirect()->route('usuarios.index')->with('ok', 'Usuario actualizado');
     }

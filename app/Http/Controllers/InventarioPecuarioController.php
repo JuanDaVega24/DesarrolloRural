@@ -358,6 +358,7 @@ class InventarioPecuarioController extends Controller
      */
     public function show(InventarioPecuario $inventario_pecuario)
     {
+        session(['encuesta_id' => $inventario_pecuario->encuesta_id]);
         $inventario_pecuario->load('encuesta');
         return view('encuestas.inventario_pecuario_show', compact('inventario_pecuario'));
     }

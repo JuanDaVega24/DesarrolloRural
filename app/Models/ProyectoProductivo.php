@@ -13,19 +13,16 @@ class ProyectoProductivo extends Model
 
     protected $fillable = [
         'nombre',
+        'ano',
         'descripcion',
-        'sector',
-        'costo_estimado',
         'estado',
-        'fecha_inicio',
-        'fecha_fin',
         'encuesta_id', // relación con encuestas si aplica
+        'data',
+        'origen', // 'manual' o 'excel'
     ];
 
     protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
-        'costo_estimado' => 'decimal:2',
+        'data' => 'array',
     ];
 
     

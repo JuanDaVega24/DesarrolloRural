@@ -1,0 +1,254 @@
+  /* Variables de color */
+        :root {
+            --primary-green: #2d5f3f;
+            --hover-blue: #e3f2fd;
+            --border-color: #dee2e6;
+            --header-bg: linear-gradient(135deg, #2d5f3f 0%, #1e4029 100%);
+            --govcolor-cobalt: #0943B5;
+        }
+
+        /* Contenedor principal */
+        .container-fluid {
+            max-width: 100%;
+        }
+
+        /* Card de la tabla */
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .bg-gradient {
+            background: var(--header-bg);
+        }
+
+        /* Tabla optimizada - responsiva para pocos datos */
+        .table-container {
+            max-height: calc(100vh - 350px);
+            min-height: 200px;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* Ajuste para tablas con pocos datos */
+        .table-container:has(table tbody tr:only-child),
+        .table-container:has(table tbody tr:nth-child(2)):has(table tbody tr:nth-child(3)) {
+            max-height: 620px;
+        }
+
+        .table {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* Headers de la tabla */
+        .table-header th {
+            background: linear-gradient(to top, var(--verde) 0%, #5a9c3f 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 0.5rem;
+            white-space: nowrap;
+            border: none;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Iconos de filtro activos */
+        .filter-icon {
+            transition: color 0.3s ease;
+        }
+
+        .filter-icon.filter-active {
+            color: var(--govcolor-cobalt) !important; /* Color amarillo/orange para filtros activos */
+        }
+
+        /* Celdas de la tabla */
+        .table td {
+            padding: 0.65rem 0.5rem;
+            vertical-align: middle;
+            border-color: var(--border-color);
+        }
+
+        /* Columna de índice */
+        .column-index {
+            width: 60px;
+            background-color: #f8f9fa !important;
+            font-weight: 600;
+            color: #495057;
+            border-right: 2px solid var(--border-color) !important;
+        }
+
+        /* Header fijo */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Primera columna fija */
+        .table th.column-index,
+        .table td.column-index {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+        }
+
+        .table thead th.column-index {
+            z-index: 101;
+        }
+
+        /* Hover mejorado */
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--hover-blue) !important;
+            transform: scale(1.001);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .table tbody tr:hover td.column-index {
+            background-color: #bbdefb !important;
+        }
+
+        /* Modo pantalla completa */
+        .fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: white;
+            overflow: auto;
+            padding: 1rem;
+            margin: 0;
+        }
+
+        .fullscreen-mode .table-container {
+            max-height: calc(100vh - 180px);
+        }
+
+        .fullscreen-mode .card {
+            border-radius: 0;
+            height: 100%;
+        }
+
+        /* Botones del header */
+        .btn-light {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+        }
+
+        .btn-light:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Input de búsqueda */
+        #searchInput {
+            border-left: none;
+            transition: all 0.3s;
+        }
+
+        #searchInput:focus {
+            box-shadow: 0 0 0 0.2rem rgba(45, 95, 63, 0.25);
+            border-color: var(--primary-green);
+        }
+
+        .input-group-text {
+            border-right: none;
+        }
+
+        /* Scrollbar personalizado */
+        .table-container::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #888 0%, #666 100%);
+            border-radius: 10px;
+            border: 2px solid #f1f1f1;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #666 0%, #444 100%);
+        }
+
+        /* Kbd styling */
+        kbd {
+            background-color: #2d5f3f;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Badges en el header */
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.65rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table {
+                font-size: 0.8rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.4rem 0.3rem;
+            }
+
+            .card-header .row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .card-header .col-md-6:last-child {
+                width: 100%;
+            }
+
+            .card-header .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .input-group {
+                max-width: 100% !important;
+            }
+
+            .table-container {
+                max-height: calc(100vh - 400px);
+            }
+        }
+
+        /* Animación de carga */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-row {
+            animation: fadeIn 0.3s ease;
+        }

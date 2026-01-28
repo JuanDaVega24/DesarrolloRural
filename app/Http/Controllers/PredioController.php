@@ -123,6 +123,7 @@ class PredioController extends Controller
 
     public function show(Predio $predio)
     {
+        session(['encuesta_id' => $predio->encuesta_id]);
         $predio->load('encuesta.controlActividade');
         return view('encuestas.predio_show', compact('predio'));
     }

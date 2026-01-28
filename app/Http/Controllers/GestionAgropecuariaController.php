@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GestionAgropecuaria;
 use App\Models\Encuesta;
+use App\Models\Maquinaria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -93,6 +94,7 @@ class GestionAgropecuariaController extends Controller
             'participa' => 'nullable|string|in:0,1',
             'año' => 'nullable|integer',
             'entidad_gestiono' => 'nullable|string',
+            'entidad_otro' => 'nullable|string',
             'consistio' => 'nullable|string',
             'credito' => 'nullable|string|in:0,1',
             'aprobado' => 'nullable|string|in:0,1',
@@ -133,6 +135,19 @@ class GestionAgropecuariaController extends Controller
         // Debug: verificar que se guardó
         \Illuminate\Support\Facades\Log::info('GestionAgropecuaria guardada:', $data);
 
+        // Verificar si venimos de una vista .show
+        if (session('from_show') && session('show_route') === 'maquinaria.show') {
+            // Limpiar las variables de sesión
+            session()->forget(['from_show', 'show_route']);
+
+            // Obtener la maquinaria de la misma encuesta para redirigir correctamente
+            $maquinaria = Maquinaria::where('encuesta_id', $encuesta_id)->first();
+
+            return redirect()
+                ->route('maquinaria.show', $maquinaria->id)
+                ->with('success', 'Gestión agropecuaria guardada correctamente.');
+        }
+
         return redirect()
             ->route('encuestas.predio')   // lista de encuestas
             ->with('success', 'Gestión agropecuaria guardada correctamente.');
@@ -140,6 +155,7 @@ class GestionAgropecuariaController extends Controller
 
     public function show(GestionAgropecuaria $gestion)
     {
+        session(['encuesta_id' => $gestion->encuesta_id]);
         $gestion->load('encuesta.predio');
         return view('encuestas.gestion_agropecuaria_show', compact('gestion'));
     }
@@ -242,10 +258,14 @@ class GestionAgropecuariaController extends Controller
     public function destroy(GestionAgropecuaria $gestion)
     {
         $encuesta_id = $gestion->encuesta_id;
+
+        // Obtener la maquinaria de la misma encuesta para redirigir correctamente
+        $maquinaria = Maquinaria::where('encuesta_id', $encuesta_id)->first();
+
         $gestion->delete();
 
         return redirect()
-            ->route('encuestas.show', $encuesta_id)
+            ->route('maquinaria.show', $maquinaria->id)
             ->with('success', 'Registro de gestión agropecuaria eliminado.');
     }
 }

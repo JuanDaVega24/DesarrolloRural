@@ -92,7 +92,7 @@ class FamiliarController extends Controller
         } else {
             return redirect()
                 ->route('encuestas.afectaciones')
-                ->with('success', '¡Encuesta completada exitosamente! Gracias por su participación.');
+                ->with('success', 'Familiares guardados correctamente. Continúa con Afectaciones.');
         }
     }
 
@@ -101,7 +101,9 @@ class FamiliarController extends Controller
      */
     public function show(Encuesta $encuesta)
     {
+        session(['encuesta_id' => $encuesta->id]);
         $familiares = Familiar::where('encuesta_id', $encuesta->id)->get();
+        $encuesta->load('afectaciones');
         return view('encuestas.familiares_show', compact('encuesta', 'familiares'));
     }
 
@@ -112,5 +114,16 @@ class FamiliarController extends Controller
     {
         $familiares = Familiar::where('encuesta_id', $encuesta->id)->get();
         return view('encuestas.familiares_edit', compact('encuesta', 'familiares'));
+    }
+
+    /**
+     * Eliminar todos los familiares de una encuesta
+     */
+    public function destroy(Encuesta $encuesta)
+    {
+        Familiar::where('encuesta_id', $encuesta->id)->delete();
+
+        return redirect()->route('familiares.show', $encuesta->id)
+            ->with('success', 'Familiares eliminados correctamente.');
     }
 }

@@ -1,52 +1,78 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Editar Usuario
-        </h2>
-    </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-md mx-auto bg-white shadow rounded p-6">
+    @vite(['resources/css/pages/usuarios/edit.css'])
 
-            <form action="{{ route('usuarios.update', $usuario) }}" method="POST">
+    <div class="d-flex justify-content-center mt-4 mb-5">
+
+        <div class="login-box" style="max-width:520px; width:100%;">
+               <div class="escudo">
+                    <img src="{{ asset('images/logo-DesarrolloDelCampo.png') }}" alt="Logo">
+                </div>
+            <h2 class="login-title">Editar Usuario</h2>
+            <p class="login-subtitle">Modificar la información del usuario</p>
+
+            {{-- Mensajes ocultos para el toast --}}
+            @if ($errors->any())
+                <div class="alert alert-danger d-none">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $e)
+                            <li>{{ $e }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('usuarios.update', $usuario) }}" method="POST" id="editUserForm">
                 @csrf
                 @method('PUT')
 
-                <div>
-                    <label class="font-semibold">Nombre</label>
-                    <input type="text" name="name" class="w-full mt-1 border-gray-300 rounded"
-                           value="{{ old('name', $usuario->name) }}">
-                    @error('name') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+                {{-- Nombre --}}
+                <div class="mb-3 position-relative">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input type="text" name="name" class="form-control"
+                           placeholder="Nombre completo"
+                           value="{{ old('name', $usuario->name) }}" required>
                 </div>
 
-                <div class="mt-4">
-                    <label class="font-semibold">Email</label>
-                    <input type="email" name="email" class="w-full mt-1 border-gray-300 rounded"
-                           value="{{ old('email', $usuario->email) }}">
-                    @error('email') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+                {{-- Email --}}
+                <div class="mb-3 position-relative">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="Correo electrónico"
+                           value="{{ old('email', $usuario->email) }}" required>
                 </div>
 
-                <div class="mt-4">
-                    <label class="font-semibold">Rol</label>
-                    <select name="role" class="w-full mt-1 border-gray-300 rounded">
-                        <option value="Administrador" {{ $usuario->roles->first()->name == 'Administrador' ? 'selected' : '' }}>Administrador</option>
-                        <option value="Tabulador" {{ $usuario->roles->first()->name == 'Tabulador' ? 'selected' : '' }}>Tabulador</option>
+                {{-- Nueva Contraseña --}}
+                <div class="mb-3 position-relative">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="Nueva contraseña (opcional)">
+                </div>
+
+                {{-- Rol --}}
+                <div class="mb-3 position-relative">
+                    <i class="fa-solid fa-id-badge input-icon"></i>
+                    <select name="role" class="form-control" required>
+                        <option value="">Seleccione el rol</option>
+                        <option value="Administrador" {{ old('role', $usuario->role) == 'Administrador' ? 'selected' : '' }}>Administrador</option>
+                        <option value="Tabulador" {{ old('role', $usuario->role) == 'Tabulador' ? 'selected' : '' }}>Tabulador</option>
                     </select>
-                    @error('role') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mt-6 flex justify-between">
-                    <a href="{{ route('usuarios.index') }}"
-                       class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                        Cancelar
-                    </a>
+                {{-- Botón Actualizar --}}
+                <button class="btn-login mt-3">
+                    <i class="fa-solid fa-save me-2"></i> Actualizar Usuario
+                </button>
 
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        Actualizar
-                    </button>
-                </div>
+                {{-- Botón Cancelar --}}
+                <a href="{{ route('usuarios.index') }}"
+                   class="btn-cancelar mt-3 d-block text-center"
+                   style="background:#6c757d;">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Cancelar
+                </a>
+
             </form>
-
         </div>
     </div>
+
 </x-app-layout>

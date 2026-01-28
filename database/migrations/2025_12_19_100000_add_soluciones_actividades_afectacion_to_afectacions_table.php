@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('afectaciones', function (Blueprint $table) {
-            $table->string('soluciones')->nullable();
-            $table->string('actividades')->nullable();
-            $table->string('afectacion')->nullable();
+            $table->json('soluciones')->nullable();
+            $table->json('actividades')->nullable();
+            $table->json('afectacion')->nullable();
+            $table->json('hectareas')->nullable();
+            $table->json('unidades_afectadas')->nullable();
         });
     }
 
@@ -24,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('afectaciones', function (Blueprint $table) {
-            $table->dropColumn(['soluciones', 'actividades', 'afectacion']);
+            $table->dropColumn(['soluciones', 'actividades', 'afectacion', 'hectareas', 'unidades_afectadas']);
         });
     }
 };

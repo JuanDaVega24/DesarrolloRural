@@ -47,15 +47,20 @@ class AfectacionController extends Controller
         // Validamos arrays primero (antes de procesar)
         $request->validate([
             'afectaciones' => 'nullable|array',
-            'afectaciones.*.actividad_productiva' => 'required|array|min:1', // Ahora es array de checkboxes
+            'afectaciones.*.actividad_productiva' => 'nullable|array|min:1', // Ahora es array de checkboxes
             'afectaciones.*.fenomeno' => 'nullable|string',
             'afectaciones.*.anio' => 'nullable|integer|min:2000|max:2030',
             'afectaciones.*.semestre' => 'nullable|string|in:1,2',
-            'afectaciones.*.hectareas' => 'nullable|numeric|min:0',
-            'afectaciones.*.unidades_afectadas' => 'nullable|integer|min:0',
-            'afectaciones.*.soluciones' => 'nullable|string',
-            'afectaciones.*.actividades' => 'nullable|string',
-            'afectaciones.*.afectacion' => 'nullable|string',
+            'afectaciones.*.hectareas' => 'nullable|array',
+            'afectaciones.*.hectareas.*' => 'nullable|numeric|min:0',
+            'afectaciones.*.unidades_afectadas' => 'nullable|array',
+            'afectaciones.*.unidades_afectadas.*' => 'nullable|integer|min:0',
+            'afectaciones.*.soluciones' => 'nullable|array',
+            'afectaciones.*.soluciones.*' => 'nullable|string',
+            'afectaciones.*.actividades' => 'nullable|array',
+            'afectaciones.*.actividades.*' => 'nullable|string',
+            'afectaciones.*.afectacion' => 'nullable|array',
+            'afectaciones.*.afectacion.*' => 'nullable|string',
         ]);
 
         // Procesar cada afectacion individualmente
@@ -83,8 +88,8 @@ class AfectacionController extends Controller
                 ->with('success', 'Afectaciones actualizadas exitosamente.');
         } else {
             return redirect()
-                ->route('encuestas.index')
-                ->with('success', '¡Encuesta completada exitosamente! Gracias por su participación.');
+                ->route('encuestador.create')
+                ->with('success', 'Afectaciones guardadas correctamente. Complete la información del encuestador.');
         }
     }
 
@@ -93,6 +98,7 @@ class AfectacionController extends Controller
      */
     public function show(Encuesta $encuesta)
     {
+        session(['encuesta_id' => $encuesta->id]);
         $afectaciones = Afectacion::where('encuesta_id', $encuesta->id)->get();
         return view('encuestas.afectaciones_show', compact('encuesta', 'afectaciones'));
     }
@@ -104,5 +110,16 @@ class AfectacionController extends Controller
     {
         $afectaciones = Afectacion::where('encuesta_id', $encuesta->id)->get();
         return view('encuestas.afectaciones_edit', compact('encuesta', 'afectaciones'));
+    }
+
+    /**
+     * Eliminar todas las afectaciones de una encuesta
+     */
+    public function destroy(Encuesta $encuesta)
+    {
+        Afectacion::where('encuesta_id', $encuesta->id)->delete();
+
+        return redirect()->route('afectaciones.show', $encuesta->id)
+            ->with('success', 'Afectaciones eliminadas correctamente.');
     }
 }

@@ -1,8 +1,5 @@
 @props(['steps', 'current' => 1, 'progress' => 0])
 
-{{-- Incluye Bootstrap Icons --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
 <style>
     :root {
         --verde: #4A7C2F;

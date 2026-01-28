@@ -14,7 +14,22 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Nunito Sans', ...defaultTheme.fontFamily.sans],
+                verdana: ['Verdana', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                'verde': '#4A7C2F',
+                'verde-hover': '#3d6625',
+                'verde-claro': '#E8F5E0',
+                'azul': '#3366CC',
+                'azul-hover': '#2952a3',
+                'azul-claro': '#E3ECFA',
+                'negro': '#1A1A1A',
+                'gris': '#666666',
+                'gris-claro': '#f8f9fa',
+                'gris-medio': '#e9ecef',
+                'beige': '#F8F6F3',
+                'blanco': '#FFFFFF',
             },
         },
     },

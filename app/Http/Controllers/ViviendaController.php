@@ -19,7 +19,8 @@ class ViviendaController extends Controller
     }
 
     $encuesta = Encuesta::findOrFail($encuesta_id);
-    return view('encuestas.vivienda', compact('encuesta'));
+    $vivienda = Vivienda::where('encuesta_id', $encuesta_id)->first();
+    return view('encuestas.vivienda', compact('encuesta', 'vivienda'));
     }
 
     // Guardar los datos de vivienda desde el formulario
@@ -46,20 +47,22 @@ class ViviendaController extends Controller
         'tipo_servicio_sanitario' => 'nullable|string|max:255',
     ]);
 
-    Vivienda::create([
-        'encuesta_id' => $encuesta_id,
-        'tipo_vivienda' => $request->tipo_vivienda,
-        'condicion_ocupacion' => $request->condicion_ocupacion,
-        'material_piso' => $request->material_piso,
-        'material_pared_exterior' => $request->material_pared_exterior,
-        'destino_aguas_residuales' => $request->destino_aguas_residuales,
-        'combustible_cocina' => $request->combustible_cocina,
-        'medios_comunicacion' => $request->medios_comunicacion,
-        'medios_electronicos' => $request->medios_electronicos,
-        'acueducto_veredal' => $request->acueducto_veredal,
-        'cuenta_con_filtro' => $request->cuenta_con_filtro,
-        'tipo_servicio_sanitario' => $request->tipo_servicio_sanitario,
-    ]);
+    Vivienda::updateOrCreate(
+        ['encuesta_id' => $encuesta_id],
+        [
+            'tipo_vivienda' => $request->tipo_vivienda,
+            'condicion_ocupacion' => $request->condicion_ocupacion,
+            'material_piso' => $request->material_piso,
+            'material_pared_exterior' => $request->material_pared_exterior,
+            'destino_aguas_residuales' => $request->destino_aguas_residuales,
+            'combustible_cocina' => $request->combustible_cocina,
+            'medios_comunicacion' => $request->medios_comunicacion,
+            'medios_electronicos' => $request->medios_electronicos,
+            'acueducto_veredal' => $request->acueducto_veredal,
+            'cuenta_con_filtro' => $request->cuenta_con_filtro,
+            'tipo_servicio_sanitario' => $request->tipo_servicio_sanitario,
+        ]
+    );
 
     return redirect()
         ->route('encuestas.descripcion')
@@ -69,6 +72,7 @@ class ViviendaController extends Controller
 
     public function show(Vivienda $vivienda)
     {
+        session(['encuesta_id' => $vivienda->encuesta_id]);
         $vivienda->load('encuesta.descripcion');
         return view('encuestas.vivienda_show', compact('vivienda'));
     }

@@ -92,6 +92,7 @@ class ControlActividadeController extends Controller
 
     public function show(ControlActividade $controlActividade)
     {
+        session(['encuesta_id' => $controlActividade->encuesta_id]);
         $controlActividade->load('encuesta');
         return view('encuestas.control_actividades_show', compact('controlActividade'));
     }

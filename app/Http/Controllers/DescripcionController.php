@@ -34,6 +34,7 @@ class DescripcionController extends Controller
      */
     public function show(Descripcion $descripcion)
     {
+        session(['encuesta_id' => $descripcion->encuesta_id]);
         $descripcion->load('encuesta.vivienda', 'encuesta.produccion');
         return view('encuestas.descripcion_show', compact('descripcion'));
     }
@@ -112,7 +113,7 @@ class DescripcionController extends Controller
             $data['destino_produccion'] = '';
         }
 
-        // ======== Procesar fuentes de agua (convertir arrays a cadenas) ========
+        // ======== Procesar fuentes de agua con JSON estructurado ========
         $fuenteCampos = [
             'acueducto_publico',
             'acuifero',
@@ -130,8 +131,31 @@ class DescripcionController extends Controller
         ];
 
         foreach ($fuenteCampos as $campo) {
+            $fuenteData = [];
+
+            // Usos seleccionados
             if ($request->has($campo)) {
-                $data[$campo] = implode(',', $request->$campo);
+                $fuenteData['usos'] = $request->$campo;
+            }
+
+            // Cantidad (si fue llenada)
+            if ($request->has('cantidad_' . $campo) && !empty($request->{'cantidad_' . $campo})) {
+                $fuenteData['cantidad'] = (int) $request->{'cantidad_' . $campo};
+            }
+
+            // Ubicado (si aplica y fue seleccionado)
+            if ($request->has('ubicado_' . $campo) && !empty($request->{'ubicado_' . $campo})) {
+                $fuenteData['ubicado'] = $request->{'ubicado_' . $campo};
+            }
+
+            // Nombre (si aplica y fue llenado)
+            if ($request->has('nombre_' . $campo) && !empty($request->{'nombre_' . $campo})) {
+                $fuenteData['nombre'] = $request->{'nombre_' . $campo};
+            }
+
+            // Solo guardar si hay datos
+            if (!empty($fuenteData)) {
+                $data[$campo] = json_encode($fuenteData);
             } else {
                 $data[$campo] = '';
             }
@@ -155,10 +179,36 @@ class DescripcionController extends Controller
         $data['sistema_riego'] = $request->sistema_riego;
         $data['otros_destinos_detalle'] = $request->otros_destinos_detalle;
 
-        // Procesar cantidad y ubicado para fuentes
+        // Procesar fuentes de agua con JSON estructurado
         foreach ($fuenteCampos as $campo) {
-            $data['cantidad_' . $campo] = $request->{'cantidad_' . $campo};
-            $data['ubicado_' . $campo] = $request->{'ubicado_' . $campo};
+            $fuenteData = [];
+
+            // Usos seleccionados
+            if ($request->has($campo)) {
+                $fuenteData['usos'] = $request->$campo;
+            }
+
+            // Cantidad (si fue llenada)
+            if ($request->has('cantidad_' . $campo) && !empty($request->{'cantidad_' . $campo})) {
+                $fuenteData['cantidad'] = (int) $request->{'cantidad_' . $campo};
+            }
+
+            // Ubicado (si aplica y fue seleccionado)
+            if ($request->has('ubicado_' . $campo) && !empty($request->{'ubicado_' . $campo})) {
+                $fuenteData['ubicado'] = $request->{'ubicado_' . $campo};
+            }
+
+            // Nombre (si aplica y fue llenado)
+            if ($request->has('nombre_' . $campo) && !empty($request->{'nombre_' . $campo})) {
+                $fuenteData['nombre'] = $request->{'nombre_' . $campo};
+            }
+
+            // Solo guardar si hay datos
+            if (!empty($fuenteData)) {
+                $data[$campo] = json_encode($fuenteData);
+            } else {
+                $data[$campo] = '';
+            }
         }
 
         $descripcion->update($data);
@@ -257,7 +307,7 @@ class DescripcionController extends Controller
             $data['destino_produccion'] = '';
         }
 
-        // ======== Procesar fuentes de agua (convertir arrays a cadenas) ========
+        // ======== Procesar fuentes de agua con JSON estructurado ========
         $fuenteCampos = [
             'acueducto_publico',
             'acuifero',
@@ -275,8 +325,31 @@ class DescripcionController extends Controller
         ];
 
         foreach ($fuenteCampos as $campo) {
+            $fuenteData = [];
+
+            // Usos seleccionados
             if ($request->has($campo)) {
-                $data[$campo] = implode(',', $request->$campo);
+                $fuenteData['usos'] = $request->$campo;
+            }
+
+            // Cantidad (si fue llenada)
+            if ($request->has('cantidad_' . $campo) && !empty($request->{'cantidad_' . $campo})) {
+                $fuenteData['cantidad'] = (int) $request->{'cantidad_' . $campo};
+            }
+
+            // Ubicado (si aplica y fue seleccionado)
+            if ($request->has('ubicado_' . $campo) && !empty($request->{'ubicado_' . $campo})) {
+                $fuenteData['ubicado'] = $request->{'ubicado_' . $campo};
+            }
+
+            // Nombre (si aplica y fue llenado)
+            if ($request->has('nombre_' . $campo) && !empty($request->{'nombre_' . $campo})) {
+                $fuenteData['nombre'] = $request->{'nombre_' . $campo};
+            }
+
+            // Solo guardar si hay datos
+            if (!empty($fuenteData)) {
+                $data[$campo] = json_encode($fuenteData);
             } else {
                 $data[$campo] = '';
             }

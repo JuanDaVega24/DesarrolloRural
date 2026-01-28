@@ -71,7 +71,7 @@ class EncuestasTabla extends Component
 
     public function render()
     {
-        $encuestas = Encuesta::with(['vereda', 'corregimiento'])
+        $encuestas = Encuesta::with(['vereda', 'corregimiento', 'encuestador'])
 
             // === FILTROS ===
             ->when($this->fecha_encuesta, fn($q) =>

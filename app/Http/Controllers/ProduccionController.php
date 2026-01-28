@@ -45,8 +45,8 @@ class ProduccionController extends Controller
                     // Para campos booleanos, convertir "si"/"no"/"null" de vuelta a 1/0/null
                     if (is_array($decoded) && in_array($campo, $camposBooleanos)) {
                         $decoded = array_map(function($valor) {
-                            if ($valor === 'si') return 1;
-                            if ($valor === 'no') return 0;
+                            if ($valor === 'Si') return 1;
+                            if ($valor === 'No') return 0;
                             return null;
                         }, $decoded);
                     }
@@ -71,8 +71,8 @@ class ProduccionController extends Controller
                     // Para campos booleanos agro, convertir "si"/"no"/"null" de vuelta a 1/0/null
                     if (is_array($decoded) && in_array($campo, $camposBooleanosAgro)) {
                         $decoded = array_map(function($valor) {
-                            if ($valor === 'si') return 1;
-                            if ($valor === 'no') return 0;
+                            if ($valor === 'Si') return 1;
+                            if ($valor === 'No') return 0;
                             return null;
                         }, $decoded);
                     }
@@ -116,55 +116,97 @@ class ProduccionController extends Controller
     // Convertir arrays a JSON para campos agrícolas
     $camposAgricolas = [
         'tipo_cultivo', 'area_cultivo', 'unidad_area_cultivo',
-        'cantidad_arboles_plantas', 'nivel_produccion', 'edades_cultivo',
-        'seguridad_alimentaria', 'uso_comercial', 'bajo_cubierta',
-        'cielo_abierto', 'hidroponia'
+        'cantidad_arboles_plantas', 'nivel_produccion', 'edades_cultivo'
     ];
 
-    // Campos booleanos que necesitan conversión especial
+    // Campos booleanos que necesitan conversión especial (ahora con nombres únicos)
     $camposBooleanos = ['seguridad_alimentaria', 'uso_comercial', 'bajo_cubierta', 'cielo_abierto', 'hidroponia'];
 
+    // Procesar arrays normales
     foreach ($camposAgricolas as $campo) {
         if (isset($input[$campo]) && is_array($input[$campo])) {
-            // Para campos booleanos, convertir valores antes de filtrar
-            if (in_array($campo, $camposBooleanos)) {
-                $input[$campo] = array_map(function($valor) {
-                    if ($valor === '1' || $valor === 1) return 'si';
-                    if ($valor === '0' || $valor === 0) return 'no';
-                    return 'null';
-                }, $input[$campo]);
-                $input[$campo] = json_encode($input[$campo]);
-            } else {
-                $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
-            }
+            $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
         }
     }
 
-    // Convertir arrays a JSON para campos agroindustriales
-    $camposAgroindustriales = [
-        'producto_nombre', 'producto_alimentario', 'producto_no_alimentario',
-        'producto_presentacion', 'producto_precio', 'producto_capacidad',
-        'producto_unidad_capacidad', 'producto_tiene_etiqueta', 'producto_tiene_registro'
-    ];
+    // Procesar campos booleanos con nombres únicos de manera más simple
+    foreach ($camposBooleanos as $campo) {
+        $processed = [];
 
-    // Campos booleanos agroindustriales
-    $camposBooleanosAgro = ['producto_alimentario', 'producto_no_alimentario', 'producto_tiene_etiqueta', 'producto_tiene_registro'];
+        // Buscar todos los campos que coincidan con el patrón campo_índice
+        foreach ($input as $key => $value) {
+            if (preg_match('/^' . preg_quote($campo) . '_(\d+)$/', $key, $matches)) {
+                $index = (int)$matches[1];
+                // Procesar el valor
+                if ($value === '1' || $value === 1) {
+                    $processed[$index] = 'Si';
+                } elseif ($value === '0' || $value === 0) {
+                    $processed[$index] = 'No';
+                } else {
+                    $processed[$index] = 'No'; // Default a No
+                }
+                // Remover el campo procesado
+                unset($input[$key]);
+            }
+        }
 
-    foreach ($camposAgroindustriales as $campo) {
-        if (isset($input[$campo]) && is_array($input[$campo])) {
-            // Para campos booleanos agro, convertir valores
-            if (in_array($campo, $camposBooleanosAgro)) {
-                $input[$campo] = array_map(function($valor) {
-                    if ($valor === '1' || $valor === 1) return 'si';
-                    if ($valor === '0' || $valor === 0) return 'no';
-                    return 'null';
-                }, $input[$campo]);
-                $input[$campo] = json_encode($input[$campo]);
-            } else {
+        // Ordenar por índice y convertir a array simple
+        ksort($processed);
+        $processed = array_values($processed);
+
+        // Solo guardar si hay valores procesados
+        if (!empty($processed)) {
+            $input[$campo] = json_encode($processed);
+        }
+    }
+
+        // Convertir arrays a JSON para campos agroindustriales
+        $camposAgroindustriales = [
+            'producto_nombre', 'producto_alimentario', 'producto_no_alimentario',
+            'producto_presentacion', 'producto_precio', 'producto_capacidad',
+            'producto_unidad_capacidad'
+        ];
+
+        // Campos booleanos agroindustriales (ahora con nombres únicos)
+        $camposBooleanosAgro = ['producto_alimentario', 'producto_no_alimentario', 'producto_tiene_etiqueta', 'producto_tiene_registro'];
+
+        // Procesar arrays normales agroindustriales
+        foreach ($camposAgroindustriales as $campo) {
+            if (isset($input[$campo]) && is_array($input[$campo])) {
                 $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
             }
         }
-    }
+
+        // Procesar campos booleanos agroindustriales con nombres únicos de manera más simple
+        foreach ($camposBooleanosAgro as $campo) {
+            $processed = [];
+
+            // Buscar todos los campos que coincidan con el patrón campo_índice
+            foreach ($input as $key => $value) {
+                if (preg_match('/^' . preg_quote($campo) . '_(\d+)$/', $key, $matches)) {
+                    $index = (int)$matches[1];
+                    // Procesar el valor
+                    if ($value === '1' || $value === 1) {
+                        $processed[$index] = 'Si';
+                    } elseif ($value === '0' || $value === 0) {
+                        $processed[$index] = 'No';
+                    } else {
+                        $processed[$index] = 'No'; // Default a No
+                    }
+                    // Remover el campo procesado
+                    unset($input[$key]);
+                }
+            }
+
+            // Ordenar por índice y convertir a array simple
+            ksort($processed);
+            $processed = array_values($processed);
+
+            // Solo guardar si hay valores procesados
+            if (!empty($processed)) {
+                $input[$campo] = json_encode($processed);
+            }
+        }
 
     // Convertir arrays a JSON para campos restantes
     $camposRestantes = [
@@ -238,6 +280,7 @@ class ProduccionController extends Controller
 
     public function show(Produccion $produccion)
     {
+        session(['encuesta_id' => $produccion->encuesta_id]);
         $produccion->load('encuesta');
         return view('encuestas.produccion_show', compact('produccion'));
     }
@@ -258,27 +301,47 @@ class ProduccionController extends Controller
         // Convertir arrays a JSON para campos agrícolas
         $camposAgricolas = [
             'tipo_cultivo', 'area_cultivo', 'unidad_area_cultivo',
-            'cantidad_arboles_plantas', 'nivel_produccion', 'edades_cultivo',
-            'seguridad_alimentaria', 'uso_comercial', 'bajo_cubierta',
-            'cielo_abierto', 'hidroponia'
+            'cantidad_arboles_plantas', 'nivel_produccion', 'edades_cultivo'
         ];
 
-        // Campos booleanos que necesitan conversión especial
+        // Campos booleanos que necesitan conversión especial (ahora con nombres únicos)
         $camposBooleanos = ['seguridad_alimentaria', 'uso_comercial', 'bajo_cubierta', 'cielo_abierto', 'hidroponia'];
 
+        // Procesar arrays normales
         foreach ($camposAgricolas as $campo) {
             if (isset($input[$campo]) && is_array($input[$campo])) {
-                // Para campos booleanos, convertir valores antes de filtrar
-                if (in_array($campo, $camposBooleanos)) {
-                    $input[$campo] = array_map(function($valor) {
-                        if ($valor === '1' || $valor === 1) return 'si';
-                        if ($valor === '0' || $valor === 0) return 'no';
-                        return 'null';
-                    }, $input[$campo]);
-                    $input[$campo] = json_encode($input[$campo]);
-                } else {
-                    $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
+                $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
+            }
+        }
+
+        // Procesar campos booleanos con nombres únicos de manera más simple
+        foreach ($camposBooleanos as $campo) {
+            $processed = [];
+
+            // Buscar todos los campos que coincidan con el patrón campo_índice
+            foreach ($input as $key => $value) {
+                if (preg_match('/^' . preg_quote($campo) . '_(\d+)$/', $key, $matches)) {
+                    $index = (int)$matches[1];
+                    // Procesar el valor
+                    if ($value === '1' || $value === 1) {
+                        $processed[$index] = 'Si';
+                    } elseif ($value === '0' || $value === 0) {
+                        $processed[$index] = 'No';
+                    } else {
+                        $processed[$index] = 'No'; // Default a No
+                    }
+                    // Remover el campo procesado
+                    unset($input[$key]);
                 }
+            }
+
+            // Ordenar por índice y convertir a array simple
+            ksort($processed);
+            $processed = array_values($processed);
+
+            // Solo guardar si hay valores procesados
+            if (!empty($processed)) {
+                $input[$campo] = json_encode($processed);
             }
         }
 
@@ -286,25 +349,47 @@ class ProduccionController extends Controller
         $camposAgroindustriales = [
             'producto_nombre', 'producto_alimentario', 'producto_no_alimentario',
             'producto_presentacion', 'producto_precio', 'producto_capacidad',
-            'producto_unidad_capacidad', 'producto_tiene_etiqueta', 'producto_tiene_registro'
+            'producto_unidad_capacidad'
         ];
 
-        // Campos booleanos agroindustriales
+        // Campos booleanos agroindustriales (ahora con nombres únicos)
         $camposBooleanosAgro = ['producto_alimentario', 'producto_no_alimentario', 'producto_tiene_etiqueta', 'producto_tiene_registro'];
 
+        // Procesar arrays normales agroindustriales
         foreach ($camposAgroindustriales as $campo) {
             if (isset($input[$campo]) && is_array($input[$campo])) {
-                // Para campos booleanos agro, convertir valores
-                if (in_array($campo, $camposBooleanosAgro)) {
-                    $input[$campo] = array_map(function($valor) {
-                        if ($valor === '1' || $valor === 1) return 'si';
-                        if ($valor === '0' || $valor === 0) return 'no';
-                        return 'null';
-                    }, $input[$campo]);
-                    $input[$campo] = json_encode($input[$campo]);
-                } else {
-                    $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
+                $input[$campo] = json_encode(array_filter($input[$campo], fn($v) => $v !== null && $v !== ''));
+            }
+        }
+
+        // Procesar campos booleanos agroindustriales con nombres únicos de manera más simple
+        foreach ($camposBooleanosAgro as $campo) {
+            $processed = [];
+
+            // Buscar todos los campos que coincidan con el patrón campo_índice
+            foreach ($input as $key => $value) {
+                if (preg_match('/^' . preg_quote($campo) . '_(\d+)$/', $key, $matches)) {
+                    $index = (int)$matches[1];
+                    // Procesar el valor
+                    if ($value === '1' || $value === 1) {
+                        $processed[$index] = 'Si';
+                    } elseif ($value === '0' || $value === 0) {
+                        $processed[$index] = 'No';
+                    } else {
+                        $processed[$index] = 'No'; // Default a No
+                    }
+                    // Remover el campo procesado
+                    unset($input[$key]);
                 }
+            }
+
+            // Ordenar por índice y convertir a array simple
+            ksort($processed);
+            $processed = array_values($processed);
+
+            // Solo guardar si hay valores procesados
+            if (!empty($processed)) {
+                $input[$campo] = json_encode($processed);
             }
         }
 
@@ -321,7 +406,7 @@ class ProduccionController extends Controller
             }
         }
 
-        // Validamos arrays primero (antes de convertir a JSON)
+        // Validamos con las reglas actualizadas
         $validated = $request->validate([
             /* ACTIVIDADES AGRÍCOLAS - Arrays */
             'tipo_cultivo.*'                => 'nullable|string',
@@ -330,26 +415,6 @@ class ProduccionController extends Controller
             'cantidad_arboles_plantas.*'    => 'nullable|integer',
             'nivel_produccion.*'            => 'nullable|string',
             'edades_cultivo.*'              => 'nullable|string',
-            'seguridad_alimentaria.*'       => 'nullable|boolean',
-            'uso_comercial.*'               => 'nullable|boolean',
-            'bajo_cubierta.*'               => 'nullable|boolean',
-            'cielo_abierto.*'               => 'nullable|boolean',
-            'hidroponia.*'                  => 'nullable|boolean',
-
-            /* ACTIVIDADES AGROINDUSTRIALES - Arrays */
-            'producto_nombre.*'             => 'nullable|string',
-            'producto_alimentario.*'        => 'nullable|boolean',
-            'producto_no_alimentario.*'     => 'nullable|boolean',
-            'producto_presentacion.*'       => 'nullable|numeric',
-            'producto_precio.*'             => 'nullable|numeric',
-            'producto_capacidad.*'          => 'nullable|numeric',
-            'producto_unidad_capacidad.*'   => 'nullable|in:kg,lts,g,cm3',
-            'producto_tiene_etiqueta.*'     => 'nullable|boolean',
-            'producto_tiene_registro.*'     => 'nullable|boolean',
-
-            /* ACTIVIDADES FORESTALES - Arrays */
-            'forestal_modalidad.*'        => 'nullable|string',
-            'forestal_cantidad.*'         => 'nullable|integer',
 
             /* ACTIVIDAD VIVERO - Arrays */
             'vivero_especies.*'           => 'nullable|string',

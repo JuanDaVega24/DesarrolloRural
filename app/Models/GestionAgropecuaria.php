@@ -16,6 +16,7 @@ class GestionAgropecuaria extends Model
         'participa',
         'año',
         'entidad_gestiono',
+        'entidad_otro',
         'consistio',
         'credito',
         'aprobado',

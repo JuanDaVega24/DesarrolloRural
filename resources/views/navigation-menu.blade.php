@@ -12,11 +12,7 @@
     <img src="{{ asset('images/logo-alcaldiaDeBucaramanga.png') }}" alt="Escudo" style="width:100px; height:80px;">
 </div>
 
-
-                        <!-- Nombre institución -->
-                        <span class="font-semibold text-gray-700 hidden sm:inline">
-                            Alcaldía de Bucaramanga
-                        </span>
+                       
                     </a>
                 </div>
 
@@ -120,9 +116,7 @@
                                 {{ __('Manage Account') }}
                             </div>
 
-                            <x-dropdown-link href="{{ route('profile.show') }}">
-                                {{ __('Profile') }}
-                            </x-dropdown-link>
+                            
 
                             @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
                                 <x-dropdown-link href="{{ route('api-tokens.index') }}">
@@ -144,6 +138,7 @@
                         </x-slot>
                     </x-dropdown>
                 </div>
+
             </div>
 
             <!-- HAMBURGER (igual) -->
@@ -163,7 +158,10 @@
                 </button>
             </div>
 
+
+
         </div>
     </div>
+
 
 </nav>

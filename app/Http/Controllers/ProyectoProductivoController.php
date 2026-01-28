@@ -4,31 +4,131 @@ namespace App\Http\Controllers;
 
 use App\Models\ProyectoProductivo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 
 class ProyectoProductivoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $proyectos = ProyectoProductivo::latest()->paginate(20);
-        return view('proyectos.index', compact('proyectos'));
+        // Obtener años únicos con conteo de proyectos
+        $anosConConteo = ProyectoProductivo::selectRaw('ano, COUNT(*) as total_proyectos')
+            ->whereNotNull('ano')
+            ->groupBy('ano')
+            ->orderBy('ano', 'desc')
+            ->get();
+
+        return view('proyectos_productivos.index', compact('anosConConteo'));
+    }
+
+    public function proyectosPorAno($ano)
+    {
+        // Obtener proyectos del año específico
+        $proyectos = ProyectoProductivo::where('ano', $ano)
+            ->latest()
+            ->paginate(20);
+
+        $totalProyectos = ProyectoProductivo::where('ano', $ano)->count();
+
+        return view('proyectos_productivos.proyectos-por-ano', compact('proyectos', 'ano', 'totalProyectos'));
     }
 
     public function create()
     {
-        return view('proyectos.create');
+        return view('proyectos_productivos.create');
+    }
+
+    public function createManual()
+    {
+        // Obtener columnas de referencia de un proyecto existente o usar columnas por defecto
+        $columnasReferencia = $this->getColumnasReferencia();
+
+        return view('proyectos_productivos.create_manual', compact('columnasReferencia'));
+    }
+
+    public function storeManual(Request $request)
+    {
+        // Validar datos básicos del proyecto
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'ano' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
+            'descripcion' => 'nullable|string|max:1000',
+            'data' => 'required|array',
+            'data.*' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            // Preparar datos para guardar
+            $dataToSave = [
+                'filename' => 'Formulario Manual - ' . $validated['nombre'],
+                'uploaded_by' => Auth::user()->name,
+                'headers' => array_keys($validated['data']),
+                'rows' => [$validated['data']], // Un solo registro
+                'uploaded_at' => now()->toISOString(),
+                'total_rows' => 1,
+                'total_columns' => count($validated['data'])
+            ];
+
+            // Crear el proyecto con origen 'manual'
+            $proyecto = ProyectoProductivo::create([
+                'nombre' => $validated['nombre'],
+                'ano' => $validated['ano'],
+                'descripcion' => $validated['descripcion'],
+                'estado' => 'Activo',
+                'origen' => 'manual', // Indicar que viene del formulario manual
+                'data' => $dataToSave,
+            ]);
+
+            // Agregar columnas automáticas de caracterización
+            $this->addAutomaticColumns($dataToSave['headers'], $dataToSave['rows'], $proyecto->ano);
+
+            // Actualizar el proyecto con las columnas automáticas
+            $proyecto->update([
+                'data' => $dataToSave
+            ]);
+
+            return redirect()->route('proyectos.por-ano', $proyecto->ano)
+                           ->with('success', '¡Proyecto creado exitosamente desde formulario manual!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error al crear el proyecto: ' . $e->getMessage());
+        }
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string',
-            'descripcion' => 'nullable|string',
-            'estado' => 'nullable|string',
+            'nombre' => 'required|string|max:255',
+            'ano' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
+            'metodo_creacion' => 'required|in:manual,excel',
         ]);
 
-        ProyectoProductivo::create($data);
+        // Crear proyecto básico
+        $proyecto = ProyectoProductivo::create([
+            'nombre' => $data['nombre'],
+            'ano' => $data['ano'],
+            'estado' => 'Activo',
+        ]);
 
-        return redirect()->route('proyectos.index')->with('success','Proyecto registrado');
+        // Redirigir según el método de creación seleccionado
+        if ($data['metodo_creacion'] === 'manual') {
+            // Crear proyecto con origen manual y redirigir al index de formularios
+            $proyecto->update(['origen' => 'manual']);
+            return redirect()->route('formularios.index')
+                           ->with('success', 'Proyecto creado. Ahora puedes completar el formulario.');
+        } else {
+            // Para Excel, redirigir al upload de Excel
+            return redirect()->route('proyectos.upload-excel', $proyecto)
+                           ->with('success', 'Proyecto creado. Ahora sube tu archivo Excel.');
+        }
     }
 
     public function edit(ProyectoProductivo $proyecto)
@@ -45,6 +145,1609 @@ class ProyectoProductivoController extends Controller
     public function destroy(ProyectoProductivo $proyecto)
     {
         $proyecto->delete();
-        return back()->with('success','Proyecto eliminado');
+        return back()->with('success','¡Proyecto eliminado Correctamente!');
+    }
+
+    public function uploadExcel(ProyectoProductivo $proyecto)
+    {
+        return view('proyectos_productivos.upload_excel', compact('proyecto'));
+    }
+
+    public function processExcel(Request $request, ProyectoProductivo $proyecto)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+        ]);
+
+        try {
+            $file = $request->file('excel_file');
+
+            // Leer el archivo Excel
+            $data = Excel::toArray([], $file, null, \Maatwebsite\Excel\Excel::XLSX);
+
+            if (empty($data) || empty($data[0])) {
+                return back()->with('error', 'El archivo Excel está vacío o no tiene datos válidos.');
+            }
+
+            $sheetData = $data[0]; // Primera hoja
+
+            if (count($sheetData) < 2) {
+                return back()->with('error', 'El archivo debe tener al menos una fila de encabezados y una fila de datos.');
+            }
+
+            // Primera fila como encabezados
+            $headers = array_shift($sheetData);
+
+            // Limpiar encabezados (quitar espacios, convertir a string)
+            $headers = array_map(function($header) {
+                return trim((string)$header);
+            }, $headers);
+
+            // Filtrar filas vacías
+            $rows = array_filter($sheetData, function($row) {
+                return !empty(array_filter($row, function($cell) {
+                    return !is_null($cell) && trim((string)$cell) !== '';
+                }));
+            });
+
+            // Convertir filas a arrays asociativos y procesar fechas
+            $processedRows = [];
+            foreach ($rows as $row) {
+                $rowData = [];
+                foreach ($headers as $index => $header) {
+                    $cellValue = isset($row[$index]) ? $row[$index] : '';
+
+                    // Procesar fechas si es un número que parece ser una fecha de Excel
+                    // Solo números > 10000 para evitar convertir números pequeños que no son fechas
+                    if (is_numeric($cellValue) && $cellValue > 10000 && $cellValue <= 100000) {
+                        try {
+                            $excelDate = Date::excelToDateTimeObject($cellValue);
+                            if ($excelDate) {
+                                $year = (int)$excelDate->format('Y');
+                                // Solo convertir si es una fecha razonable (1900-2100)
+                                if ($year >= 1900 && $year <= 2100) {
+                                    $cellValue = $excelDate->format('d/m/Y');
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            // Si falla la conversión, mantener el valor original
+                        }
+                    }
+
+                    $rowData[$header] = trim((string)$cellValue);
+                }
+                $processedRows[] = $rowData;
+            }
+
+            // AGREGAR COLUMNAS AUTOMÁTICAS DE CARACTERIZACIÓN
+            $this->addAutomaticColumns($headers, $processedRows, $proyecto->ano);
+
+            // Preparar datos para guardar
+            $dataToSave = [
+                'filename' => $file->getClientOriginalName(),
+                'uploaded_by' => Auth::user()->name,
+                'headers' => $headers,
+                'rows' => $processedRows,
+                'uploaded_at' => now()->toISOString(),
+                'total_rows' => count($processedRows),
+                'total_columns' => count($headers)
+            ];
+
+            // Guardar datos en el proyecto
+            $proyecto->update([
+                'data' => $dataToSave
+            ]);
+
+            return redirect()->route('proyectos.por-ano', $proyecto->ano)->with('success', 'Excel subido correctamente. ' . count($processedRows) . ' filas procesadas.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al procesar el archivo: ' . $e->getMessage());
+        }
+    }
+
+    public function show(ProyectoProductivo $proyecto)
+    {
+        // Permitir proyectos con datos, sin importar si fueron creados desde Excel o manualmente
+        if (!$proyecto->data) {
+            return redirect()->route('proyectos.index')->with('error', 'Este proyecto no tiene datos cargados.');
+        }
+
+        // Preparar datos para filtros
+        $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+        $rows = $data['rows'] ?? [];
+        $headers = $data['headers'] ?? [];
+
+        // Extraer valores únicos para filtros
+        $filterData = $this->prepareFilterData($rows, $headers);
+
+        // Obtener corregimientos de la base de datos
+        $corregimientos = \App\Models\Corregimiento::orderBy('id')->pluck('nombre', 'id')->toArray();
+
+        // Obtener veredas ÚNICAS del proyecto actual (solo las que aparecen en Vereda_CZ)
+        $veredas = $this->getVeredasFromProject($rows, $headers);
+
+        return view('proyectos_productivos.show', compact('proyecto', 'filterData', 'corregimientos', 'veredas'));
+    }
+
+    /**
+     * Preparar datos únicos para los filtros de cada columna
+     */
+    private function prepareFilterData($rows, $headers)
+    {
+        $filterData = [];
+
+        // Columnas que queremos filtrar (con variaciones para género)
+        $filterableColumns = ['Estado_Caracterizacion', 'Corregimiento_CZ'];
+
+        // Buscar columna de género con variaciones
+        $genderColumn = $this->findGenderColumn($headers);
+        if ($genderColumn) {
+            $filterableColumns[] = $genderColumn;
+        }
+
+        foreach ($filterableColumns as $column) {
+            if (in_array($column, $headers)) {
+                $uniqueValues = [];
+                foreach ($rows as $row) {
+                    $value = trim($row[$column] ?? '');
+                    if (!empty($value) && !in_array($value, $uniqueValues)) {
+                        $uniqueValues[] = $value;
+                    }
+                }
+                sort($uniqueValues);
+                // Usar 'Genero' como clave para mantener consistencia en la vista
+                $key = ($column === $genderColumn) ? 'Genero' : $column;
+                $filterData[$key] = $uniqueValues;
+            }
+        }
+
+        return $filterData;
+    }
+
+    /**
+     * Obtener veredas únicas del proyecto actual (solo las que aparecen en Vereda_CZ)
+     */
+    private function getVeredasFromProject($rows, $headers)
+    {
+        $veredas = [];
+
+        // Verificar si existe la columna Vereda_CZ
+        if (!in_array('Vereda_CZ', $headers)) {
+            return $veredas;
+        }
+
+        // Extraer valores únicos de Vereda_CZ
+        foreach ($rows as $row) {
+            $veredaValue = trim($row['Vereda_CZ'] ?? '');
+            if (!empty($veredaValue) && !in_array($veredaValue, $veredas)) {
+                $veredas[] = $veredaValue;
+            }
+        }
+
+        sort($veredas);
+        return $veredas;
+    }
+
+    /**
+     * Buscar columna de género con variaciones de nombre
+     */
+    public function findGenderColumn($headers)
+    {
+        $genderVariations = [
+            'genero', 'género', 'sexo', 'gender', 'sex',
+            'gen', 'genero_persona', 'género_persona'
+        ];
+
+        foreach ($headers as $header) {
+            $headerNormalized = $this->normalizeText($header);
+            foreach ($genderVariations as $variation) {
+                if (str_contains($headerNormalized, $variation)) {
+                    return $header;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Aplicar filtros a las filas de datos (para exportación)
+     */
+    private function applyFiltersToRows($rows, $headers, $activeFilters)
+    {
+        if (empty($activeFilters)) {
+            return $rows;
+        }
+
+        $filteredRows = [];
+
+        foreach ($rows as $row) {
+            $shouldInclude = true;
+
+            foreach ($activeFilters as $column => $values) {
+                if (!is_array($values) || empty($values)) {
+                    continue;
+                }
+
+                // Obtener el índice de la columna
+                $columnIndex = array_search($column, $headers);
+                if ($columnIndex === false) {
+                    continue;
+                }
+
+                // Para el filtro de género, usar la columna detectada
+                if ($column === 'Genero') {
+                    $genderColumn = $this->findGenderColumn($headers);
+                    if ($genderColumn) {
+                        $columnIndex = array_search($genderColumn, $headers);
+                    }
+                }
+
+                // Obtener el valor de la celda
+                $cellValue = '';
+                if (isset($row[$column])) {
+                    $cellValue = trim((string)$row[$column]);
+                }
+
+                // Verificar si el valor está en los filtros seleccionados
+                if (!in_array($cellValue, $values)) {
+                    $shouldInclude = false;
+                    break;
+                }
+            }
+
+            if ($shouldInclude) {
+                $filteredRows[] = $row;
+            }
+        }
+
+        return $filteredRows;
+    }
+
+    /**
+     * Aplicar filtro de búsqueda de texto a las filas de datos
+     */
+    private function applySearchFilter($rows, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $rows;
+        }
+
+        $searchTerm = strtolower(trim($searchTerm));
+        $filteredRows = [];
+
+        foreach ($rows as $row) {
+            $rowText = '';
+            foreach ($row as $value) {
+                $rowText .= ' ' . strtolower(trim((string)$value));
+            }
+
+            if (str_contains($rowText, $searchTerm)) {
+                $filteredRows[] = $row;
+            }
+        }
+
+        return $filteredRows;
+    }
+
+    public function exportExcel(Request $request, ProyectoProductivo $proyecto)
+    {
+        if (!$proyecto->data) {
+            return redirect()->back()->with('error', 'Este proyecto no tiene datos para exportar.');
+        }
+
+        // Preparar datos para Excel
+        $data = $proyecto->data;
+        if (is_string($data)) {
+            $data = json_decode($data, true);
+        }
+
+        if (!is_array($data) || !isset($data['headers']) || !isset($data['rows'])) {
+            return redirect()->back()->with('error', 'Los datos del proyecto no están en el formato correcto.');
+        }
+
+        $headers = $data['headers'];
+        $rows = $data['rows'];
+
+        // Aplicar filtros de columna si existen
+        $activeFilters = $request->get('filters', []);
+        if (!empty($activeFilters)) {
+            $rows = $this->applyFiltersToRows($rows, $headers, $activeFilters);
+        }
+
+        // Aplicar filtro de búsqueda de texto si existe
+        $searchTerm = $request->get('search', '');
+        if (!empty($searchTerm)) {
+            $rows = $this->applySearchFilter($rows, $searchTerm);
+        }
+
+        // Convertir filas asociativas a arrays indexados en el mismo orden que los headers
+        $processedRows = [];
+        foreach ($rows as $row) {
+            $processedRow = [];
+            foreach ($headers as $header) {
+                $processedRow[] = $row[$header] ?? '';
+            }
+            $processedRows[] = $processedRow;
+        }
+
+        // Crear nombre de archivo con indicador de filtros/búsqueda
+        $filterSuffix = (!empty($activeFilters) || !empty($searchTerm)) ? '_filtrado' : '';
+        $fileName = $proyecto->nombre . $filterSuffix . '_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new class($headers, $processedRows) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            private $headers;
+            private $rows;
+
+            public function __construct($headers, $rows)
+            {
+                $this->headers = $headers;
+                $this->rows = $rows;
+            }
+
+            public function headings(): array
+            {
+                return $this->headers;
+            }
+
+            public function array(): array
+            {
+                return $this->rows;
+            }
+        }, $fileName);
+    }
+
+    public function getProyectosExcel(Request $request)
+    {
+        $query = ProyectoProductivo::whereNotNull('data')
+            ->where('data->total_rows', '>', 0);
+
+        // Apply year filter if specified
+        if ($request->has('ano') && !empty($request->ano)) {
+            $query->where('ano', $request->ano);
+        }
+
+        $proyectos = $query->select('id', 'nombre', 'ano', 'data')
+            ->orderBy('ano', 'desc')
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($proyecto) {
+                $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+                return [
+                    'id' => $proyecto->id,
+                    'nombre' => $proyecto->nombre,
+                    'ano' => $proyecto->ano,
+                    'total_rows' => $data['total_rows'] ?? 0,
+                ];
+            });
+
+        return response()->json($proyectos);
+    }
+
+    public function getAniosDisponibles()
+    {
+        $anios = ProyectoProductivo::whereNotNull('data')
+            ->where('data->total_rows', '>', 0)
+            ->select('ano')
+            ->distinct()
+            ->orderBy('ano', 'desc')
+            ->pluck('ano')
+            ->filter()
+            ->values();
+
+        return response()->json($anios);
+    }
+
+    public function validarProyecto(Request $request, ProyectoProductivo $proyecto)
+    {
+        if (!$proyecto->data) {
+            return response()->json(['error' => 'Este proyecto no tiene datos Excel cargados.'], 404);
+        }
+
+        // OPTIMIZACIÓN: Crear mapas eficientes para búsquedas O(1) usando tabla dinámica
+        $caracterizacionMaps = $this->createCaracterizacionMaps();
+
+        // Obtener datos del proyecto
+        $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+        $rows = $data['rows'] ?? [];
+        $headers = $data['headers'] ?? [];
+
+        // Obtener parámetros manuales de selección de columnas
+        $manualDocumentColumn = $request->query('document_column');
+        $manualNameColumn = $request->query('name_column');
+
+        // Depuración: mostrar información del procesamiento
+        $debug = [
+            'total_rows' => count($rows),
+            'headers' => $headers,
+            'total_caracterizaciones_directas' => count($caracterizacionMaps['directos'] ?? []),
+            'total_caracterizaciones_familiares' => count($caracterizacionMaps['familiares'] ?? []),
+            'total_caracterizaciones_total' => count($caracterizacionMaps['directos'] ?? []) + count($caracterizacionMaps['familiares'] ?? []),
+            'manual_document_column' => $manualDocumentColumn,
+            'manual_name_column' => $manualNameColumn,
+        ];
+
+        $comparison = [];
+        $stats = ['total' => 0, 'valid' => 0, 'invalid' => 0];
+
+        // Usar columna manual si se especificó, sino detectar automáticamente
+        $documentColumnName = $manualDocumentColumn ?: $this->findDocumentColumn($headers, $rows);
+        $nameColumnName = $manualNameColumn ?: $this->findNameColumn($headers);
+
+        foreach ($rows as $rowIndex => $row) {
+            // IMPORTANTE: Los datos están guardados como arrays asociativos con nombres de columnas
+            // row es como: ['Documento' => '123456', 'Nombre' => 'Juan Pérez', ...]
+
+            if (!is_array($row)) continue;
+
+            // Obtener documento usando el nombre de columna encontrado
+            $documento = '';
+            if ($documentColumnName && isset($row[$documentColumnName])) {
+                $documento = trim((string)$row[$documentColumnName]);
+            }
+
+            // Si no encontró columna específica, intentar con la primera columna que parezca documento
+            if (empty($documento)) {
+                foreach ($row as $colName => $value) {
+                    $colNameLower = strtolower(trim($colName));
+                    $valueStr = trim((string)$value);
+                    // Si la columna parece ser de documento y el valor parece un número de documento
+                    if ((str_contains($colNameLower, 'doc') ||
+                         str_contains($colNameLower, 'ced') ||
+                         str_contains($colNameLower, 'id') ||
+                         is_numeric($valueStr)) &&
+                        strlen($valueStr) >= 6 && strlen($valueStr) <= 12) {
+                        $documento = $valueStr;
+                        break;
+                    }
+                }
+            }
+
+            if (empty($documento)) continue;
+
+            $stats['total']++;
+
+            // BÚSQUEDA OPTIMIZADA: Usar mapas para búsqueda O(1) en tabla dinámica
+            $caracterizacionInfo = $this->findCaracterizacionInfoOptimized($documento, $caracterizacionMaps);
+            $tieneCaracterizacion = $caracterizacionInfo !== null;
+
+            if ($tieneCaracterizacion) {
+                $stats['valid']++;
+            } else {
+                $stats['invalid']++;
+            }
+
+            // Obtener nombre completo
+            $nombreCompleto = '';
+            if ($nameColumnName && isset($row[$nameColumnName])) {
+                $nombreCompleto = trim((string)$row[$nameColumnName]);
+            }
+
+            // Si no hay nombre específico, intentar encontrar una columna que contenga nombre
+            if (empty($nombreCompleto)) {
+                foreach ($row as $colName => $value) {
+                    $colNameLower = strtolower(trim($colName));
+                    if (str_contains($colNameLower, 'nombre') ||
+                        str_contains($colNameLower, 'name') ||
+                        str_contains($colNameLower, 'persona')) {
+                        $nombreCompleto = trim((string)$value);
+                        break;
+                    }
+                }
+            }
+
+            // Si aún no hay nombre, combinar primeras columnas no numéricas
+            if (empty($nombreCompleto)) {
+                $possibleNameParts = [];
+                $colCount = 0;
+                foreach ($row as $colName => $value) {
+                    $valueStr = trim((string)$value);
+                    if (!is_numeric($valueStr) && !empty($valueStr) && $colCount < 3) {
+                        $possibleNameParts[] = $valueStr;
+                        $colCount++;
+                    }
+                }
+                $nombreCompleto = implode(' ', $possibleNameParts);
+            }
+
+            // Preparar información de caracterización usando datos de los mapas
+            $tipoCaracterizacion = null;
+            $detallesCaracterizacion = 'No tiene caracterización';
+
+            if ($tieneCaracterizacion) {
+                // Determinar si es caracterización directa o familiar
+                $mapaDirectos = $caracterizacionMaps['directos'] ?? [];
+                $mapaFamiliares = $caracterizacionMaps['familiares'] ?? [];
+
+                if (isset($mapaDirectos[$documento]) || (isset($mapaDirectos[(string)(int)$documento]) && is_numeric($documento))) {
+                    $tipoCaracterizacion = 'directa';
+                    $info = $mapaDirectos[$documento] ?? $mapaDirectos[(string)(int)$documento];
+                    $detallesCaracterizacion = $info['estado_caracterizacion'];
+                } elseif (isset($mapaFamiliares[$documento]) || (isset($mapaFamiliares[(string)(int)$documento]) && is_numeric($documento))) {
+                    $tipoCaracterizacion = 'familiar';
+                    $info = $mapaFamiliares[$documento] ?? $mapaFamiliares[(string)(int)$documento];
+                    $detallesCaracterizacion = $info['estado_caracterizacion'];
+                }
+            }
+
+            $comparison[] = [
+                'documento' => $documento,
+                'nombre_completo' => $nombreCompleto ?: 'No disponible',
+                'tiene_caracterizacion' => $tieneCaracterizacion,
+                'tipo_caracterizacion' => $tipoCaracterizacion,
+                'detalles_caracterizacion' => $detallesCaracterizacion,
+            ];
+        }
+
+        return response()->json([
+            'proyecto' => [
+                'id' => $proyecto->id,
+                'nombre' => $proyecto->nombre,
+                'ano' => $proyecto->ano,
+            ],
+            'stats' => $stats,
+            'comparison' => $comparison,
+            'debug' => $debug, // Información de depuración
+        ]);
+    }
+
+    /**
+     * Buscar columna de documento en los headers
+     * Implementa detección inteligente con múltiples estrategias
+     */
+    private function findDocumentColumn($headers, $rows)
+    {
+        // Estrategia 1: Buscar por nombres de columna específicos (prioridad alta)
+        $documentKeywords = [
+            // Alta prioridad - términos muy específicos colombianos
+            ['cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
+
+            // Media-alta prioridad - términos específicos
+            ['cédula', 'cedula', 'cc', 'ced'],
+
+            // Media prioridad - términos genéricos pero específicos para documentos
+            ['documento identidad', 'documento nacional', 'numero documento', 'número documento'],
+
+            // Baja prioridad - términos genéricos
+            ['documento', 'doc', 'id', 'identificación', 'identificacion', 'dni'],
+
+            // Menor prioridad - otros términos posibles
+            ['cedula', 'numero', 'número', 'identidad']
+        ];
+
+        // Buscar por nombre de columna primero, validando contenido
+        foreach ($documentKeywords as $priorityGroup) {
+            foreach ($headers as $header) {
+                $headerNormalized = $this->normalizeText($header);
+                foreach ($priorityGroup as $keyword) {
+                    if (str_contains($headerNormalized, $keyword)) {
+                        if ($this->validateDocumentColumn($header, $rows)) {
+                            return $header;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Estrategia 2: Buscar por patrones comunes en nombres de columna
+        $patternMatches = [
+            '/^(doc|documento|cedula|ced|id)\d*$/i',
+            '/^(numero|número)\s*(doc|documento|cedula|ced|id)/i',
+            '/^(cc|cedula)\s*(de)?\s*(ciudadania|ciudadanía)?$/i'
+        ];
+
+        foreach ($headers as $header) {
+            $headerNormalized = $this->normalizeText($header);
+            foreach ($patternMatches as $pattern) {
+                if (preg_match($pattern, $headerNormalized)) {
+                    if ($this->validateDocumentColumn($header, $rows)) {
+                        return $header;
+                    }
+                }
+            }
+        }
+
+        // Estrategia 3: Búsqueda por contenido puro (último recurso)
+        foreach ($headers as $header) {
+            if ($this->validateDocumentColumn($header, $rows)) {
+                return $header;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Validar que una columna contenga números de documento válidos
+     */
+    private function validateDocumentColumn($columnName, $rows)
+    {
+        if (empty($rows)) return false;
+
+        $validCount = 0;
+        $totalChecked = 0;
+        $maxToCheck = min(20, count($rows)); // Revisar máximo 20 filas para validación
+
+        for ($i = 0; $i < $maxToCheck; $i++) {
+            if (!isset($rows[$i][$columnName])) continue;
+
+            $value = trim((string)$rows[$i][$columnName]);
+            $totalChecked++;
+
+            // Validar que sea un número de documento válido
+            if ($this->isValidDocumentNumber($value)) {
+                $validCount++;
+            }
+        }
+
+        if ($totalChecked === 0) return false;
+
+        // La columna es válida si al menos 60% de los valores son documentos válidos
+        $validPercentage = ($validCount / $totalChecked) * 100;
+        return $validPercentage >= 60;
+    }
+
+    /**
+     * Verificar si un valor parece ser un número de documento válido
+     */
+    private function isValidDocumentNumber($value)
+    {
+        // Debe ser numérico
+        if (!is_numeric($value)) return false;
+
+        // Longitud típica para documentos colombianos (6-12 dígitos)
+        $length = strlen((string)$value);
+        if ($length < 6 || $length > 12) return false;
+
+        // No debe ser un número muy pequeño (probablemente no es un documento)
+        $numValue = (int)$value;
+        if ($numValue < 100000) return false; // Documentos suelen ser mayores
+
+        return true;
+    }
+
+    /**
+     * Normalizar texto para búsqueda (quitar acentos, convertir a minúsculas, etc.)
+     */
+    private function normalizeText($text)
+    {
+        // Convertir a minúsculas
+        $text = strtolower(trim($text));
+
+        // Reemplazar caracteres con acentos
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c'
+        ];
+
+        $text = str_replace(array_keys($replacements), array_values($replacements), $text);
+
+        // Reemplazar múltiples espacios por uno solo
+        $text = preg_replace('/\s+/', ' ', $text);
+
+        // Quitar caracteres especiales pero mantener letras, números y espacios
+        $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
+
+        return trim($text);
+    }
+
+    /**
+     * Buscar columna de nombre en los headers
+     */
+    private function findNameColumn($headers)
+    {
+        $nameKeywords = [
+            'nombre', 'name', 'persona', 'beneficiario', 'beneficiaria',
+            'primer nombre', 'primer apellido', 'segundo apellido'
+        ];
+
+        foreach ($headers as $header) {
+            $headerLower = strtolower(trim($header));
+            foreach ($nameKeywords as $keyword) {
+                if (str_contains($headerLower, $keyword)) {
+                    return $header;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getProyectosParaComparar(Request $request)
+    {
+        $query = ProyectoProductivo::whereNotNull('data')
+            ->where('data->total_rows', '>', 0);
+
+        // Apply year filter if specified
+        if ($request->has('ano') && !empty($request->ano)) {
+            $query->where('ano', $request->ano);
+        }
+
+        // Exclude base project if specified
+        if ($request->has('exclude_base') && !empty($request->exclude_base)) {
+            $query->where('id', '!=', $request->exclude_base);
+        }
+
+        $proyectos = $query->select('id', 'nombre', 'ano', 'data')
+            ->orderBy('ano', 'desc')
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($proyecto) {
+                $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+                return [
+                    'id' => $proyecto->id,
+                    'nombre' => $proyecto->nombre,
+                    'ano' => $proyecto->ano,
+                    'total_rows' => $data['total_rows'] ?? 0,
+                ];
+            });
+
+        return response()->json($proyectos);
+    }
+
+    public function compararProyecto(Request $request, ProyectoProductivo $proyecto)
+    {
+        if (!$proyecto->data) {
+            return response()->json(['error' => 'Este proyecto no tiene datos Excel cargados.'], 404);
+        }
+
+        // Obtener parámetros
+        $comparisonProjectIds = $request->query('proyectos_comparacion');
+        $manualDocumentColumn = $request->query('document_column');
+        $manualNameColumn = $request->query('name_column');
+
+        // Convertir string de IDs separados por coma a array
+        $selectedProjectIds = [];
+        if ($comparisonProjectIds) {
+            $selectedProjectIds = explode(',', $comparisonProjectIds);
+            $selectedProjectIds = array_map('intval', array_filter($selectedProjectIds));
+        }
+
+        if (empty($selectedProjectIds)) {
+            return response()->json(['error' => 'Debe seleccionar al menos un proyecto para comparar.'], 400);
+        }
+
+        // Obtener datos del proyecto base
+        $baseData = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+        $baseRows = $baseData['rows'] ?? [];
+        $baseHeaders = $baseData['headers'] ?? [];
+
+        // Encontrar columnas del proyecto base
+        $documentColumnName = $manualDocumentColumn ?: $this->findDocumentColumn($baseHeaders, $baseRows);
+        $nameColumnName = $manualNameColumn ?: $this->findNameColumn($baseHeaders);
+
+        // Extraer documentos del proyecto base
+        $baseDocuments = [];
+        foreach ($baseRows as $row) {
+            if (!is_array($row)) continue;
+
+            $documento = '';
+            if ($documentColumnName && isset($row[$documentColumnName])) {
+                $documento = trim((string)$row[$documentColumnName]);
+            }
+
+            if (empty($documento)) continue;
+
+            $nombreCompleto = '';
+            if ($nameColumnName && isset($row[$nameColumnName])) {
+                $nombreCompleto = trim((string)$row[$nameColumnName]);
+            }
+
+            $baseDocuments[$documento] = [
+                'documento' => $documento,
+                'nombre_completo' => $nombreCompleto ?: 'No disponible',
+                'base_row' => $row,
+                'proyectos_encontrados' => []
+            ];
+        }
+
+        // Buscar proyectos específicos para comparación
+        // Nota: Permitimos comparar un proyecto consigo mismo para testing y casos donde sea necesario
+        $comparisonProjects = ProyectoProductivo::whereIn('id', $selectedProjectIds)
+            ->whereNotNull('data')
+            ->where('data->total_rows', '>', 0)
+            ->get();
+
+        $stats = [
+            'total_personas_base' => count($baseDocuments),
+            'total_proyectos_comparacion' => $comparisonProjects->count(),
+            'personas_con_multiples_proyectos' => 0,
+            'total_coincidencias' => 0
+        ];
+
+        $results = [];
+
+        // Para cada documento del proyecto base, buscar en otros proyectos
+        foreach ($baseDocuments as $documento => $basePerson) {
+            $proyectosEncontrados = [];
+
+            foreach ($comparisonProjects as $compProject) {
+                $compData = is_string($compProject->data) ? json_decode($compProject->data, true) : $compProject->data;
+                $compRows = $compData['rows'] ?? [];
+                $compHeaders = $compData['headers'] ?? [];
+
+                // Buscar el documento en este proyecto de comparación usando múltiples estrategias
+                $foundInProject = false;
+                $matchingRow = null;
+
+                foreach ($compRows as $compRow) {
+                    if (!is_array($compRow)) continue;
+
+                    // Estrategia 1: Buscar por la columna detectada en el proyecto base
+                    $compDocumento = '';
+                    if ($documentColumnName && isset($compRow[$documentColumnName])) {
+                        $compDocumento = trim((string)$compRow[$documentColumnName]);
+                        if ($compDocumento === $documento) {
+                            $foundInProject = true;
+                            $matchingRow = $compRow;
+                            break;
+                        }
+                    }
+
+                    // Estrategia 2: Buscar en todas las columnas por contenido que coincida
+                    if (!$foundInProject) {
+                        foreach ($compRow as $colName => $value) {
+                            $valueStr = trim((string)$value);
+
+                            // Si el valor coincide exactamente con el documento buscado
+                            if ($valueStr === $documento) {
+                                $foundInProject = true;
+                                $matchingRow = $compRow;
+                                break 2; // Salir del bucle interno y externo
+                            }
+
+                            // Si el valor parece ser un documento y coincide numéricamente
+                            if (is_numeric($valueStr) && is_numeric($documento) &&
+                                (int)$valueStr === (int)$documento) {
+                                $foundInProject = true;
+                                $matchingRow = $compRow;
+                                break 2; // Salir del bucle interno y externo
+                            }
+                        }
+                    }
+
+                    // Estrategia 3: Buscar por columnas que contengan términos relacionados con documentos
+                    if (!$foundInProject) {
+                        foreach ($compHeaders as $header) {
+                            $headerNormalized = $this->normalizeText($header);
+                            $isDocumentColumn = false;
+
+                            // Verificar si esta columna parece contener documentos
+                            $documentIndicators = ['doc', 'ced', 'cedula', 'documento', 'id', 'numero'];
+                            foreach ($documentIndicators as $indicator) {
+                                if (str_contains($headerNormalized, $indicator)) {
+                                    $isDocumentColumn = true;
+                                    break;
+                                }
+                            }
+
+                            if ($isDocumentColumn && isset($compRow[$header])) {
+                                $valueStr = trim((string)$compRow[$header]);
+                                if ($valueStr === $documento ||
+                                    (is_numeric($valueStr) && is_numeric($documento) && (int)$valueStr === (int)$documento)) {
+                                    $foundInProject = true;
+                                    $matchingRow = $compRow;
+                                    break 2; // Salir del bucle interno y externo
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ($foundInProject && $matchingRow) {
+                    $proyectosEncontrados[] = [
+                        'proyecto' => [
+                            'id' => $compProject->id,
+                            'nombre' => $compProject->nombre,
+                            'ano' => $compProject->ano,
+                        ],
+                        'row_data' => $matchingRow,
+                        'headers' => $compHeaders
+                    ];
+                    $stats['total_coincidencias']++;
+                }
+            }
+
+            // Filtrar proyectos adicionales (excluyendo el proyecto base si está incluido)
+            $proyectosAdicionales = array_filter($proyectosEncontrados, function($encontrado) use ($proyecto) {
+                return $encontrado['proyecto']['id'] != $proyecto->id;
+            });
+
+            // Contar en estadísticas solo personas con 2 o más proyectos adicionales (3+ proyectos totales)
+            if (count($proyectosAdicionales) >= 2) {
+                $stats['personas_con_multiples_proyectos']++;
+            }
+
+            // Incluir en resultados todas las personas con al menos 1 proyecto adicional (2+ proyectos totales)
+            if (!empty($proyectosAdicionales)) {
+                $results[] = [
+                    'documento' => $documento,
+                    'nombre_completo' => $basePerson['nombre_completo'],
+                    'base_proyecto' => [
+                        'id' => $proyecto->id,
+                        'nombre' => $proyecto->nombre,
+                        'ano' => $proyecto->ano,
+                    ],
+                    'base_row_data' => $basePerson['base_row'],
+                    'base_headers' => $baseHeaders,
+                    'proyectos_encontrados' => $proyectosAdicionales,
+                    'total_proyectos_adicionales' => count($proyectosAdicionales)
+                ];
+            }
+        }
+
+        // Ordenar resultados por número de proyectos encontrados (descendente)
+        usort($results, function($a, $b) {
+            return $b['total_proyectos_adicionales'] <=> $a['total_proyectos_adicionales'];
+        });
+
+        // Recopilar información de debugging adicional
+        $debugInfo = [
+            'proyectos_comparacion_ids' => $selectedProjectIds,
+            'total_proyectos_comparados' => $comparisonProjects->count(),
+            'document_column' => $documentColumnName,
+            'name_column' => $nameColumnName,
+            'base_headers' => $baseHeaders,
+            'total_documentos_base' => count($baseDocuments),
+            'documentos_base_muestra' => array_slice(array_keys($baseDocuments), 0, 5),
+            'proyectos_comparados' => $comparisonProjects->map(function($p) {
+                return ['id' => $p->id, 'nombre' => $p->nombre, 'filas' => count($p->data['rows'] ?? [])];
+            })->toArray(),
+        ];
+
+        return response()->json([
+            'proyecto_base' => [
+                'id' => $proyecto->id,
+                'nombre' => $proyecto->nombre,
+                'ano' => $proyecto->ano,
+            ],
+            'stats' => $stats,
+            'results' => $results,
+            'debug' => $debugInfo
+        ]);
+    }
+
+    /**
+     * Agregar columnas automáticas de caracterización a los datos del Excel
+     */
+    protected function addAutomaticColumns(&$headers, &$rows, $currentYear)
+    {
+        // Verificar y agregar las nuevas columnas a los headers solo si no existen
+        $automaticColumns = ['Estado_Caracterizacion', 'Corregimiento_CZ', 'Vereda_CZ', 'Proyectos_Anteriores'];
+
+        foreach ($automaticColumns as $column) {
+            if (!in_array($column, $headers)) {
+                $headers[] = $column;
+            }
+        }
+
+        // Encontrar columna de documento
+        $documentColumn = $this->findDocumentColumn($headers, $rows);
+
+        // OPTIMIZACIÓN: Crear mapas eficientes para búsquedas O(1)
+        $caracterizacionMaps = $this->createCaracterizacionMaps();
+
+        // Obtener proyectos del año inmediatamente anterior (optimizado)
+        $proyectosAnteriores = ProyectoProductivo::where('ano', $currentYear - 1)
+            ->whereNotNull('data')
+            ->where('data->total_rows', '>', 0)
+            ->get();
+
+        // Crear mapa de documentos por proyecto anterior (optimizado)
+        $documentosPorProyecto = [];
+        foreach ($proyectosAnteriores as $proyecto) {
+            $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+            $proyectoRows = $data['rows'] ?? [];
+
+            $proyectoDocumentos = [];
+            foreach ($proyectoRows as $row) {
+                if (!is_array($row)) continue;
+
+                $documento = '';
+                if ($documentColumn && isset($row[$documentColumn])) {
+                    $documento = trim((string)$row[$documentColumn]);
+                }
+
+                if (!empty($documento)) {
+                    $proyectoDocumentos[] = $documento;
+                }
+            }
+
+            $documentosPorProyecto[$proyecto->id] = [
+                'nombre' => $proyecto->nombre,
+                'ano' => $proyecto->ano,
+                'documentos' => $proyectoDocumentos
+            ];
+        }
+
+        // Procesar cada fila para agregar información automática (OPTIMIZADO)
+        foreach ($rows as &$row) {
+            $documento = '';
+            if ($documentColumn && isset($row[$documentColumn])) {
+                $documento = trim((string)$row[$documentColumn]);
+            }
+
+            if (empty($documento)) {
+                // Si no hay documento, dejar columnas vacías
+                $row['Estado_Caracterizacion'] = '';
+                $row['Corregimiento_CZ'] = '';
+                $row['Vereda_CZ'] = '';
+                $row['Proyectos_Anteriores'] = '';
+                continue;
+            }
+
+            // BÚSQUEDA OPTIMIZADA: Usar mapas para búsqueda O(1)
+            $caracterizacionInfo = $this->findCaracterizacionInfoOptimized($documento, $caracterizacionMaps);
+
+            if ($caracterizacionInfo) {
+                // Tiene caracterización - usar la información de los mapas optimizados
+                $row['Estado_Caracterizacion'] = $caracterizacionInfo['estado_caracterizacion'];
+                $row['Corregimiento_CZ'] = $caracterizacionInfo['corregimiento_cz'];
+                $row['Vereda_CZ'] = $caracterizacionInfo['vereda_cz'];
+            } else {
+                // No tiene caracterización
+                $row['Estado_Caracterizacion'] = 'NO TIENE CZ';
+                $row['Corregimiento_CZ'] = '';
+                $row['Vereda_CZ'] = '';
+            }
+
+            // Buscar proyectos anteriores donde aparece este documento
+            $proyectosEncontrados = [];
+            foreach ($documentosPorProyecto as $proyectoId => $proyectoData) {
+                if (in_array($documento, $proyectoData['documentos'])) {
+                    $proyectosEncontrados[] = "Recibió en {$proyectoData['nombre']} el año {$proyectoData['ano']}";
+                }
+            }
+
+            $row['Proyectos_Anteriores'] = !empty($proyectosEncontrados) ? implode('; ', $proyectosEncontrados) : '';
+        }
+    }
+
+    /**
+     * Crear mapas optimizados para búsquedas O(1) de caracterización
+     */
+    private function createCaracterizacionMaps()
+    {
+        $caracterizacionData = $this->getCaracterizacionData();
+        $rows = $caracterizacionData['rows'] ?? [];
+        $headers = $caracterizacionData['headers'] ?? [];
+
+        // Encontrar columna de documento para caracterizaciones
+        $documentColumn = $this->findDocumentColumn($headers, $rows);
+
+        if (!$documentColumn) {
+            return [
+                'directos' => [],
+                'familiares' => []
+            ];
+        }
+
+        $mapaDirectos = []; // documento => info caracterización
+        $mapaFamiliares = []; // documento => info caracterización del principal
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) continue;
+
+            $documento = '';
+            if (isset($row[$documentColumn])) {
+                $documento = trim((string)$row[$documentColumn]);
+            }
+
+            if (empty($documento)) continue;
+
+            // Extraer información de corregimiento y vereda
+            $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+            $veredaValue = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz', 'Vereda', 'Vereda_CZ']);
+
+            // Extraer información de familiares
+            $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
+
+            // Obtener nombre del principal
+            $principalNombre = $this->findColumnValue($row, $headers, ['nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+            if (empty($principalNombre)) {
+                $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
+                $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
+                $segundoApellido = $this->findColumnValue($row, $headers, ['segundo apellido', 'Segundo Apellido']);
+                $partesNombre = array_filter([$primerNombre, $primerApellido, $segundoApellido]);
+                $principalNombre = implode(' ', $partesNombre);
+            }
+
+            // Obtener tipo de documento del principal
+            $principalTipoDocumento = $this->findColumnValue($row, $headers, ['tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
+
+            // Construir el string de estado para caracterización directa
+            $estadoCaracterizacionDirecta = 'Si';
+            if (!empty($familiaresInfo)) {
+                $familiaresString = implode(', ', array_map(function($familiar) {
+                    return "{$familiar['nombre']}, {$familiar['tipo']}, {$familiar['numero']}";
+                }, $familiaresInfo));
+                $estadoCaracterizacionDirecta .= ', ' . $familiaresString;
+            }
+
+            // Agregar al mapa de caracterizaciones directas
+            $mapaDirectos[$documento] = [
+                'estado_caracterizacion' => $estadoCaracterizacionDirecta,
+                'corregimiento_cz' => $corregimientoValue,
+                'vereda_cz' => $veredaValue,
+                'principal_nombre' => $principalNombre,
+                'principal_tipo_documento' => $principalTipoDocumento,
+                'principal_documento' => $documento,
+                'familiares' => $familiaresInfo
+            ];
+
+            // Agregar cada familiar al mapa de familiares (indexado por documento del familiar)
+            foreach ($familiaresInfo as $familiar) {
+                $familiarDocumento = trim($familiar['numero']);
+                if (!empty($familiarDocumento)) {
+                    // Construir mensaje para familiar
+                    $estadoCaracterizacionFamiliar = 'Si, P NF de ' . $principalNombre;
+                    if (!empty($principalTipoDocumento)) {
+                        $estadoCaracterizacionFamiliar .= ' ' . $principalTipoDocumento;
+                    }
+                    if (!empty($documento)) {
+                        $estadoCaracterizacionFamiliar .= ' ' . $documento;
+                    }
+
+                    // Agregar información de TODOS los familiares
+                    if (!empty($familiaresInfo)) {
+                        $familiaresString = implode(', ', array_map(function($familiar) {
+                            return "{$familiar['nombre']} {$familiar['tipo']} {$familiar['numero']}";
+                        }, $familiaresInfo));
+                        $estadoCaracterizacionFamiliar .= ',' . $familiaresString;
+                    }
+
+                    $mapaFamiliares[$familiarDocumento] = [
+                        'estado_caracterizacion' => $estadoCaracterizacionFamiliar,
+                        'corregimiento_cz' => $corregimientoValue,
+                        'vereda_cz' => $veredaValue,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'directos' => $mapaDirectos,
+            'familiares' => $mapaFamiliares
+        ];
+    }
+
+    /**
+     * Buscar información de caracterización usando mapas optimizados (O(1))
+     */
+    private function findCaracterizacionInfoOptimized($documento, $caracterizacionMaps)
+    {
+        $mapaDirectos = $caracterizacionMaps['directos'] ?? [];
+        $mapaFamiliares = $caracterizacionMaps['familiares'] ?? [];
+
+        // Normalizar documento para comparación
+        $documentoNormalizado = trim((string)$documento);
+
+        // Primero buscar en caracterizaciones directas
+        if (isset($mapaDirectos[$documentoNormalizado])) {
+            return $mapaDirectos[$documentoNormalizado];
+        }
+
+        // Si no está en directas, buscar en familiares
+        if (isset($mapaFamiliares[$documentoNormalizado])) {
+            return $mapaFamiliares[$documentoNormalizado];
+        }
+
+        // Si no se encuentra, intentar con comparación numérica
+        foreach ($mapaDirectos as $doc => $info) {
+            if (is_numeric($doc) && is_numeric($documentoNormalizado) && (int)$doc === (int)$documentoNormalizado) {
+                return $info;
+            }
+        }
+
+        foreach ($mapaFamiliares as $doc => $info) {
+            if (is_numeric($doc) && is_numeric($documentoNormalizado) && (int)$doc === (int)$documentoNormalizado) {
+                return $info;
+            }
+        }
+
+        return null; // No encontrado
+    }
+
+    /**
+     * Obtener datos de caracterización dinámica (Base de Datos de Caracterizaciones - ID=1)
+     */
+    private function getCaracterizacionData()
+    {
+        $caracterizacion = \App\Models\Caracterizacion::find(1);
+
+        if (!$caracterizacion || !$caracterizacion->data) {
+            return ['rows' => [], 'headers' => []];
+        }
+
+        $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
+
+        return [
+            'rows' => $data['rows'] ?? [],
+            'headers' => $data['headers'] ?? []
+        ];
+    }
+
+    /**
+     * Buscar información de caracterización en los datos dinámicos
+     */
+    private function findCaracterizacionInfo($documento, $caracterizacionData)
+    {
+        $rows = $caracterizacionData['rows'] ?? [];
+        $headers = $caracterizacionData['headers'] ?? [];
+
+        // Buscar columna de documento en caracterización
+        $documentColumn = $this->findDocumentColumn($headers, $rows);
+
+        if (!$documentColumn) {
+            return null;
+        }
+
+        // PRIMERA BÚSQUEDA: Documento directo (persona caracterizada)
+        foreach ($rows as $row) {
+            if (!is_array($row)) continue;
+
+            $rowDocumento = '';
+            if (isset($row[$documentColumn])) {
+                $rowDocumento = trim((string)$row[$documentColumn]);
+            }
+
+            // Comparar documentos (exacto o numérico)
+            if ($rowDocumento === $documento ||
+                (is_numeric($rowDocumento) && is_numeric($documento) && (int)$rowDocumento === (int)$documento)) {
+
+                // Encontramos el documento directo, extraer información de corregimiento y vereda
+                $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $veredaValue = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz', 'Vereda', 'Vereda_CZ']);
+
+                // Extraer información de familiares
+                $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
+
+                // Construir el string de estado con información de familiares
+                $estadoCaracterizacion = 'Si hola';
+                if (!empty($familiaresInfo)) {
+                    $familiaresString = implode(' , ', array_map(function($familiar) {
+                        return "{$familiar['nombre']} {$familiar['tipo']} {$familiar['numero']}";
+                    }, $familiaresInfo));
+                    $estadoCaracterizacion .= ' , ' . $familiaresString;
+                }
+
+                return [
+                    'estado_caracterizacion' => $estadoCaracterizacion,
+                    'corregimiento_cz' => $corregimientoValue,
+                    'vereda_cz' => $veredaValue,
+                ];
+            }
+        }
+
+        // SEGUNDA BÚSQUEDA: Si no encontró coincidencia directa, buscar en familiares
+        foreach ($rows as $row) {
+            if (!is_array($row)) continue;
+
+            // Extraer información de familiares de esta fila
+            $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
+
+            // Verificar si el documento buscado está entre los familiares
+            foreach ($familiaresInfo as $familiar) {
+                $familiarDocumento = trim($familiar['numero']);
+                if (!empty($familiarDocumento) &&
+                    ($familiarDocumento === $documento ||
+                     (is_numeric($familiarDocumento) && is_numeric($documento) && (int)$familiarDocumento === (int)$documento))) {
+
+                    // ¡Encontrado como familiar! Obtener información del caracterizado principal
+                    $principalDocumento = '';
+                    if (isset($row[$documentColumn])) {
+                        $principalDocumento = trim((string)$row[$documentColumn]);
+                    }
+
+                    // Obtener nombre del principal (persona caracterizada)
+                    $principalNombre = $this->findColumnValue($row, $headers, ['nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+                    if (empty($principalNombre)) {
+                        // Intentar combinar nombre y apellidos
+                        $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
+                        $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
+                        $segundoApellido = $this->findColumnValue($row, $headers, ['segundo apellido', 'Segundo Apellido']);
+                        $partesNombre = array_filter([$primerNombre, $primerApellido, $segundoApellido]);
+                        $principalNombre = implode(' ', $partesNombre);
+                    }
+
+                    // Obtener tipo de documento del principal
+                    $principalTipoDocumento = $this->findColumnValue($row, $headers, ['tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
+
+                    // Extraer información de corregimiento y vereda
+                    $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                    $veredaValue = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz', 'Vereda', 'Vereda_CZ']);
+
+                    // Construir mensaje: pertenece al núcleo familiar del principal, con info de todos los familiares
+                    $estadoCaracterizacion = 'Si, pertenece al nucleo familiar de ' . $principalNombre;
+                    if (!empty($principalTipoDocumento)) {
+                        $estadoCaracterizacion .= ', ' . $principalTipoDocumento;
+                    }
+                    if (!empty($principalDocumento)) {
+                        $estadoCaracterizacion .= ', ' . $principalDocumento;
+                    }
+
+                    // Agregar información de TODOS los familiares
+                    if (!empty($familiaresInfo)) {
+                        $familiaresString = implode(', ', array_map(function($familiar) {
+                            return "{$familiar['nombre']}, {$familiar['tipo']}, {$familiar['numero']}";
+                        }, $familiaresInfo));
+                        $estadoCaracterizacion .= ', ' . $familiaresString;
+                    }
+
+                    return [
+                        'estado_caracterizacion' => $estadoCaracterizacion,
+                        'corregimiento_cz' => $corregimientoValue,
+                        'vereda_cz' => $veredaValue,
+                    ];
+                }
+            }
+        }
+
+        return null; // No encontrado ni directo ni como familiar
+    }
+
+    /**
+     * Extraer información de familiares de la fila de caracterización
+     */
+    private function extractFamiliaresInfo($row, $headers)
+    {
+        $familiares = [];
+
+        // Buscar columnas que contengan información de familiares usando los patrones específicos
+        $familiaresData = [];
+
+        foreach ($headers as $header) {
+            $headerNormalized = $this->normalizeText($header);
+
+            // Buscar columnas de nombre de familiar: "Nombres y apellidos familiar X"
+            if (preg_match('/nombres y apellidos familiar (\d+)/i', $headerNormalized, $matches)) {
+                $index = $matches[1];
+                $value = trim((string)($row[$header] ?? ''));
+                if (!isset($familiaresData[$index])) {
+                    $familiaresData[$index] = [];
+                }
+                $familiaresData[$index]['nombre'] = $value;
+            }
+
+            // Buscar columnas de tipo de documento: "Tipo de documento de identidad" o "Tipo de documento de identidadX"
+            elseif (preg_match('/tipo de documento de identidad(\d*)/i', $headerNormalized, $matches)) {
+                $index = $matches[1] ?: 1; // Si no tiene número, asumir 1
+                $value = trim((string)($row[$header] ?? ''));
+                if (!isset($familiaresData[$index])) {
+                    $familiaresData[$index] = [];
+                }
+                $familiaresData[$index]['tipo'] = $value;
+            }
+
+            // Buscar columnas de número de documento: "Número de documento de identidad (sin puntos ni comas)" o con número
+            elseif (preg_match('/numero.*documento.*identidad\D*(\d*)$/i', $headerNormalized, $matches)) {
+                $index = $matches[1] ?: 1; // Si no tiene número, asumir 1
+                $value = trim((string)($row[$header] ?? ''));
+                if (!isset($familiaresData[$index])) {
+                    $familiaresData[$index] = [];
+                }
+                $familiaresData[$index]['numero'] = $value;
+            }
+        }
+
+        // Filtrar familiares que tengan al menos nombre (solo incluir índices >= 1 para familiares)
+        foreach ($familiaresData as $index => $familiar) {
+            if ($index >= 1 && !empty($familiar['nombre']) &&
+                (!empty($familiar['tipo']) || !empty($familiar['numero']))) {
+                $familiares[] = [
+                    'nombre' => $familiar['nombre'],
+                    'tipo' => $familiar['tipo'] ?? '',
+                    'numero' => $familiar['numero'] ?? ''
+                ];
+            }
+        }
+
+        return $familiares;
+    }
+
+    /**
+     * Buscar valor de columna usando múltiples nombres posibles
+     */
+    private function findColumnValue($row, $headers, $possibleNames)
+    {
+        foreach ($possibleNames as $name) {
+            if (in_array($name, $headers) && isset($row[$name])) {
+                $value = trim((string)$row[$name]);
+                if (!empty($value)) {
+                    return $value;
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Actualizar las columnas automáticas de un proyecto específico (método público para comandos)
+     */
+    public function updateAutomaticColumns(ProyectoProductivo $proyecto)
+    {
+        if (!$proyecto->data) {
+            return false;
+        }
+
+        try {
+            // Obtener datos actuales
+            $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
+
+            if (!isset($data['rows']) || !isset($data['headers'])) {
+                return false;
+            }
+
+            $rows = $data['rows'];
+            $headers = $data['headers'];
+
+            // Llamar al método protegido para recalcular
+            $this->addAutomaticColumns($headers, $rows, $proyecto->ano);
+
+            // Actualizar los datos en el proyecto
+            $data['rows'] = $rows;
+            $data['headers'] = $headers;
+            $data['updated_automatic_columns_at'] = now()->toISOString();
+
+            $proyecto->update([
+                'data' => $data
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error actualizando columnas automáticas del proyecto {$proyecto->id}: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+    /**
+     * Método para actualizar columnas automáticas vía POST (para botón manual)
+     */
+    public function updateAutomaticColumnsPost(ProyectoProductivo $proyecto)
+    {
+        try {
+            $updated = $this->updateAutomaticColumns($proyecto);
+
+            if ($updated) {
+                return redirect()->back()->with('success', 'Columnas automáticas actualizadas correctamente.');
+            } else {
+                return redirect()->back()->with('error', 'Error al actualizar las columnas automáticas.');
+            }
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error interno al actualizar las columnas: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Método para actualizar columnas automáticas de todos los proyectos
+     */
+    public function updateAllProjectsColumns()
+    {
+        try {
+            $proyectos = ProyectoProductivo::whereNotNull('data')
+                ->where('data->total_rows', '>', 0)
+                ->get();
+
+            $updated = 0;
+            $errors = 0;
+
+            foreach($proyectos as $proyecto) {
+                $result = $this->updateAutomaticColumns($proyecto);
+                if ($result) {
+                    $updated++;
+                } else {
+                    $errors++;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Actualización completada',
+                'total_proyectos' => $proyectos->count(),
+                'actualizados' => $updated,
+                'errores' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Obtener columnas de referencia para el formulario manual
+     */
+    private function getColumnasReferencia()
+    {
+        // Intentar obtener columnas de un proyecto existente
+        $proyectoExistente = ProyectoProductivo::whereNotNull('data')
+            ->where('data->total_rows', '>', 0)
+            ->latest()
+            ->first();
+
+        if ($proyectoExistente) {
+            $data = is_string($proyectoExistente->data) ? json_decode($proyectoExistente->data, true) : $proyectoExistente->data;
+            $headers = $data['headers'] ?? [];
+
+            if (!empty($headers)) {
+                // Preparar información de tipos de campos para cada columna
+                $columnas = [];
+                foreach ($headers as $header) {
+                    $columnas[] = [
+                        'nombre' => $header,
+                        'tipo' => $this->inferirTipoCampo($header),
+                        'requerido' => $this->esCampoRequerido($header)
+                    ];
+                }
+                return $columnas;
+            }
+        }
+
+        // Columnas por defecto si no hay proyectos existentes
+        return [
+            ['nombre' => 'Documento', 'tipo' => 'number', 'requerido' => true],
+            ['nombre' => 'Nombre Completo', 'tipo' => 'text', 'requerido' => true],
+            ['nombre' => 'Fecha Nacimiento', 'tipo' => 'date', 'requerido' => false],
+            ['nombre' => 'Género', 'tipo' => 'select', 'requerido' => false, 'opciones' => ['Masculino', 'Femenino']],
+            ['nombre' => 'Dirección', 'tipo' => 'text', 'requerido' => false],
+            ['nombre' => 'Teléfono', 'tipo' => 'tel', 'requerido' => false],
+            ['nombre' => 'Correo', 'tipo' => 'email', 'requerido' => false],
+        ];
+    }
+
+    /**
+     * Inferir el tipo de campo basado en el nombre de la columna
+     */
+    private function inferirTipoCampo($nombreColumna)
+    {
+        $nombreLower = strtolower($nombreColumna);
+
+        // Tipos basados en palabras clave
+        if (str_contains($nombreLower, 'fecha') || str_contains($nombreLower, 'nacimiento') || str_contains($nombreLower, 'date')) {
+            return 'date';
+        }
+
+        if (str_contains($nombreLower, 'documento') || str_contains($nombreLower, 'cedula') || str_contains($nombreLower, 'doc') ||
+            str_contains($nombreLower, 'numero') || str_contains($nombreLower, 'id')) {
+            return 'number';
+        }
+
+        if (str_contains($nombreLower, 'correo') || str_contains($nombreLower, 'email') || str_contains($nombreLower, 'mail')) {
+            return 'email';
+        }
+
+        if (str_contains($nombreLower, 'telefono') || str_contains($nombreLower, 'tel') || str_contains($nombreLower, 'celular') ||
+            str_contains($nombreLower, 'movil') || str_contains($nombreLower, 'phone')) {
+            return 'tel';
+        }
+
+        if (str_contains($nombreLower, 'genero') || str_contains($nombreLower, 'sexo') || str_contains($nombreLower, 'gender') ||
+            str_contains($nombreLower, 'tipo') || str_contains($nombreLower, 'categoria')) {
+            return 'select';
+        }
+
+        // Por defecto texto
+        return 'text';
+    }
+
+    /**
+     * Determinar si un campo es requerido basado en el nombre
+     */
+    private function esCampoRequerido($nombreColumna)
+    {
+        $nombreLower = strtolower($nombreColumna);
+        $camposRequeridos = ['documento', 'cedula', 'nombre', 'name', 'doc'];
+
+        foreach ($camposRequeridos as $campo) {
+            if (str_contains($nombreLower, $campo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

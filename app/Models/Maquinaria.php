@@ -18,6 +18,7 @@ class Maquinaria extends Model
         'pertenece_asociacion',
         'nombre_asociacion',
         'entidad_asesoria',
+        'entidad_asesoria_nombre',
         'recibio_asesoria_ultimo_anio',
 
         // Maquinaria arrays (JSON)

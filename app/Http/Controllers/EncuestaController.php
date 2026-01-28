@@ -159,8 +159,8 @@ class EncuestaController extends Controller
         $encuesta->update($data);
 
         return redirect()
-            ->route('encuestas.index')
-            ->with('success', 'Encuesta actualizada correctamente.');
+            ->route('encuestas.show', $encuesta->id)
+            ->with('success', 'Caracterización actualizada correctamente.');
     }
 
     public function destroy(Encuesta $encuesta)
@@ -275,6 +275,16 @@ public function getVeredas($id)
 public function establecerSesion($encuestaId)
 {
     session(['encuesta_id' => $encuestaId]);
+    return response()->json(['success' => true]);
+}
+
+public function establecerSesionShow($encuestaId)
+{
+    session([
+        'encuesta_id' => $encuestaId,
+        'from_show' => true,
+        'show_route' => 'maquinaria.show'
+    ]);
     return response()->json(['success' => true]);
 }
 
