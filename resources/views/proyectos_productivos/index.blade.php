@@ -71,33 +71,31 @@
     </div>
 
     {{-- === MODAL GOV.CO - Confirmación === --}}
-    <div class="container-modal-govco">
-        <div class="modal-container-govco" id="exampleModalConfirmacion" tabindex="-1" aria-hidden="true" role="dialog">
-            <div class="modal-dialog modal-dialog-govco">
-                <div class="modal-content modal-content-govco">
-                    <div class="modal-header modal-header-govco">
-                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+    <div class="modal-container-govco" id="exampleModalConfirmacion" tabindex="-1" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-govco">
+            <div class="modal-content modal-content-govco">
+                <div class="modal-header modal-header-govco">
+                    <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                </div>
+                <div class="modal-body modal-body-govco center-elements-govco">
+                    <div class="modal-icon">
+                        <span class="govco-icon govco-info-circle"></span>
                     </div>
-                    <div class="modal-body modal-body-govco center-elements-govco">
-                        <div class="modal-icon">
-                            <span class="govco-icon govco-info-circle"></span>
-                        </div>
-                        <h3 class="modal-title-govco confirmation-govco">
-                            ¿Eliminar Proyecto?
-                        </h3>
-                        <p class="modal-text-govco modal-text-center-govco">
-                            ¿Está seguro de que desea eliminar este proyecto? Esta acción no se puede deshacer.
-                        </p>
-                    </div>
-                    <div class="modal-footer-govco">
-                        <div class="modal-buttons-govco">
-                            <button type="button" class="btn-modal-govco btn-eliminar-confirmar">
-                                Eliminar
-                            </button>
-                            <button type="button" class="btn-modal-govco btn-contorno btn-eliminar-cancelar">
-                                Cancelar
-                            </button>
-                        </div>
+                    <h3 class="modal-title-govco confirmation-govco">
+                        ¿Eliminar Proyecto?
+                    </h3>
+                    <p class="modal-text-govco modal-text-center-govco">
+                        ¿Está seguro de que desea eliminar este proyecto? Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer-govco">
+                    <div class="modal-buttons-govco">
+                        <button type="button" class="btn-modal-govco btn-eliminar-confirmar">
+                            Eliminar
+                        </button>
+                        <button type="button" class="btn-modal-govco btn-contorno btn-eliminar-cancelar">
+                            Cancelar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -105,30 +103,28 @@
     </div>
 
     {{-- === MODAL GOV.CO - Éxito === --}}
-    <div class="container-modal-govco">
-        <div class="modal-container-govco" id="exampleModalExito" tabindex="-1" aria-hidden="true" role="dialog">
-            <div class="modal-dialog modal-dialog-govco">
-                <div class="modal-content modal-content-govco">
-                    <div class="modal-header modal-header-govco">
-                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+    <div class="modal-container-govco" id="exampleModalExito" tabindex="-1" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-govco">
+            <div class="modal-content modal-content-govco">
+                <div class="modal-header modal-header-govco">
+                    <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                </div>
+                <div class="modal-body modal-body-govco center-elements-govco">
+                    <div class="modal-icon">
+                        <span class="govco-icon govco-check-circle"></span>
                     </div>
-                    <div class="modal-body modal-body-govco center-elements-govco">
-                        <div class="modal-icon">
-                            <span class="govco-icon govco-check-circle"></span>
-                        </div>
-                        <h3 class="modal-title-govco success-govco">
-                            ¡Operación Exitosa!
-                        </h3>
-                        <p class="modal-text-govco modal-text-center-govco">
-                            La operación se realizó correctamente.
-                        </p>
-                    </div>
-                    <div class="modal-footer-govco">
-                        <div class="modal-buttons-govco" style="justify-content: center;">
-                            <button type="button" class="btn-modal-govco btn-exito-aceptar">
-                                Aceptar
-                            </button>
-                        </div>
+                    <h3 class="modal-title-govco success-govco">
+                        ¡Operación Exitosa!
+                    </h3>
+                    <p class="modal-text-govco modal-text-center-govco">
+                        La operación se realizó correctamente.
+                    </p>
+                </div>
+                <div class="modal-footer-govco">
+                    <div class="modal-buttons-govco" style="justify-content: center;">
+                        <button type="button" class="btn-modal-govco btn-exito-aceptar">
+                            Aceptar
+                        </button>
                     </div>
                 </div>
             </div>

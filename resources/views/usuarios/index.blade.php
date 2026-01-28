@@ -342,7 +342,7 @@
             src: url('../assets/fonts/Verdana/static/Verdana-Regular.ttf');
         }
 
-        .modal-container-govco {
+       .modal-container-govco {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -361,7 +361,7 @@
             justify-content: center !important;
         }
 
-        .modal-container-govco .modal-backdrop-govco {
+        .modal-backdrop-govco {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -453,6 +453,18 @@
             box-shadow: none !important;
         }
 
+        .btn-modal-govco.btn-contorno {
+            background-color: var(--govcolor-white) !important;
+            color: var(--govcolor-cobalt) !important;
+            border: 2px solid var(--govcolor-cobalt) !important;
+        }
+
+        .btn-modal-govco.btn-contorno:hover,
+        .btn-modal-govco.btn-contorno:focus {
+            background-color: var(--govcolor-havelock-lue) !important;
+            color: var(--govcolor-white) !important;
+        }
+
         .btn-modal-govco:hover {
             background-color: var(--govcolor-havelock-lue) !important;
             border-color: var(--govcolor-havelock-lue) !important;
@@ -481,6 +493,12 @@
             width: 100%;
             margin-bottom: 1.5rem !important;
             color: var(--govcolor-green);
+        }
+
+        .confirmation-govco {
+            width: 100%;
+            margin-bottom: 1.5rem !important;
+            color: var(--govcolor-cobalt);
         }
 
         .govco-icon.govco-check-circle {
@@ -534,10 +552,17 @@
                 padding-bottom: 3rem !important;
             }
 
-            .btn-modal-govco {
-                width: 100%;
-            }
+            .modal-buttons-govco {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
         }
+
+        .btn-modal-govco {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
     </style>
 
     <div class="usuarios-container">
@@ -652,12 +677,14 @@
                                                title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
-                                            <button class="btn btn-danger btn-sm"
-                                                    title="Eliminar"
-                                                    onclick="confirmarEliminacion('{{ route('usuarios.destroy', $u) }}', '{{ $u->name }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+ 
+                                            <form method="POST" action="{{ route('usuarios.destroy', $u) }}" onsubmit="confirmarEliminacion(event, '{{ addslashes($u->name) }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -741,7 +768,10 @@
         };
 
         // Función para confirmar eliminación
-        function confirmarEliminacion(url, usuarioNombre) {
+        function confirmarEliminacion(event, usuarioNombre) {
+            event.preventDefault(); // Prevenir el envío del formulario
+            const formParaEliminar = event.currentTarget; // El formulario que disparó el evento
+
             const modal = document.getElementById('exampleModalConfirmacion');
             const titulo = modal.querySelector('.modal-title-govco');
             const texto = modal.querySelector('.modal-text-govco');
@@ -787,30 +817,7 @@
                 const nuevoBtnConfirmar = btnConfirmar.cloneNode(true);
                 btnConfirmar.parentNode.replaceChild(nuevoBtnConfirmar, btnConfirmar);
                 nuevoBtnConfirmar.addEventListener('click', function() {
-                    // Crear formulario de eliminación
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = url;
-                    form.style.display = 'none';
-
-                    // Token CSRF
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    form.appendChild(csrfToken);
-
-                    // Método DELETE
-                    const methodInput = document.createElement('input');
-                    methodInput.type = 'hidden';
-                    methodInput.name = '_method';
-                    methodInput.value = 'DELETE';
-                    form.appendChild(methodInput);
-
-                    // Enviar formulario
-                    document.body.appendChild(form);
-                    form.submit();
-
+                    formParaEliminar.submit(); // Enviar el formulario original
                     cerrarModal();
                 });
             }
@@ -837,33 +844,31 @@
     </script>
 
     {{-- === MODAL GOV.CO - Confirmación === --}}
-    <div class="container-modal-govco">
-        <div class="modal-container-govco" id="exampleModalConfirmacion" tabindex="-1" aria-hidden="true" role="dialog">
-            <div class="modal-dialog modal-dialog-govco">
-                <div class="modal-content modal-content-govco">
-                    <div class="modal-header modal-header-govco">
-                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+    <div class="modal-container-govco" id="exampleModalConfirmacion" tabindex="-1" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-govco">
+            <div class="modal-content modal-content-govco">
+                <div class="modal-header modal-header-govco">
+                    <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                </div>
+                <div class="modal-body modal-body-govco center-elements-govco">
+                    <div class="modal-icon">
+                        <span class="govco-icon govco-info-circle"></span>
                     </div>
-                    <div class="modal-body modal-body-govco center-elements-govco">
-                        <div class="modal-icon">
-                            <span class="govco-icon govco-info-circle"></span>
-                        </div>
-                        <h3 class="modal-title-govco confirmation-govco">
-                            ¿Eliminar Usuario?
-                        </h3>
-                        <p class="modal-text-govco modal-text-center-govco">
-                            ¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.
-                        </p>
-                    </div>
-                    <div class="modal-footer-govco">
-                        <div class="modal-buttons-govco">
-                            <button type="button" class="btn-modal-govco btn-eliminar-confirmar">
-                                Eliminar
-                            </button>
-                            <button type="button" class="btn-modal-govco btn-contorno btn-eliminar-cancelar">
-                                Cancelar
-                            </button>
-                        </div>
+                    <h3 class="modal-title-govco confirmation-govco">
+                        ¿Eliminar Usuario?
+                    </h3>
+                    <p class="modal-text-govco modal-text-center-govco">
+                        ¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer-govco">
+                    <div class="modal-buttons-govco">
+                        <button type="button" class="btn-modal-govco btn-eliminar-confirmar">
+                            Eliminar
+                        </button>
+                        <button type="button" class="btn-modal-govco btn-contorno btn-eliminar-cancelar">
+                            Cancelar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -871,30 +876,28 @@
     </div>
 
     {{-- === MODAL GOV.CO - Éxito === --}}
-    <div class="container-modal-govco">
-        <div class="modal-container-govco" id="exampleModalExito" tabindex="-1" aria-hidden="true" role="dialog">
-            <div class="modal-dialog modal-dialog-govco">
-                <div class="modal-content modal-content-govco">
-                    <div class="modal-header modal-header-govco">
-                        <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+    <div class="modal-container-govco" id="exampleModalExito" tabindex="-1" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-govco">
+            <div class="modal-content modal-content-govco">
+                <div class="modal-header modal-header-govco">
+                    <button type="button" disabled class="btn-close" aria-label="cerrar"></button>
+                </div>
+                <div class="modal-body modal-body-govco center-elements-govco">
+                    <div class="modal-icon">
+                        <span class="govco-icon govco-check-circle"></span>
                     </div>
-                    <div class="modal-body modal-body-govco center-elements-govco">
-                        <div class="modal-icon">
-                            <span class="govco-icon govco-check-circle"></span>
-                        </div>
-                        <h3 class="modal-title-govco success-govco">
-                            ¡Operación Exitosa!
-                        </h3>
-                        <p class="modal-text-govco modal-text-center-govco">
-                            La operación se realizó correctamente.
-                        </p>
-                    </div>
-                    <div class="modal-footer-govco">
-                        <div class="modal-buttons-govco">
-                            <button type="button" class="btn-modal-govco btn-exito-aceptar">
-                                Aceptar
-                            </button>
-                        </div>
+                    <h3 class="modal-title-govco success-govco">
+                        ¡Operación Exitosa!
+                    </h3>
+                    <p class="modal-text-govco modal-text-center-govco">
+                        La operación se realizó correctamente.
+                    </p>
+                </div>
+                <div class="modal-footer-govco">
+                    <div class="modal-buttons-govco">
+                        <button type="button" class="btn-modal-govco btn-exito-aceptar">
+                            Aceptar
+                        </button>
                     </div>
                 </div>
             </div>

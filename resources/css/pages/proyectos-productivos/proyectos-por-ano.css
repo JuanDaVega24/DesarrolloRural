@@ -319,8 +319,7 @@
                 width: 100%;
             }
         }
-
-        .modal-container-govco {
+ .modal-container-govco {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -339,7 +338,7 @@
             justify-content: center !important;
         }
 
-        .modal-container-govco .modal-backdrop-govco {
+        .modal-backdrop-govco {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -534,10 +533,10 @@
                 display: flex;
                 justify-content: center;
                 gap: 1rem;
-            }
-
-            .btn-modal-govco {
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
         }
+
+        .btn-modal-govco {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
