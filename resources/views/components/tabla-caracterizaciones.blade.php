@@ -14,7 +14,22 @@
         <div class="row align-items-center">
             
             <div class="col-md-12">
-                <div class="d-flex gap-2 justify-content-end">
+                <div class="d-flex gap-2 justify-content-end align-items-center flex-wrap">
+                    {{-- Filtro Tipo de Cultivo --}}
+                    <select class="form-select" id="tipoCultivoFilter" style="max-width: 180px;">
+                        <option value="">Tipo de cultivo</option>
+                    </select>
+
+                    {{-- Filtro Producto --}}
+                    <select class="form-select" id="productoFilter" style="max-width: 180px;">
+                        <option value="">Producto</option>
+                    </select>
+
+                    {{-- Filtro Especie --}}
+                    <select class="form-select" id="especieFilter" style="max-width: 180px;">
+                        <option value="">Especie</option>
+                    </select>
+
                     <div class="input-group" style="max-width: 300px;">
                         <span class="input-group-text bg-white">
                             <i class="bi bi-search"></i>
@@ -22,8 +37,9 @@
                         <input type="text" class="form-control" id="searchInput"
                                placeholder="Buscar en tabla...">
                     </div>
+
                     <button class="btn btn-light" id="toggleFilters" title="Activar filtros">
-                        <i class="bi bi-funnel"></i> Activar filtros
+                        <i class="bi bi-funnel"></i>
                     </button>
                     <button class="btn btn-light" id="exportBtn" title="Exportar a Excel">
                         <i class="bi bi-download"></i>

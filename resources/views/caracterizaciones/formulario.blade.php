@@ -28,8 +28,10 @@
                     $opcionesColumnas = [
                         'Tipo de documento' => ['Cédula de Ciudadanía(CC)', 'Tarjeta de Identidad(TI)', 'Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
                         'Corregimiento' => ['1', '2', '3'],
-                        'Principales fuentes de ingresos del hogar' => ['Actividades Agrícolas', 'Actividades Pecuarias', 'Empleo formal', 'Actividades comerciales'],
-                        '¿Cual?' => ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras'],
+                        'Vereda' => [], // Se llenará dinámicamente
+                        'Veredas' => [], // Se llenará dinámicamente
+                        'Nombre de la Vereda' => [], // Se llenará dinámicamente
+                        '¿Cuenta con un medio de transporte propio? ¿Cual?' => ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras','Ninguno'],
                          'Tenencia o relación con la tierra'=> ['Propia', 'Arriendo', 'Aparcería', 'Usufructo', 'Comodato', 'Ocupación de hecho', 'Propiedad colectiva', 'Adjudicatario o Comunero', 'Adjudicatario(a)/ Viviente', 'Otras'],
                         '¿Pertenece a una poblacion de especial protección constitucional?'=> ['Campesino', 'Población étnica', 'LGBTIQ+', 'Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado', 'Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto (RUV)', 'Cuidador/a', 'Otro'],
                         'Población'=> ['Población étnica', 'Población con orientación sexualmente diversa','Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado/Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto armado', 'Cuidador/a', 'Otro'],
@@ -43,7 +45,6 @@
                         '¿Donde almacena las herramientas e insumos agropecuarios que emplea en sus labores?'=> ['En la vivienda', 'En bodega contigua a la vivienda', 'Al aire libre'],
                         'Tipo de servicio sanitario (inodoro) que tiene la vivienda' => ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
                         'Tipo de sistema de riego empleado' => ['Superficial (Por gravedad o inundación)', 'Prenomsurizado (Goteo, aspersión, microaspersión)', 'Manual o por mateo'],
-                        'Usos del suelo en el predio' => ['Agricultura (ha)', 'Ganadería (ha)', 'Conservación (ha)', 'Vivienda/infraestructura agropecuaria (ha)', 'Rastrojo (ha)'],
                         'El destino final de la producción es' => ['Autoconsumo', 'Venta a intermediarios (plazas de mercado/ Central de abastos)', 'Venta a cooperativa', 'Mercadillos campesinos', 'Exportación', 'Otras'],
                         'Tipo de vivienda' => ['Casa', 'Apartamento', 'Tipo cuarto', 'No hay vivienda', 'Otra'],
                         'género' => ['Masculino', 'Femenino', 'Otro'],
@@ -67,7 +68,7 @@
                         'Qué fenómeno natural lo afecto' => ['Lluvia torrencial', 'Sequía', 'Ola de calor', 'Ola de frío', 'Vientos fuertes', 'Terremoto','Deslizamiento / Remoción de masa', 'Inundación', 'Desboradmiento de ríos / quebradas', 'Otro'],
                         'Qué solución propone para superar la afectación' => ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación'],
                         'Destino de aguas residuales' => ['Alcantarillado', 'Pozo séptico', 'Ninguno'],
-                        'la mayor parte del terreno que conforma esta Unidad Productiva Agropecuaria es:'=> ['Plano', 'Quebrado (con pendiente)'],
+                        'La mayor parte del terreno que conforma esta unidad productiva agropecuaria es:'=> ['Plano', 'Quebrado (con pendiente)'],
                         'Realiza actividades productivas agrícolas'=> ['Si', 'No'],
                         'Realiza actividades agroindustriales'=> ['Si', 'No'],                    
                         'Realiza actividades pecuarias'=> ['Si', 'No'],
@@ -89,11 +90,7 @@
                         $manualRules = [
                             // EJEMPLO 1: SALTO DE SECCIÓN (Range Rule)
                             // Si la respuesta es "No", oculta todo hasta llegar al campo destino
-                             [
-                                'trigger_field' => 'Cuenta con un medio de transporte propio', // Campo que dispara la acción
-                                'trigger_value' => 'No',                                        // Valor que activa el salto
-                                'skip_to_field' => 'Tenencia o relación con la tierra'              // Campo donde se reanuda el formulario
-                            ],
+                          
 
                             [
                                 'trigger_field' => 'Tiene familiares', // Campo que dispara la acción
@@ -247,6 +244,12 @@
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Cuántas personas (incluido el productor y los miembros del núcleo trabajaron de manera permanente en la Unidad Productiva Agropecuaria para realizar las actividades productivas en los últimos 30 días'              // Campo donde se reanuda el formulario
                             ],
+
+                             [
+                                'trigger_field' => 'Lleva registros de las actividades que desarrolla en la unidad productiva', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Tiene o posee otro(s) predio(s) no continuos en los que desarrolla actividades productivas agropecuarias'              // Campo donde se reanuda el formulario
+                            ],
                            
                             
                            
@@ -339,7 +342,13 @@
 
                                     // Generar ID válido para JavaScript (versión inline)
                                     $fieldId = strtolower($columna);
-                $fieldId = str_replace([' ', '(', ')', '#','/', '¿', '?', '¡', '!', '¿', '¡', ',', '.', ';', ':', '"', "'"], ['_', '', '', '', '_', '', '', '', '', '', '', '', '', '', '', '', ''], $fieldId);
+                                    // Primero eliminar caracteres especiales
+                                    $fieldId = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $fieldId);
+                                    // Reemplazar caracteres específicos por guion bajo
+                                    $fieldId = str_replace(['#', '/'], '_', $fieldId);
+                                    // Reemplazar CUALQUIER espacio en blanco (incluyendo espacios no rompibles) por guion bajo
+                                    $fieldId = preg_replace('/\s+/u', '_', $fieldId);
+                                    
                                     if (!preg_match('/^[a-zA-Z]/', $fieldId)) {
                                         $fieldId = 'field_' . $fieldId;
                                     }
@@ -354,6 +363,9 @@
                                     } elseif (str_contains($columnaLower, 'hora') && str_contains($columnaLower, 'final') && !str_contains($columnaLower, 'nombres') && !str_contains($columnaLower, 'apellidos')) {
                                         $esCampoAutomatico = true;
                                         $tipoCampo = 'datetime-local';
+                                    } elseif (str_contains($columnaLower, 'correo electrónico del tabulador') || str_contains($columnaLower, 'correo electronico del tabulador')) {
+                                        $esCampoAutomatico = true;
+                                        $tipoCampo = 'email';
                                     }
 
                                     // Detectar tipos de campo automáticamente
@@ -372,7 +384,7 @@
                                         if ($tieneOpcionesEspecificas) {
                                             // Definir qué campos deben ser checkbox (selección múltiple)
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
-                                            str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'usos del suelo en el predio') 
+                                            str_contains($columnaLower, 'cual') 
                                             
                                             
 
@@ -385,7 +397,7 @@
                                         } elseif (str_contains($columnaLower, 'genero') || str_contains($columnaLower, 'tenencia') ||
                                                   str_contains($columnaLower, 'categoria') ||
                                                  (str_contains($columnaLower, 'estado') && !str_contains($columnaLower, 'encuestador')) || str_contains($columnaLower, 'condicion') ||
-                                                 str_contains($columnaLower, 'corregimiento') || str_contains($columnaLower, 'principales')||
+                                                 str_contains($columnaLower, 'corregimiento') ||
                                                  str_contains($columnaLower, 'cuenta') ||  
                                                  str_contains($columnaLower, 'pertenece a una población de especial protección constitucional') || str_contains($columnaLower, 'población') ||
                                                  str_contains($columnaLower, 'sabe leer y escribir') || str_contains($columnaLower, 'agregar') ||
@@ -404,8 +416,8 @@
                                                 str_contains($columnaLower, 'ha sido beneficiario de algún proyecto para el desarrollo agropecuario') || str_contains($columnaLower, 'cuenta con maquinaria y o equipo para el desarrollo de actividades agropecuarias o agroindustriales en la unidad productiva') ||
                                                 str_contains($columnaLower, 'empleó trabajo colectivo para realizar las actividades agropecuarias en los últimos 30 días (minga, convite, mano de obra prestada)') || str_contains($columnaLower, 'cuenta con maquinaria y o equipo para el desarrollo de actividades agropecuarias o agroindustriales en la unidad productiva') ||
                                                 str_contains($columnaLower, 'ha realizado control de plagas y enfermedades en la unidad productiva') || str_contains($columnaLower, 'conoce y aplica buenas prácticas agrícolas ganaderas en la unidad productiva') ||
-                                                str_contains($columnaLower, 'ingresan al cultivo nuevamente después de la aplicación de plaguicidas') || str_contains($columnaLower, 'lleva registros de las actividades que desarrolla en la unidad productiva') 
-
+                                                str_contains($columnaLower, 'ingresan al cultivo nuevamente después de la aplicación de plaguicidas') || str_contains($columnaLower, 'lleva registros de las actividades que desarrolla en la unidad productiva') ||
+                                                str_contains($columnaLower, 'la mayor parte del terreno que conforma esta unidad productiva agropecuaria es:')
 
 
 
@@ -421,11 +433,34 @@
                                             $tipoCampo = 'text'; // Mantener como text para números largos
                                         } elseif (str_contains($columnaLower, 'precio') || str_contains($columnaLower, 'valor') || 
                                                   str_contains($columnaLower, 'número') || str_contains($columnaLower, 'Número de documento') || 
-                                                  str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || 
-                                                  str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') ||
-                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud')
-                                                  
+                                                  str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || str_contains($columnaLower, 'hembras') ||
+                                                  str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') || str_contains($columnaLower, 'machos') ||
+                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'principales fuentes de ingresos del hogar agropecuaria') ||
+                                                  str_contains($columnaLower, 'pecuaria') || str_contains($columnaLower, 'empleo formal') || str_contains($columnaLower, 'actividades comerciales') ||
+                                                str_contains($columnaLower, 'usos del suelo en el predio agricultura (ha)') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') ||
+                                               str_contains($columnaLower, 'rastrojo (ha)')
+                                               
+                                               
+                                               
+                                               
                                                   ) {
+                                            $tipoCampo = 'number';
+                                        }
+
+                                        // Corrección: Forzar campos de ingresos y pecuaria (incluyendo typos reportados) a number
+                                        // No sobrescribir si ya fue clasificado explícitamente como 'select'
+                                        if ($tipoCampo !== 'select') {
+                                            if (str_contains($columnaLower, 'funete') || 
+                                                str_contains($columnaLower, 'ingrsos') || 
+                                                (str_contains($columnaLower, 'pecuaria') && 
+                                                 !str_contains($columnaLower, 'asociación') && 
+                                                 !str_contains($columnaLower, 'maquinaria') && 
+                                                 !str_contains($columnaLower, 'actividades') && 
+                                                 !str_contains($columnaLower, 'buenas prácticas'))) {
+                                                $tipoCampo = 'number';
+                                            }
+                                        }
+                                        if (trim($columnaLower) === 'pecuaria') {
                                             $tipoCampo = 'number';
                                         }
                                     }
@@ -442,12 +477,13 @@
                                     </label>
 
                                     @if($tipoCampo === 'select')
-                                        <select id="{{ $fieldId }}" class="form-control form-select"
+                                        <select id="{{ $fieldId }}" class="form-control form-select select-otro-trigger"
                                                 @if($esCampoAutomatico) readonly disabled @endif>
                                             <option value="">Seleccione</option>
                                             @php
                                                 $columnaNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $columna));
                                                 $opcionesEncontradas = null;
+                                                $tieneOpcionOtro = false;
 
                                                 // Buscar opciones específicas para esta columna
                                                 foreach ($opcionesColumnas as $key => $opciones) {
@@ -462,22 +498,30 @@
                                                 if ($opcionesEncontradas) {
                                                     foreach ($opcionesEncontradas as $opcion) {
                                                         echo "<option value=\"{$opcion}\">{$opcion}</option>";
+                                                        if (strtolower($opcion) === 'otro' || strtolower($opcion) === 'otras') {
+                                                            $tieneOpcionOtro = true;
+                                                        }
                                                     }
                                                 } elseif (str_contains(strtolower($columna), 'género') || str_contains(strtolower($columna), 'sexo')) {
                                                     echo "<option value=\"Masculino\">Masculino</option>";
                                                     echo "<option value=\"Femenino\">Femenino</option>";
                                                     echo "<option value=\"Otro\">Otro</option>";
+                                                    $tieneOpcionOtro = true;
                                                 } elseif (str_contains(strtolower($columna), 'condicion')) {
                                                     $condiciones = ['Ninguno', 'Afrocolombiano', 'Campesino', 'Indígena', 'LGBTIQ+', 'Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado', 'Reinsertado', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto (RUV)', 'Cuidador/a', 'Otro'];
                                                     foreach ($condiciones as $condicion) {
                                                         echo "<option value=\"{$condicion}\">{$condicion}</option>";
                                                     }
+                                                    $tieneOpcionOtro = true;
                                                 } else {
                                                     echo "<option value=\"Sí\">Sí</option>";
                                                     echo "<option value=\"No\">No</option>";
                                                 }
                                             @endphp
                                         </select>
+                                        @if($tieneOpcionOtro)
+                                            <input type="text" id="{{ $fieldId }}_otro" class="form-control mt-2 input-otro-especificar" style="display: none;" placeholder="Especifique cuál...">
+                                        @endif
                                     @elseif($tipoCampo === 'checkbox')
                                         {{-- Campo oculto que almacenará los valores separados por coma (para compatibilidad con el JS existente) --}}
                                         <input type="hidden" id="{{ $fieldId }}" class="form-control checkbox-result">
@@ -486,6 +530,7 @@
                                             @php
                                                 $columnaNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $columna));
                                                 $opcionesEncontradas = null;
+                                                $tieneOpcionOtroCheckbox = false;
 
                                                 foreach ($opcionesColumnas as $key => $opciones) {
                                                     $keyNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $key));
@@ -501,10 +546,17 @@
                                                         echo '<input class="form-check-input checkbox-dynamic" type="checkbox" value="' . $opcion . '" id="' . $fieldId . '_' . $index . '" data-target="' . $fieldId . '">';
                                                         echo '<label class="form-check-label" for="' . $fieldId . '_' . $index . '">' . $opcion . '</label>';
                                                         echo '</div>';
+                                                        
+                                                        if (in_array(strtolower($opcion), ['otro', 'otros', 'otras', 'otra'])) {
+                                                            $tieneOpcionOtroCheckbox = true;
+                                                        }
                                                     }
                                                 }
                                             @endphp
                                         </div>
+                                        @if($tieneOpcionOtroCheckbox)
+                                            <input type="text" id="{{ $fieldId }}_otro" class="form-control mt-2 input-otro-especificar-checkbox" style="display: none;" placeholder="Especifique cuál..." data-target="{{ $fieldId }}">
+                                        @endif
                                     @else
                                         <input type="{{ $tipoCampo }}" id="{{ $fieldId }}"
                                                class="form-control"
@@ -593,8 +645,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const opcionesColumnas = {
         'Tipo de documento': ['CC', 'TI', 'CE', 'PA', 'RC', 'Otro'],
         'Corregimiento': ['1', '2', '3'],
-        'Principales fuentes de ingresos del hogar': ['Actividades Agrícolas', 'Actividades Pecuarias', 'Empleo formal', 'Actividades comerciales'],
-        '¿Cual?': ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras'],
+        '¿¿Cuenta con un medio de transporte propio? ¿Cual??': ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras', 'Ninguno'],
         'Tenencia o relación con la tierra': ['Propia', 'Arriendo', 'Aparcería', 'Usufructo', 'Comodato', 'Ocupación de hecho', 'Propiedad colectiva', 'Adjudicatario o Comunero', 'Adjudicatario(a)/ Viviente', 'Otras'],
         '¿Pertenece a una poblacion de especial protección constitucional?': ['Campesino', 'Población étnica', 'LGBTIQ+', 'Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado', 'Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto (RUV)', 'Cuidador/a', 'Otro'],
         'Población': ['Población étnica', 'Población con orientación sexualmente diversa','Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado/Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto armado', 'Cuidador/a', 'Otro'],
@@ -608,7 +659,6 @@ document.addEventListener('DOMContentLoaded', function () {
         '¿Donde almacena las herramientas e insumos agropecuarios que emplea en sus labores?': ['En la vivienda', 'En bodega contigua a la vivienda', 'Al aire libre'],
         'Tipo de servicio sanitario (inodoro) que tiene la vivienda': ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
         'Tipo de sistema de riego empleado': ['Superficial (Por gravedad o inundación)', 'Presurizado (Goteo, aspersión, microaspersión)', 'Manual o por mateo'],
-        'Usos del suelo en el predio': ['Agricultura (ha)', 'Ganadería (ha)', 'Conservación (ha)', 'Vivienda/infraestructura agropecuaria (ha)', 'Rastrojo (ha)'],
         'El destino final de la producción es': ['Autoconsumo', 'Venta a intermediarios (plazas de mercado/ Central de abastos)', 'Venta a cooperativa', 'Mercadillos campesinos', 'Exportación', 'Otras'],
         'género': ['Masculino', 'Femenino', 'Otro'],
         'nivel educativo': ['Primaria Completa', 'Primaria incompleta', 'Secundaria incompleta', 'Secundaria completa', 'Técnico', 'Tecnológica', 'Profesional', 'Especializacion', 'Maestria','Doctorado', 'Ninguna'],
@@ -631,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'Qué fenómeno natural lo afecto': ['Lluvia torrencial', 'Sequía', 'Ola de calor', 'Ola de frío', 'Vientos fuertes', 'Terremoto','Deslizamiento / Remoción de masa', 'Inundación', 'Desboradmiento de ríos / quebradas', 'Otro'],
         'Qué solución propone para superar la afectación': ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación'],
         'Destino de aguas residuales': ['Alcantarillado', 'Pozo séptico', 'Ninguno'],
-        'la mayor parte del terreno que conforma esta Unidad Productiva Agropecuaria es:': ['Plano', 'Quebrado (con pendiente)'],
+        'La mayor parte del terreno que conforma esta unidad productiva agropecuaria es:': ['Plano', 'Quebrado (con pendiente)'],
         'Realiza actividades productivas agrícolas': ['Si', 'No'],
         'Realiza actividades agroindustriales': ['Si', 'No'],                    
         'Realiza actividades pecuarias': ['Si', 'No'],
@@ -644,9 +694,59 @@ document.addEventListener('DOMContentLoaded', function () {
         
     };
 
+    // --- LÓGICA DINÁMICA DE VEREDAS ---
+    const veredasMap = @json(json_decode(file_get_contents(resource_path('js/veredas.json')), true));
+
+    // Buscar campos de Corregimiento y Vereda
+    const corregimientoFields = Array.from(document.querySelectorAll('select, input')).filter(el => el.id.includes('corregimiento'));
+    const veredaFields = Array.from(document.querySelectorAll('select, input')).filter(el => el.id.includes('vereda'));
+
+    if (corregimientoFields.length > 0 && veredaFields.length > 0) {
+        const corregimientoSelect = corregimientoFields[0];
+        const veredaSelect = veredaFields[0];
+        
+        function poblarVeredas(idCorregimiento) {
+             // Verificar si veredaSelect es realmente un SELECT
+             if (veredaSelect.tagName !== 'SELECT') {
+                 console.warn('El campo vereda no es un select, no se pueden poblar opciones.');
+                 return;
+             }
+
+             // Limpiar opciones actuales
+             while (veredaSelect.options.length > 0) {
+                 veredaSelect.remove(0);
+             }
+             
+             // Opción por defecto
+             const defaultOption = document.createElement('option');
+             defaultOption.value = "";
+             defaultOption.textContent = "Seleccione Vereda";
+             veredaSelect.add(defaultOption);
+             
+             if (idCorregimiento && veredasMap[idCorregimiento]) {
+                 veredasMap[idCorregimiento].forEach(vereda => {
+                     const option = document.createElement('option');
+                     option.value = vereda;
+                     option.textContent = vereda;
+                     veredaSelect.add(option);
+                 });
+             }
+        }
+        
+        corregimientoSelect.addEventListener('change', function() {
+            poblarVeredas(this.value);
+        });
+        
+        // Cargar inicial si hay valor
+        if (corregimientoSelect.value) {
+            poblarVeredas(corregimientoSelect.value);
+        }
+    }
+
     // Inicializar campos automáticos al cargar la página
     function inicializarCamposAutomaticos() {
         horaInicioFormulario = new Date().toISOString().slice(0, 16); // Formato datetime-local
+            const loggedEmail = "{{ auth()->check() ? auth()->user()->email : '' }}";
         
         // Inicializar listeners para checkboxes
         document.querySelectorAll('.checkbox-dynamic').forEach(checkbox => {
@@ -664,6 +764,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     targetInput.value = checkedValues.join(', ');
                 }
             });
+        });
+
+        // --- MANEJO DE OPCIÓN "OTRO" ---
+        document.querySelectorAll('.select-otro-trigger').forEach(select => {
+            const inputOtro = document.getElementById(select.id + '_otro');
+            
+            if (inputOtro) {
+                // Función para alternar visibilidad
+                const toggleOtro = () => {
+                    const val = select.value.toLowerCase();
+                    if (val === 'otro' || val === 'otras') {
+                        inputOtro.style.display = 'block';
+                        inputOtro.focus();
+                    } else {
+                        inputOtro.style.display = 'none';
+                        inputOtro.value = '';
+                    }
+                };
+                
+                // Listener
+                select.addEventListener('change', toggleOtro);
+                
+                // Estado inicial
+                // Necesitamos asegurar que el name esté correcto al inicio
+                // Como Blade genera el name en el select, si el valor inicial es Otro, debemos moverlo
+                // Pero aquí asumimos valor inicial vacío o no-otro.
+                // Si estamos editando y viene con "Otro", sería más complejo, pero para nuevos registros:
+                toggleOtro();
+            }
         });
 
         // Establecer valores en los campos automáticos
@@ -695,6 +824,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Se establecerá al enviar el formulario
                     @elseif(str_contains(strtolower($columna), 'id'))
                         campo{{ $fieldId }}.value = contadorRegistros;
+                    @elseif(str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador'))
+                        campo{{ $fieldId }}.value = loggedEmail;
                     @endif
                 }
             @endif
@@ -735,6 +866,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* =========================
+       LÓGICA CHECKBOX OTRO
+    ========================== */
+    // Delegación de eventos para checkboxes dinámicos
+    const formContainer = document.getElementById('caracterizacionForm');
+    if (formContainer) {
+        formContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('checkbox-dynamic')) {
+                handleCheckboxChange(e.target);
+            }
+        });
+
+        // Inicializar estado de checkboxes "Otro" pre-seleccionados
+        // Esto es necesario por si el navegador recuerda la selección al recargar
+        // o si volvemos de una validación fallida
+        setTimeout(() => {
+            const checkboxes = formContainer.querySelectorAll('.checkbox-dynamic:checked');
+            checkboxes.forEach(checkbox => {
+                const value = checkbox.value.toLowerCase();
+                if (['otro', 'otros', 'otras', 'otra'].includes(value)) {
+                    handleCheckboxChange(checkbox);
+                }
+            });
+        }, 100);
+    }
+
+    function handleCheckboxChange(checkbox) {
+        const fieldId = checkbox.getAttribute('data-target');
+        const value = checkbox.value.toLowerCase();
+        
+        // Verificar si es una opción "Otro"
+        if (['otro', 'otros', 'otras', 'otra'].includes(value)) {
+            const inputOtro = document.getElementById(fieldId + '_otro');
+            if (inputOtro) {
+                if (checkbox.checked) {
+                    inputOtro.style.display = 'block';
+                    inputOtro.focus();
+                } else {
+                    inputOtro.style.display = 'none';
+                    inputOtro.value = '';
+                }
+            }
+        }
+        
+        // Actualizar el campo oculto con los valores seleccionados
+        updateCheckboxHiddenField(fieldId);
+    }
+
+    function updateCheckboxHiddenField(fieldId) {
+        // Encontrar el contenedor correcto
+        // El checkbox está dentro de un div.form-check, que está dentro de .checkbox-group-container
+        const hiddenField = document.getElementById(fieldId);
+        if (!hiddenField) return;
+        
+        // Buscar los checkboxes asociados a este campo
+        // Usamos el atributo data-target para asegurar que seleccionamos los correctos
+        const checkboxes = document.querySelectorAll(`.checkbox-dynamic[data-target="${fieldId}"]:checked`);
+        const values = Array.from(checkboxes).map(cb => cb.value);
+        
+        hiddenField.value = values.join(',');
+    }
+
+    /* =========================
        RECOPILAR DATOS
     ========================== */
     function obtenerDatos() {
@@ -744,13 +937,38 @@ document.addEventListener('DOMContentLoaded', function () {
         @foreach($columnasReferencia as $columna)
             @php
                 $fieldId = strtolower($columna);
-                $fieldId = str_replace([' ', '(', ')', '¿', '?', '¡', '!', '¿', '¡', ',', '.', ';', ':', '"', "'"], ['_', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], $fieldId);
+                // Primero eliminar caracteres especiales
+                $fieldId = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $fieldId);
+                // Reemplazar caracteres específicos por guion bajo
+                $fieldId = str_replace(['#', '/'], '_', $fieldId);
+                // Reemplazar CUALQUIER espacio en blanco (incluyendo espacios no rompibles) por guion bajo
+                $fieldId = preg_replace('/\s+/u', '_', $fieldId);
+                
                 if (!preg_match('/^[a-zA-Z]/', $fieldId)) {
                     $fieldId = 'field_' . $fieldId;
                 }
             @endphp
             const {{ $fieldId }} = document.getElementById('{{ $fieldId }}');
-            data['{{ $columna }}'] = {{ $fieldId }}.value.trim();
+            let val_{{ $fieldId }} = {{ $fieldId }} ? {{ $fieldId }}.value.trim() : '';
+            const {{ $fieldId }}_otro = document.getElementById('{{ $fieldId }}_otro');
+            
+            if ({{ $fieldId }}_otro && {{ $fieldId }}_otro.style.display !== 'none') {
+                const otroVal = {{ $fieldId }}_otro.value.trim();
+                
+                if ({{ $fieldId }}.classList.contains('checkbox-result')) {
+                     // Lógica para checkbox
+                     let values = val_{{ $fieldId }}.split(',').filter(v => v);
+                     // Remover 'Otro' de la lista
+                     values = values.filter(v => !['otro', 'otros', 'otras', 'otra'].includes(v.toLowerCase()));
+                     // Agregar el valor especificado
+                     if (otroVal) values.push(otroVal);
+                     val_{{ $fieldId }} = values.join(',');
+                } else {
+                     // Lógica para select (reemplazo total)
+                     val_{{ $fieldId }} = otroVal;
+                }
+            }
+            data['{{ $columna }}'] = val_{{ $fieldId }};
         @endforeach
 
         return data;
@@ -767,7 +985,13 @@ document.addEventListener('DOMContentLoaded', function () {
         @foreach($columnasReferencia as $columna)
             @php
                 $fieldId = strtolower($columna);
-                $fieldId = str_replace([' ', '(', ')', '¿', '?', '¡', '!', '¿', '¡', ',', '.', ';', ':', '"', "'"], ['_', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], $fieldId);
+                // Primero eliminar caracteres especiales
+                $fieldId = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $fieldId);
+                // Reemplazar caracteres específicos por guion bajo
+                $fieldId = str_replace(['#', '/'], '_', $fieldId);
+                // Reemplazar CUALQUIER espacio en blanco (incluyendo espacios no rompibles) por guion bajo
+                $fieldId = preg_replace('/\s+/u', '_', $fieldId);
+
                 if (!preg_match('/^[a-zA-Z]/', $fieldId)) {
                     $fieldId = 'field_' . $fieldId;
                 }
@@ -784,9 +1008,21 @@ document.addEventListener('DOMContentLoaded', function () {
         // No validar campos ocultos
         if (fieldGroup && fieldGroup.style.display === 'none') {
             // Campo oculto → no se valida
-        } else if (!{{ $fieldId }}.value.trim()) {
-            mostrarErrorCampo('{{ $fieldId }}', 'Este campo es obligatorio');
-            valido = false;
+        } else {
+            let val = {{ $fieldId }}.value.trim();
+            const {{ $fieldId }}_otro = document.getElementById('{{ $fieldId }}_otro');
+            
+            // Validar campo "Otro" si está activo
+            if ({{ $fieldId }}_otro && {{ $fieldId }}_otro.style.display !== 'none') {
+                val = {{ $fieldId }}_otro.value.trim();
+                if (!val) {
+                    mostrarErrorCampo('{{ $fieldId }}', 'Por favor especifique la opción "Otro"');
+                    valido = false;
+                }
+            } else if (!val) {
+                mostrarErrorCampo('{{ $fieldId }}', 'Este campo es obligatorio');
+                valido = false;
+            }
         }
     }
            @endif
@@ -1110,10 +1346,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Función para generar IDs válidos para JavaScript (igual que en PHP)
     function generateFieldId(columna) {
-        // Convertir a minúsculas y reemplazar caracteres problemáticos
         let id = columna.toLowerCase();
-        // Reemplazar espacios, paréntesis y caracteres especiales
-        id = strReplace(id, [' ', '(', ')', '#', '/', '¿', '?', '¡', '!', '¿', '¡', ',', '.', ';', ':', '"', "'"], ['_', '', '', '', '_', '', '', '', '', '', '', '', '', '', '', '', '']);
+        
+        // Eliminar caracteres especiales (punctuation)
+        id = id.replace(/[()¿?¡!,.;:"']/g, '');
+        
+        // Reemplazar chars específicos
+        id = id.replace(/[#/]/g, '_');
+        
+        // Reemplazar cualquier espacio en blanco con _
+        id = id.replace(/\s+/g, '_');
+        
         // Asegurar que empiece con letra (prefijo si es necesario)
         if (!/^[a-zA-Z]/.test(id)) {
             id = 'field_' + id;

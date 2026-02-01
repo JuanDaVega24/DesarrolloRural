@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let filteredData = []; // Datos filtrados
     let currentPage = 1;
     let pageSize = 50; // Filas por página (reducido para mejor rendimiento)
-    let activeFilters = {}; // Filtros activos por columna
+    let activeFilters = {}; // Filtros activos por columna (dropdown de cabecera)
+    let activeFiltersGroups = {}; // Filtros agrupados (cultivo/producto/especie) aplicados con OR entre columnas
     let searchTerm = ''; // Término de búsqueda
     let isInitialized = false;
 
@@ -66,13 +67,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyClientFilters() {
         filteredData = [...allData];
 
-        // Aplicar filtros de columna
+        // Aplicar filtros de columna (AND entre columnas individuales)
         Object.keys(activeFilters).forEach(column => {
             const selectedValues = activeFilters[column];
             if (selectedValues && selectedValues.length > 0) {
                 filteredData = filteredData.filter(row => {
                     const cellValue = String(row[column] || '').trim();
                     return selectedValues.includes(cellValue);
+                });
+            }
+        });
+
+        // Aplicar filtros agrupados (OR entre columnas del grupo)
+        Object.keys(activeFiltersGroups).forEach(groupKey => {
+            const group = activeFiltersGroups[groupKey];
+            if (group && group.values && group.values.length > 0 && Array.isArray(group.columns) && group.columns.length > 0) {
+                filteredData = filteredData.filter(row => {
+                    return group.values.some(val =>
+                        group.columns.some(col => String(row[col] || '').trim() === val)
+                    );
                 });
             }
         });
@@ -229,20 +242,102 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Alternar filtros
+    // --- Filtros por dropdown: Cultivo / Producto / Especie ---
+    const headers = Config.headers || [];
+    const filterData = Config.filterData || {};
+
+    function normalize(str) {
+        return String(str || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function setupDropdownFilter(selectId, placeholder, matchFn, groupKey) {
+        const selectEl = document.getElementById(selectId);
+        if (!selectEl) return;
+
+        const columns = headers.filter(h => matchFn(normalize(h)));
+        if (!columns || columns.length === 0) {
+            selectEl.style.display = 'none';
+            console.warn(`No se encontró columna para filtro ${placeholder}`);
+            return;
+        }
+
+        // Unir valores de todas las columnas del grupo y deduplicar
+        const set = new Set();
+        columns.forEach(col => {
+            const vals = filterData[col] || [];
+            vals.forEach(v => set.add(String(v)));
+        });
+        const values = Array.from(set);
+
+        let html = `<option value="">${placeholder}</option>`;
+        values.forEach(val => {
+            html += `<option value="${val}">${val}</option>`;
+        });
+        selectEl.innerHTML = html;
+
+        selectEl.addEventListener('change', function() {
+            const value = this.value;
+            if (value) {
+                activeFiltersGroups[groupKey] = { columns, values: [value] };
+            } else {
+                delete activeFiltersGroups[groupKey];
+            }
+            applyClientFilters();
+        });
+
+        return { selectEl, columns };
+    }
+
+    const cultivoFilter = setupDropdownFilter(
+        'tipoCultivoFilter',
+        'Actividades Productivas Agrícolas',
+        // Coincidencia exacta base + sufijo numérico opcional: "tipo de cultivo", "tipo de cultivo1", "tipo de cultivo 2"
+        norm => /^tipo de cultivo(?:\s*\d+)?$/.test(norm),
+        'cultivo'
+    );
+
+    const productoFilter = setupDropdownFilter(
+        'productoFilter',
+        'Actividades Agroindustriales',
+        norm => /^producto(?:\s*\d+)?$/.test(norm),
+        'producto'
+    );
+
+    const especieFilter = setupDropdownFilter(
+        'especieFilter',
+        'Actividades Pecuarias',
+        norm => /^especie(?:\s*\d+)?$/.test(norm),
+        'especie'
+    );
+
+    // Alternar filtros (actualizado)
     if (toggleFilters) {
         toggleFilters.addEventListener('click', function() {
             if (filterRow.classList.contains('d-none')) {
                 filterRow.classList.remove('d-none');
-                this.innerHTML = '<i class="bi bi-funnel"></i> Eliminar filtros';
+                this.innerHTML = '<i class="bi bi-funnel"></i>';
                 this.setAttribute('title', 'Eliminar filtros');
             } else {
                 filterRow.classList.add('d-none');
-                this.innerHTML = '<i class="bi bi-funnel"></i> Activar filtros';
+                this.innerHTML = '<i class="bi bi-funnel"></i>';
                 this.setAttribute('title', 'Activar filtros');
-                // Limpiar filtros aplicados
+                
+                // Limpiar filtros aplicados (excepto búsqueda global)
+                // OJO: Si el usuario quiere mantener el filtro de cultivo, deberíamos excluirlo?
+                // Generalmente "Eliminar filtros" limpia todo.
+                
                 activeFilters = {};
+                activeFiltersGroups = {};
                 document.querySelectorAll('.column-filter').forEach(cb => cb.checked = false);
+                
+                // Resetear dropdowns
+                if (cultivoFilter?.selectEl) cultivoFilter.selectEl.value = '';
+                if (productoFilter?.selectEl) productoFilter.selectEl.value = '';
+                if (especieFilter?.selectEl) especieFilter.selectEl.value = '';
+
                 applyClientFilters();
             }
         });
@@ -352,6 +447,20 @@ document.addEventListener('DOMContentLoaded', function() {
             applyClientFilters();
         }
     });
+
+    const filterTipoCultivo = document.getElementById('filterTipoCultivo');
+    if (filterTipoCultivo) {
+        filterTipoCultivo.addEventListener('change', function() {
+            const column = this.getAttribute('data-column');
+            const value = this.value;
+            if (value) {
+                activeFilters[column] = [value];
+            } else {
+                delete activeFilters[column];
+            }
+            applyClientFilters();
+        });
+    }
 
     // Event listener para paginación (delegación de eventos)
     if (paginationContainer) {

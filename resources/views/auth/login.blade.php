@@ -285,11 +285,7 @@
             <i class="fa-solid fa-right-to-bracket me-2"></i> Entrar
         </button>
 
-        @if (Route::has('password.request'))
-        <div class="text-center mt-3">
-            <a href="{{ route('password.request') }}" class="forgot-link">¿Olvidaste tu contraseña?</a>
-        </div>
-        @endif
+     
 
     </form>
     @if ($errors->any())
@@ -316,6 +312,9 @@
         <button class="increase-font-size" aria-label="Aumentar letra" data-increase-limit="5">
             <span class="govco-font-maximize"></span>
         </button>
+        <button class="sign-language" aria-label="Lenguaje de señas" onclick="window.open('https://ticsinbarreras.mintic.gov.co/791/w3-propertyvalue-339742.html', '_blank')">
+                 <span class="govco-sign-language"></span>
+            </button>
     </div>
 </div>
 
@@ -416,6 +415,13 @@
         content: "Aumentar letra";
     }
 
+     .barra-accesibilidad-govco button span.govco-sign-language {
+            background-image: url(/assets/icons/channels-616_icon_centro_relevo.svg);
+        }
+    .barra-accesibilidad-govco button.sign-language::before {
+            content: "Lenguaje de señas";
+        }
+
     .barra-accesibilidad-govco button:hover,
     .barra-accesibilidad-govco button:focus-visible {
         background-color: var(--govcolor-havelock-lue);
@@ -487,6 +493,10 @@ function guardarTamañoLetra() {
     // Guardar el estado actual del contraste
     const contrasteActivo = document.body.classList.contains('contrast-govco');
     localStorage.setItem('accesibilidad_contraste', contrasteActivo);
+    
+    // Guardar el estado del alto contraste
+    const altoContrasteActivo = document.documentElement.classList.contains('alto-contraste');
+    localStorage.setItem('accesibilidad_alto_contraste', altoContrasteActivo);
 
     // Guardar el contador actual del tamaño de fuente
     localStorage.setItem('accesibilidad_contador_fuente', window.accesibilityBarCounterFontSize || 0);
@@ -498,6 +508,12 @@ function aplicarTamañoLetraGuardado() {
     const contrasteGuardado = localStorage.getItem('accesibilidad_contraste');
     if (contrasteGuardado === 'true') {
         document.body.classList.add('contrast-govco');
+    }
+    
+    // Aplicar alto contraste guardado
+    const altoContrasteGuardado = localStorage.getItem('accesibilidad_alto_contraste');
+    if (altoContrasteGuardado === 'true') {
+        document.documentElement.classList.add('alto-contraste');
     }
 
     // Aplicar contador de fuente guardado y reconstruir cambios
@@ -597,12 +613,23 @@ function addEventsAccessibilityBar(event = null) {
 }
 
 function activeContrast() {
-    const element = document.querySelector('body');
-    if (element.classList.contains('contrast-govco')) {
-        element.classList.remove('contrast-govco');
+    const htmlElement = document.documentElement;
+    const bodyElement = document.querySelector('body');
+    
+    // Toggle del alto contraste (clase en html)
+    if (htmlElement.classList.contains('alto-contraste')) {
+        htmlElement.classList.remove('alto-contraste');
     } else {
-        element.classList.add('contrast-govco');
+        htmlElement.classList.add('alto-contraste');
     }
+    
+    // Mantener compatibilidad con clase antigua en body
+    if (bodyElement.classList.contains('contrast-govco')) {
+        bodyElement.classList.remove('contrast-govco');
+    } else {
+        bodyElement.classList.add('contrast-govco');
+    }
+    
     activeButtonAccessibility(this);
     guardarTamañoLetra(); // Guardar estado
 }

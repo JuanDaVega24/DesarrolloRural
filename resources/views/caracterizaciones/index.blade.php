@@ -132,7 +132,8 @@
             exportUrl: '{{ route("caracterizaciones.export-excel", $caracterizacion) }}',
             headers: @json($headers ?? []),
             headersCount: @json(count($headers ?? [])),
-            caracterizacionId: '{{ $caracterizacion->id }}'
+            caracterizacionId: '{{ $caracterizacion->id }}',
+            filterData: @json($filterData ?? [])
         };
     </script>
 

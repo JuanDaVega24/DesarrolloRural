@@ -85,6 +85,8 @@ textarea {
     box-shadow: 0 2px 4px rgba(0,0,0,0.07);
 }
 
+
+
  .escudo {
             width: 300px;
             height: 150px;
@@ -130,6 +132,52 @@ nav.navbar {
     padding: 12px 0;
     box-shadow: 0 3px 8px rgba(0,0,0,0.08);
 }
+
+/* Alto contraste: barra de navegación en negro con acentos accesibles */
+html.alto-contraste nav.navbar {
+    background: #000000 !important;
+    border-bottom: 2px solid var(--govcolor-cobalt) !important;
+    box-shadow: none !important;
+}
+
+html.alto-contraste .alcaldia-header {
+    background-color: #3b3a3a !important;
+    border-bottom: 1px solid var(--govcolor-cobalt) !important;
+}
+
+html.alto-contraste .alcaldia-name,
+html.alto-contraste .alcaldia-title {
+    color: var(--negro) !important;
+}
+
+html.alto-contraste .navbar .navbar-brand,
+html.alto-contraste .navbar .nav-link {
+    color: var(--negro) !important;
+}
+
+html.alto-contraste .navbar .nav-link:hover,
+html.alto-contraste .navbar .nav-link:focus {
+    background-color: var(--govcolor-cobalt) !important;
+    color: #000000 !important;
+    border-radius: 0.375rem;
+}
+
+html.alto-contraste .dropdown-menu {
+    background: #121212 !important;
+    border: 1px solid #2a2a2a !important;
+}
+
+html.alto-contraste .dropdown-item {
+    color: var(--negro) !important;
+}
+
+html.alto-contraste .dropdown-item:hover,
+html.alto-contraste .dropdown-item:focus {
+    background-color: var(--govcolor-cobalt) !important;
+    color: #000000 !important;
+}
+
+
 
 .dropdown-menu {
     border-radius: var(--radius-lg);
@@ -613,7 +661,7 @@ color: #4A7C2F;
     transition: gap 0.3s ease;
     font-size: 0.9375rem;
     background: linear-gradient(180deg, var(--verde), #6ba349);
-    color: var(--verde);
+    color: var(--blanco);
 }
 
 .card-link.disabled {
@@ -754,9 +802,16 @@ color: #4A7C2F;
     min-height: 100vh;
 }
 
+html.alto-contraste .dashboard-container {
+    background-color: #000000 !important;
+}
+
 .caracterizacion-container {
     padding: 1.5rem 0;
 }
+
+
+
 
 /* ==========================================
    16. MEDIA QUERIES RESPONSIVE
@@ -790,71 +845,286 @@ color: #4A7C2F;
    17. MODO DE ALTO CONTRASTE - ACCESIBILIDAD
    ========================================== */
 html.alto-contraste {
-    /* Invertir colores principales */
-    --verde: #B583D0;
-    --verde-hover: #C299DA;
-    --verde-claro: #170A1F;
-    --azul: #CC9933;
-    --azul-hover: #D6AD5C;
-    --azul-claro: #1C1305;
+    /* Colores principales (amarillo GOV.CO como acento) */
+    --verde: #FFC107;           /* Botones/acciones primarias */
+    --verde-hover: #FFD54F;
+    --verde-claro: #1E1E1E;
+    --azul: #1E88E5;            /* Secundario (si aplica) */
+    --azul-hover: #42A5F5;
+    --azul-claro: #0D47A1;
     
-    /* Invertir neutrales */
-    --negro: #E5E5E5;
-    --gris: #999999;
-    --gris-claro: #070605;
-    --gris-medio: #161310;
-    --blanco: #000000;
+    /* Neutros oscuros */
+    --negro: #F2F2F2;           /* Texto principal */
+    --gris: #BDBDBD;            /* Texto secundario */
+    --gris-claro: #121212;      /* Fondo base */
+    --gris-medio: #1E1E1E;      /* Superficies elevadas */
+    --blanco: #0D0D0D;          /* Fondo global oscuro */
     
-    /* Invertir adicionales */
-    --beige: #07090C;
-    --rojo: #23CBBA;
-    --naranja: #0094CA;
-    --naranja-hover: #1AA5D4;
+    /* Adicionales */
+    --beige: #0F0F0F;
+    --rojo: #FF5252;
+    --naranja: #FFC107;         /* Acento */
+    --naranja-hover: #FFD54F;
     
-    /* GovCo invertidos */
-    --govcolor-black: #FFFFFF;
-    --govcolor-cobalt: #F6BC4A;
-    --govcolor-havelock-lue: #B98D37;
-    --govcolor-matterhorn: #B3B3B3;
-    --govcolor-white: #000000;
-    --govcolor-green: #EA7C9E;
-    --govcolor-red: #57FABE;
+    /* Paleta GOV.CO adaptada a alto contraste oscuro */
+    --govcolor-black: #ffffff;      /* Texto en elementos GOV.CO */
+    --govcolor-cobalt: #F6C453;     /* Barra accesibilidad / acento */
+    --govcolor-havelock-lue: #F6C453;/* Hover/énfasis */
+    --govcolor-matterhorn: #B3B3B3; /* Texto secundario */
+    --govcolor-white: #000000;      /* Fondo inverso en componentes GOV.CO */
+    --govcolor-green: #00E676;
+    --govcolor-red: #FF1744;
     
-    /* Estilos invertidos */
-    --verde-principal: #B583D0;
-    --azul-govco: #CC9933;
-    --gris-suave: #0A0805;
-    --gris-texto: #CCCCCC;
+    /* Estilos derivados */
+    --verde-principal: #FFC107;
+    --azul-govco: #d8a50d;
+    --gris-suave: #121212;
+    --gris-texto: #E0E0E0;
 }
 
 html.alto-contraste {
     background-color: var(--blanco);
     color: var(--negro);
-    filter: invert(1) hue-rotate(180deg);
 }
 
 html.alto-contraste img,
 html.alto-contraste video,
 html.alto-contraste canvas,
 html.alto-contraste svg {
-    filter: invert(1) hue-rotate(180deg);
 }
 
 html.alto-contraste .barra-accesibilidad-govco-container,
-html.alto-contraste .barra-accesibilidad-govco,
+html.alto-contraste .barra-accesibilidad-govco {
+}
+
+/* Estilos personalizados para los botones en modo alto contraste */
 html.alto-contraste .barra-accesibilidad-govco button {
-    filter: invert(1) hue-rotate(180deg);
+    background-color: #F6C453 !important; /* Fondo Negro */
+    color: #000000 !important; /* Texto Amarillo */
+    border: 2px solid #F6C453 !important;
 }
 
-html.alto-contraste button.contrast::after {
-    content: ' ✓';
-    font-weight: bold;
-    color: #00FF00;
+html.alto-contraste .barra-accesibilidad-govco button:hover,
+html.alto-contraste .barra-accesibilidad-govco button.active {
+    background-color: #f5e9d0 !important;
+    color: #000000 !important;
 }
 
-/* ==========================================
-   18. MODALES GOV.CO
-   ========================================== */
+/* User Management & General High Contrast Fixes */
+html.alto-contraste .filter-minimal,
+html.alto-contraste .table-card,
+html.alto-contraste .bg-white,
+html.alto-contraste .card,
+html.alto-contraste .info-card,
+html.alto-contraste .upload-card,
+html.alto-contraste .module-card {
+    background-color: #3b3a3a !important;
+    border: 1px solid #3b3a3a !important;
+    color: var(--negro) !important;
+}
+
+html.alto-contraste .table-header {
+    background: #000000 !important;
+    border-bottom: 2px solid var(--govcolor-cobalt) !important;
+}
+
+html.alto-contraste .table-header h4,
+html.alto-contraste .table-header span {
+    color: var(--verde-principal) !important;
+}
+
+html.alto-contraste .form-control, 
+html.alto-contraste .form-select {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: var(--govcolor-cobalt) !important;
+}
+
+html.alto-contraste .table thead th {
+    background-color: #000000 !important;
+    color: var(--verde-principal) !important;
+    border-bottom: 1px solid var(--govcolor-cobalt) !important;
+}
+ 
+ /* Tabla de Caracterizaciones - Alto contraste */
+ html.alto-contraste .data-card {
+     background-color: #000000 !important;
+     border: 1px solid var(--govcolor-cobalt) !important;
+     color: #ffffff !important;
+ }
+ 
+ html.alto-contraste .card-header,
+ html.alto-contraste .card-header.text-black {
+     background-color: #000000 !important;
+     color: #E0E0E0 !important;
+     border-bottom: 1px solid var(--govcolor-cobalt) !important;
+ }
+ 
+ html.alto-contraste .text-black {
+     color: #E0E0E0 !important;
+ }
+ 
+ html.alto-contraste .table {
+     background-color: #000000 !important;
+     color: #ffffff !important;
+ }
+ 
+ html.alto-contraste .table tbody tr {
+     background-color: #000000 !important;
+ }
+ 
+ html.alto-contraste .btn-light {
+     background-color: #000000 !important;
+     color: #ffffff !important;
+     border: 1px solid var(--govcolor-cobalt) !important;
+ }
+ 
+ html.alto-contraste .filter-icon {
+     color: var(--verde-principal) !important;
+ }
+
+html.alto-contraste .table tbody td {
+    border-bottom: 1px solid #333 !important;
+    color: #ffffff !important;
+}
+
+html.alto-contraste .table tbody tr:hover {
+    background-color: #1a1a1a !important;
+}
+
+html.alto-contraste .badge {
+    background-color: #000000 !important;
+    border: 1px solid var(--govcolor-cobalt) !important;
+    color: var(--verde-principal) !important;
+}
+ 
+ /* Mejora de legibilidad: tabla de caracterizaciones */
+ html.alto-contraste .table-responsive {
+     background-color: #000000 !important;
+     border: 1px solid var(--govcolor-cobalt) !important;
+ }
+ 
+ html.alto-contraste .table tbody td {
+     color: #ffffff !important;
+     border-bottom: 1px solid #2a2a2a !important;
+ }
+ 
+ html.alto-contraste .table tbody tr:nth-child(even) {
+     background-color: #0f0f0f !important;
+ }
+ 
+ html.alto-contraste .table tbody td a {
+     color: #ffffff !important;
+     text-decoration: underline !important;
+ }
+ 
+ html.alto-contraste .table-loading-placeholder {
+     background-color: #000000 !important;
+     color: #E0E0E0 !important;
+ }
+ 
+ /* Fuerza máxima visibilidad en celdas y textos dentro de la tabla */
+ html.alto-contraste .data-card table,
+ html.alto-contraste .data-card table thead th,
+ html.alto-contraste .data-card table tbody td,
+ html.alto-contraste .data-card table tbody th,
+ html.alto-contraste .data-card table tbody td *,
+ html.alto-contraste .data-card table tbody th * {
+     color: #ffffff !important;
+     background: transparent !important;
+ }
+ 
+ html.alto-contraste .data-card table tbody td {
+     line-height: 1.35 !important;
+     padding: 0.6rem 0.6rem !important;
+     word-break: break-word !important;
+ }
+html.alto-contraste .form-card,
+html.alto-contraste .form-container,
+html.alto-contraste .login-box {
+    background-color: #000000 !important;
+    border: 1px solid #F6C453 !important;
+    box-shadow: none !important;
+}
+
+html.alto-contraste .login-title,
+html.alto-contraste .login-subtitle {
+    color: #E0E0E0 !important;
+}
+
+html.alto-contraste .form-label {
+    color: #F2F2F2 !important;
+}
+
+html.alto-contraste .required-indicator {
+    color: #FF5252 !important;
+}
+
+html.alto-contraste .input-group-text {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+    border-color: #F6C453 !important;
+}
+
+html.alto-contraste .form-control,
+html.alto-contraste .form-select {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #F6C453 !important;
+}
+
+html.alto-contraste .form-control::placeholder {
+    color: #BDBDBD !important;
+    opacity: 1 !important;
+}
+
+html.alto-contraste .form-control:focus,
+html.alto-contraste .form-select:focus {
+    border-color: #F6C453 !important;
+    box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.35) !important;
+    outline: none !important;
+}
+
+html.alto-contraste input[type="file"] {
+    color: #ffffff !important;
+    border-color: #F6C453 !important;
+}
+
+html.alto-contraste .form-text {
+    color: #BDBDBD !important;
+}
+
+html.alto-contraste input[type="checkbox"],
+html.alto-contraste input[type="radio"] {
+    accent-color: #F6C453 !important;
+}
+
+html.alto-contraste .form-check-input {
+    background-color: #000000 !important;
+    border: 2px solid #F6C453 !important;
+}
+
+html.alto-contraste .form-check-input:checked {
+    background-color: #F6C453 !important;
+    border-color: #F6C453 !important;
+}
+
+html.alto-contraste .form-check-label {
+    color: #F2F2F2 !important;
+}
+
+html.alto-contraste .alert-info {
+    background-color: #0f141b !important;
+    border-left: 3px solid #1E88E5 !important;
+    color: #E0E0E0 !important;
+}
+
+html.alto-contraste ::selection {
+    background: #F6C453 !important;
+    color: #000000 !important;
+}
+
+ 
 .container-modal-govco {
     position: fixed;
     inset: 0;
@@ -1473,7 +1743,7 @@ html.alto-contraste button.contrast::after {
 .btn-govco.fill-btn-govco.disabled .govco-svg,
 .btn-govco.fill-secundary-btn-govco:disabled .govco-svg,
 .btn-govco.fill-secundary-btn-govco.disabled .govco-svg {
-  filter: var(--govcolor-svg-white);
+  filter: var(--govcolor-white);
 }
 
 .btn-govco.outline-btn-govco .govco-svg,
