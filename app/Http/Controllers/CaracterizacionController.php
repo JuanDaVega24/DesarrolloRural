@@ -124,7 +124,7 @@ class CaracterizacionController extends Controller
     public function processExcel(Request $request, Caracterizacion $caracterizacion)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:51200', // 50MB max
         ]);
 
         try {

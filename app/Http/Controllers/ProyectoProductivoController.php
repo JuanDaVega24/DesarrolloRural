@@ -156,7 +156,7 @@ class ProyectoProductivoController extends Controller
     public function processExcel(Request $request, ProyectoProductivo $proyecto)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB max
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:51200', // 50MB max
         ]);
 
         try {
@@ -700,7 +700,7 @@ class ProyectoProductivoController extends Controller
         // Estrategia 1: Buscar por nombres de columna específicos (prioridad alta)
         $documentKeywords = [
             // Alta prioridad - términos muy específicos colombianos
-            ['cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
+            ['cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula', 'número de documento', 'numero de documento'],
 
             // Media-alta prioridad - términos específicos
             ['cédula', 'cedula', 'cc', 'ced'],
@@ -1247,7 +1247,7 @@ class ProyectoProductivoController extends Controller
             $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
 
             // Obtener nombre del principal
-            $principalNombre = $this->findColumnValue($row, $headers, ['nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+            $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
             if (empty($principalNombre)) {
                 $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
                 $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
@@ -1257,10 +1257,16 @@ class ProyectoProductivoController extends Controller
             }
 
             // Obtener tipo de documento del principal
-            $principalTipoDocumento = $this->findColumnValue($row, $headers, ['tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
+            $principalTipoDocumento = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1', 'tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
 
             // Construir el string de estado para caracterización directa
             $estadoCaracterizacionDirecta = 'Si';
+            if (!empty($principalNombre) || !empty($principalTipoDocumento) || !empty($documento)) {
+                $detalles = array_filter([$principalNombre, $principalTipoDocumento, $documento], function($v) { return !empty($v); });
+                if (!empty($detalles)) {
+                    $estadoCaracterizacionDirecta .= ' - ' . implode(' - ', $detalles);
+                }
+            }
             if (!empty($familiaresInfo)) {
                 $familiaresString = implode(', ', array_map(function($familiar) {
                     return "{$familiar['nombre']}, {$familiar['tipo']}, {$familiar['numero']}";
@@ -1406,14 +1412,43 @@ class ProyectoProductivoController extends Controller
                 // Extraer información de familiares
                 $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
 
-                // Construir el string de estado con información de familiares
-                $estadoCaracterizacion = 'Si hola';
-                if (!empty($familiaresInfo)) {
-                    $familiaresString = implode(' , ', array_map(function($familiar) {
-                        return "{$familiar['nombre']} {$familiar['tipo']} {$familiar['numero']}";
-                    }, $familiaresInfo));
-                    $estadoCaracterizacion .= ' , ' . $familiaresString;
+                // Obtener nombre del principal
+                $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+                if (empty($principalNombre)) {
+                    $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
+                    $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
+                    $segundoApellido = $this->findColumnValue($row, $headers, ['segundo apellido', 'Segundo Apellido']);
+                    $partesNombre = array_filter([$primerNombre, $primerApellido, $segundoApellido]);
+                    $principalNombre = implode(' ', $partesNombre);
                 }
+
+                // Obtener tipo de documento del principal
+                $principalTipoDocumento = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1', 'tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
+
+                // Construir el string de estado con información de familiares
+                $estadoCaracterizacion = 'Si';
+                
+                // Array para almacenar todas las partes del string final
+                $partesEstado = ['Si'];
+
+                // Agregar datos del principal
+                if (!empty($principalNombre) || !empty($principalTipoDocumento) || !empty($rowDocumento)) {
+                    if (!empty($principalNombre)) $partesEstado[] = $principalNombre;
+                    if (!empty($principalTipoDocumento)) $partesEstado[] = $principalTipoDocumento;
+                    if (!empty($rowDocumento)) $partesEstado[] = $rowDocumento;
+                }
+
+                // Agregar datos de los familiares
+                if (!empty($familiaresInfo)) {
+                    foreach ($familiaresInfo as $familiar) {
+                        if (!empty($familiar['nombre'])) $partesEstado[] = $familiar['nombre'];
+                        if (!empty($familiar['tipo'])) $partesEstado[] = $familiar['tipo'];
+                        if (!empty($familiar['numero'])) $partesEstado[] = $familiar['numero'];
+                    }
+                }
+
+                // Unir todo con guiones
+                $estadoCaracterizacion = implode(' - ', $partesEstado);
 
                 return [
                     'estado_caracterizacion' => $estadoCaracterizacion,
@@ -1444,7 +1479,7 @@ class ProyectoProductivoController extends Controller
                     }
 
                     // Obtener nombre del principal (persona caracterizada)
-                    $principalNombre = $this->findColumnValue($row, $headers, ['nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+                    $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
                     if (empty($principalNombre)) {
                         // Intentar combinar nombre y apellidos
                         $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
@@ -1455,7 +1490,7 @@ class ProyectoProductivoController extends Controller
                     }
 
                     // Obtener tipo de documento del principal
-                    $principalTipoDocumento = $this->findColumnValue($row, $headers, ['tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
+                    $principalTipoDocumento = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1', 'tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
 
                     // Extraer información de corregimiento y vereda
                     $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
@@ -1496,54 +1531,57 @@ class ProyectoProductivoController extends Controller
     private function extractFamiliaresInfo($row, $headers)
     {
         $familiares = [];
-
-        // Buscar columnas que contengan información de familiares usando los patrones específicos
-        $familiaresData = [];
-
-        foreach ($headers as $header) {
-            $headerNormalized = $this->normalizeText($header);
-
-            // Buscar columnas de nombre de familiar: "Nombres y apellidos familiar X"
-            if (preg_match('/nombres y apellidos familiar (\d+)/i', $headerNormalized, $matches)) {
-                $index = $matches[1];
-                $value = trim((string)($row[$header] ?? ''));
-                if (!isset($familiaresData[$index])) {
-                    $familiaresData[$index] = [];
-                }
-                $familiaresData[$index]['nombre'] = $value;
+        
+        // Iterar posibles índices de familiares (1 a 20)
+        // Según indicación:
+        // Familiar 1: "Nombres y apellidos1"
+        // Familiar 2: "Nombres y apellidos2"
+        for ($i = 1; $i <= 20; $i++) {
+            $familiar = [];
+            
+            // 1. Buscar NOMBRE del familiar i
+            // Patrones: "Nombres y apellidosX", "Nombres y apellidos X", "Nombre familiar X"
+            $namePatterns = [
+                "Nombres y apellidos{$i}", "Nombres y apellidos {$i}",
+                "Nombres y apellidos familiar {$i}", "Nombre familiar {$i}",
+                "Nombre{$i}", "Nombre {$i}"
+            ];
+            $nombre = $this->findColumnValue($row, $headers, $namePatterns);
+            
+            // Si no hay nombre, saltamos este índice (asumiendo que el nombre es obligatorio para que exista el familiar)
+            if (empty($nombre)) {
+                continue;
             }
+            $familiar['nombre'] = $nombre;
 
-            // Buscar columnas de tipo de documento: "Tipo de documento de identidad" o "Tipo de documento de identidadX"
-            elseif (preg_match('/tipo de documento de identidad(\d*)/i', $headerNormalized, $matches)) {
-                $index = $matches[1] ?: 1; // Si no tiene número, asumir 1
-                $value = trim((string)($row[$header] ?? ''));
-                if (!isset($familiaresData[$index])) {
-                    $familiaresData[$index] = [];
-                }
-                $familiaresData[$index]['tipo'] = $value;
-            }
+            // 2. Buscar TIPO DE DOCUMENTO del familiar i
+            // La indicación del usuario sugiere un desfase o numeración específica.
+            // Probamos patrones comunes y el patrón "i+1" mencionado indirectamente ("Tipo de documento1" es main, "Nombres y apellidos1" es familiar 1)
+            // Si Main usa "Tipo de documento1", entonces Familiar 1 podría usar "Tipo de documento2".
+            // Pero también buscamos "Tipo de documento1" si no fuera main.
+            // Prioridad:
+            // - "Tipo de documento familiar X" (Explícito)
+            // - "Tipo de documento X+1" (Posible patrón secuencial si Main es 1)
+            // - "Tipo de documento X" (Patrón estándar)
+            $typePatterns = [
+                "Tipo de documento familiar {$i}", 
+                "Tipo de documento de identidad {$i}", "Tipo de documento de identidad{$i}",
+                "Tipo de documento" . ($i + 1), "Tipo de documento " . ($i + 1), // Si Main es 1, Fam 1 es 2
+                "Tipo de documento{$i}", "Tipo de documento {$i}"
+            ];
+            $familiar['tipo'] = $this->findColumnValue($row, $headers, $typePatterns);
 
-            // Buscar columnas de número de documento: "Número de documento de identidad (sin puntos ni comas)" o con número
-            elseif (preg_match('/numero.*documento.*identidad\D*(\d*)$/i', $headerNormalized, $matches)) {
-                $index = $matches[1] ?: 1; // Si no tiene número, asumir 1
-                $value = trim((string)($row[$header] ?? ''));
-                if (!isset($familiaresData[$index])) {
-                    $familiaresData[$index] = [];
-                }
-                $familiaresData[$index]['numero'] = $value;
-            }
-        }
+            // 3. Buscar NÚMERO DE DOCUMENTO del familiar i
+            // Patrones: "Número de documentoX", "Número de documento X"
+            $numPatterns = [
+                "Número de documento{$i}", "Número de documento {$i}",
+                "Numero de documento{$i}", "Numero de documento {$i}",
+                "Número de documento familiar {$i}", "Numero de documento familiar {$i}",
+                "Número de documento de identidad {$i}", "Número de documento de identidad{$i}"
+            ];
+            $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns);
 
-        // Filtrar familiares que tengan al menos nombre (solo incluir índices >= 1 para familiares)
-        foreach ($familiaresData as $index => $familiar) {
-            if ($index >= 1 && !empty($familiar['nombre']) &&
-                (!empty($familiar['tipo']) || !empty($familiar['numero']))) {
-                $familiares[] = [
-                    'nombre' => $familiar['nombre'],
-                    'tipo' => $familiar['tipo'] ?? '',
-                    'numero' => $familiar['numero'] ?? ''
-                ];
-            }
+            $familiares[] = $familiar;
         }
 
         return $familiares;

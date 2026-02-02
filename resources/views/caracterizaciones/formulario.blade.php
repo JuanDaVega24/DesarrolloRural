@@ -384,7 +384,7 @@
                                         if ($tieneOpcionesEspecificas) {
                                             // Definir qué campos deben ser checkbox (selección múltiple)
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
-                                            str_contains($columnaLower, 'cual') 
+                                            str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') || str_contains($columnaLower, 'el destino final de la producción es')
                                             
                                             
 
@@ -435,7 +435,7 @@
                                                   str_contains($columnaLower, 'número') || str_contains($columnaLower, 'Número de documento') || 
                                                   str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || str_contains($columnaLower, 'hembras') ||
                                                   str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') || str_contains($columnaLower, 'machos') ||
-                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'principales fuentes de ingresos del hogar agropecuaria') ||
+                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') ||
                                                   str_contains($columnaLower, 'pecuaria') || str_contains($columnaLower, 'empleo formal') || str_contains($columnaLower, 'actividades comerciales') ||
                                                 str_contains($columnaLower, 'usos del suelo en el predio agricultura (ha)') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') ||
                                                str_contains($columnaLower, 'rastrojo (ha)')
@@ -460,7 +460,7 @@
                                                 $tipoCampo = 'number';
                                             }
                                         }
-                                        if (trim($columnaLower) === 'pecuaria') {
+                                        if (trim($columnaLower) === 'Actividades pecuarias') {
                                             $tipoCampo = 'number';
                                         }
                                     }
