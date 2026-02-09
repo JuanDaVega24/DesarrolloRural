@@ -38,7 +38,8 @@ class AdminUserController extends Controller
             'name'     => 'required',
             'email'    => ['required','email', Rule::unique('users')],
             'password' => 'required|min:6',
-            'role'     => 'required'
+            'role'     => 'required',
+            'caracterizacion_permiso' => ['required_if:role,Tabulador', Rule::in(['0','1'])]
         ],[
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -54,6 +55,7 @@ class AdminUserController extends Controller
             'email'    => $request->email,
             'password' => bcrypt($request->password),
             'role'     => $request->role,
+            'caracterizacion_permiso' => $request->role === 'Tabulador' ? (int)$request->caracterizacion_permiso : 0,
         ]);
 
         return redirect()->route('usuarios.index')->with('ok', 'Usuario creado correctamente');
@@ -70,7 +72,8 @@ class AdminUserController extends Controller
             'name'  => 'required',
             'email' => ['required','email', Rule::unique('users')->ignore($usuario->id)],
             'password' => 'nullable|min:6',
-            'role'  => 'required'
+            'role'  => 'required',
+            'caracterizacion_permiso' => ['required_if:role,Tabulador', Rule::in(['0','1'])]
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -84,6 +87,7 @@ class AdminUserController extends Controller
             'name'  => $request->name,
             'email' => $request->email,
             'role'  => $request->role,
+            'caracterizacion_permiso' => $request->role === 'Tabulador' ? (int)$request->caracterizacion_permiso : 0,
         ];
 
         // Solo actualizar contraseña si se proporciona

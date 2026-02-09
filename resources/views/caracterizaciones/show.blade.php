@@ -89,7 +89,20 @@
                                 @foreach($rows as $row)
                                     <tr>
                                         @foreach($headers as $header)
-                                            <td>{{ $row[$header] ?? '' }}</td>
+                                            @php
+                                                $val = $row[$header] ?? '';
+                                                $isUrl = is_string($val) && filter_var($val, FILTER_VALIDATE_URL);
+                                                $isImage = $isUrl && preg_match('/\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i', $val);
+                                            @endphp
+                                            <td>
+                                                @if($isUrl)
+                                                    <a href="{{ $val }}" target="_blank" rel="noopener" @if($isImage) download @endif>
+                                                        {{ $isImage ? 'Descargar imagen' : $val }}
+                                                    </a>
+                                                @else
+                                                    {{ $val }}
+                                                @endif
+                                            </td>
                                         @endforeach
                                     </tr>
                                 @endforeach

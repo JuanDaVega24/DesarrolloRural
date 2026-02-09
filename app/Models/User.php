@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Role;
 
 class User extends Authenticatable
 {
@@ -31,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'caracterizacion_permiso',
     ];
 
     /**
@@ -63,17 +62,13 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'caracterizacion_permiso' => 'boolean',
         ];
     }
 
-    public function roles()
-{
-    return $this->belongsToMany(Role::class, 'role_user');
-}
-
-public function hasRole($role)
-{
-    return $this->role == $role;
-}
+    public function hasRole($role)
+    {
+        return strtolower((string)$this->role) === strtolower((string)$role);
+    }
 
 }

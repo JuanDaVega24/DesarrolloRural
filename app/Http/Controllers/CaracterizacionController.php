@@ -6,13 +6,21 @@ use App\Models\Caracterizacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class CaracterizacionController extends Controller
 {
+    protected function authorizeCaracterizacionAccess(): void
+    {
+        $user = Auth::user();
+        if (!$user || (!$user->hasRole('Administrador') && !($user->caracterizacion_permiso))) {
+            abort(403);
+        }
+    }
+
     public function index(Request $request)
     {
+        $this->authorizeCaracterizacionAccess();
         // Obtener o crear la caracterización global (ID=1)
         $caracterizacion = Caracterizacion::find(1);
 
@@ -67,6 +75,7 @@ class CaracterizacionController extends Controller
 
     public function caracterizacionesPorAno($ano)
     {
+        $this->authorizeCaracterizacionAccess();
         // Obtener caracterizaciones del año específico
         $caracterizaciones = Caracterizacion::where('ano', $ano)
             ->latest()
@@ -79,11 +88,13 @@ class CaracterizacionController extends Controller
 
     public function create()
     {
+        $this->authorizeCaracterizacionAccess();
         return view('caracterizaciones.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeCaracterizacionAccess();
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'ano' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
@@ -101,28 +112,33 @@ class CaracterizacionController extends Controller
 
     public function edit(Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         return view('caracterizaciones.edit', compact('caracterizacion'));
     }
 
     public function update(Request $request, Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         $caracterizacion->update($request->all());
         return redirect()->route('caracterizaciones.index')->with('success','Caracterización actualizada');
     }
 
     public function destroy(Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         $caracterizacion->delete();
         return back()->with('success','¡Caracterización eliminada Correctamente!');
     }
 
     public function uploadExcel(Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         return view('caracterizaciones.upload_excel', compact('caracterizacion'));
     }
 
     public function processExcel(Request $request, Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         $request->validate([
             'excel_file' => 'required|file|mimes:xlsx,xls|max:51200', // 50MB max
         ]);
@@ -232,6 +248,7 @@ class CaracterizacionController extends Controller
 
     public function show(Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         if (!$caracterizacion->data) {
             return redirect()->route('caracterizaciones.index')->with('error', 'Esta caracterización no tiene datos cargados.');
         }
@@ -246,6 +263,7 @@ class CaracterizacionController extends Controller
 
     public function exportExcel(Request $request, Caracterizacion $caracterizacion)
     {
+        $this->authorizeCaracterizacionAccess();
         if (!$caracterizacion->data) {
             return redirect()->back()->with('error', 'Esta caracterización no tiene datos para exportar.');
         }

@@ -16,7 +16,6 @@ class ProyectoProductivo extends Model
         'ano',
         'descripcion',
         'estado',
-        'encuesta_id', // relación con encuestas si aplica
         'data',
         'origen', // 'manual' o 'excel'
     ];

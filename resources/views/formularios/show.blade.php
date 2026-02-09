@@ -273,8 +273,12 @@
                                     <i class="fas fa-camera"></i>
                                     EVIDENCIA FOTOGRAFICA (Consultado por la Alcaldía)
                                 </label>
-                                <input type="text" id="evidencia_fotografica" class="form-control"
-                                       placeholder="Ingrese evidencia fotográfica" readonly>
+                                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                    <input type="file" id="evidencia_file" class="form-control" accept="image/*">
+                                    <input type="text" id="evidencia_fotografica" class="form-control"
+                                           placeholder="Nombre del archivo seleccionado" readonly>
+                                </div>
+                                <div id="error-evidencia_fotografica" class="field-error"></div>
                             </div>
 
                             {{-- CONSULTA BD --}}
@@ -354,6 +358,18 @@ document.addEventListener('DOMContentLoaded', function () {
     let beneficiarios = [];
     let contador = 1;
 
+    const evidenciaFileInput = document.getElementById('evidencia_file');
+    const evidenciaNombreInput = document.getElementById('evidencia_fotografica');
+    if (evidenciaFileInput && evidenciaNombreInput) {
+        evidenciaFileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                evidenciaNombreInput.value = this.files[0].name;
+                limpiarErrorCampo('evidencia_fotografica');
+            } else {
+                evidenciaNombreInput.value = '';
+            }
+        });
+    }
     /* =========================
        UTILIDADES DE ERRORES
     ========================== */
@@ -405,6 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const telefono = document.getElementById('telefono');
         const lugar_entrega = document.getElementById('lugar_entrega');
         const evidencia_fotografica = document.getElementById('evidencia_fotografica');
+        const evidencia_file = document.getElementById('evidencia_file');
         const consulta_bd = document.getElementById('consulta_bd');
 
         return {
@@ -421,7 +438,9 @@ document.addEventListener('DOMContentLoaded', function () {
             'FINCA': finca.value.trim(),
             'TELÉFONO': telefono.value.trim(),
             'LUGAR DE ENTREGA': lugar_entrega.value.trim(),
-            'EVIDENCIA FOTOGRAFICA': evidencia_fotografica.value.trim(),
+            'EVIDENCIA FOTOGRAFICA': (evidencia_file && evidencia_file.files && evidencia_file.files[0])
+                ? evidencia_file.files[0].name
+                : evidencia_fotografica.value.trim(),
             'CONSULTA BD': consulta_bd.value.trim()
         };
     }
@@ -456,6 +475,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        const evidenciaFile = document.getElementById('evidencia_file');
+        const evidenciaNombre = document.getElementById('evidencia_fotografica');
+        if (evidenciaFile && evidenciaFile.files && evidenciaFile.files[0]) {
+            if (evidenciaNombre) {
+                evidenciaNombre.value = evidenciaFile.files[0].name;
+                limpiarErrorCampo('evidencia_fotografica');
+            }
+        }
+
         return valido;
     }
 
@@ -465,6 +493,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function limpiarFormulario() {
         document.querySelectorAll('#beneficiario-form input, #beneficiario-form select')
             .forEach(c => c.value = '');
+        const evidenciaFile = document.getElementById('evidencia_file');
+        if (evidenciaFile) evidenciaFile.value = '';
         limpiarTodosErrores();
     }
 

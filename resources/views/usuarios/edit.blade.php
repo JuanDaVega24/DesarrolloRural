@@ -59,6 +59,14 @@
                     </select>
                 </div>
 
+                <div class="mb-3 position-relative" id="permisoCaracterizacionContainer">
+                    <i class="fa-solid fa-shield input-icon"></i>
+                    <select name="caracterizacion_permiso" class="form-control" required>
+                        <option value="0" {{ old('caracterizacion_permiso', (int)($usuario->caracterizacion_permiso)) === 0 ? 'selected' : '' }}>No tiene permisos</option>
+                        <option value="1" {{ old('caracterizacion_permiso', (int)($usuario->caracterizacion_permiso)) === 1 ? 'selected' : '' }}>Tiene permiso de Caracterización</option>
+                    </select>
+                </div>
+
                 {{-- Botón Actualizar --}}
                 <button class="btn-login mt-3">
                     <i class="fa-solid fa-save me-2"></i> Actualizar Usuario
@@ -74,5 +82,24 @@
             </form>
         </div>
     </div>
+
+    <script>
+        (function(){
+            const roleSelect = document.querySelector('select[name="role"]');
+            const permisoContainer = document.getElementById('permisoCaracterizacionContainer');
+            const toggle = () => {
+                const isAdmin = roleSelect.value === 'Administrador';
+                permisoContainer.style.display = isAdmin ? 'none' : '';
+                const permisoSelect = permisoContainer.querySelector('select[name="caracterizacion_permiso"]');
+                if (isAdmin) {
+                    permisoSelect.value = '0';
+                }
+            };
+            if (roleSelect && permisoContainer) {
+                toggle();
+                roleSelect.addEventListener('change', toggle);
+            }
+        })();
+    </script>
 
 </x-app-layout>

@@ -13,6 +13,10 @@ class CaracterizacionFormularioController extends Controller
      */
     public function show()
     {
+        $user = Auth::user();
+        if (!$user || (!($user->hasRole('Administrador')) && !($user->caracterizacion_permiso))) {
+            abort(403);
+        }
         // Obtener la caracterización global (ID=1)
         $caracterizacion = Caracterizacion::find(1);
 
@@ -32,36 +36,6 @@ class CaracterizacionFormularioController extends Controller
         }
 
         // Calcular el siguiente ID disponible basado en los registros existentes
-        $registrosExistentes = $data['rows'] ?? [];
-        $ultimoId = 0;
-        $columnaId = null;
-
-        // Buscar cuál es la columna que actúa como ID (misma lógica que en la vista)
-        foreach ($columnasReferencia as $columna) {
-            $columnaLower = strtolower($columna);
-            if (preg_match('/(^|[\s_])id($|[\s_])/', $columnaLower) && !str_contains($columnaLower, 'cedula') && !str_contains($columnaLower, 'documento')) {
-                $columnaId = $columna;
-                break;
-            }
-        }
-
-        if ($columnaId) {
-            foreach ($registrosExistentes as $row) {
-                if (isset($row[$columnaId]) && is_numeric($row[$columnaId])) {
-                    $val = (int)$row[$columnaId];
-                    if ($val > $ultimoId) {
-                        $ultimoId = $val;
-                    }
-                }
-            }
-        } else {
-            // Fallback: si no se detecta columna ID explícita, usar el conteo de filas
-            $ultimoId = count($registrosExistentes);
-        }
-
-        $siguienteId = $ultimoId + 1;
-
-  // Calcular el siguiente ID disponible basado en los registros existentes
         $registrosExistentes = $data['rows'] ?? [];
         $ultimoId = 0;
         $columnaId = null;
@@ -227,17 +201,7 @@ class CaracterizacionFormularioController extends Controller
         $headers = $data['headers'] ?? [];
         $rows = $data['rows'] ?? [];
 
-        // Buscar columna de documento
-        $documentColumn = null;
-        foreach ($headers as $header) {
-            $headerNormalized = strtolower(trim($header));
-            if (str_contains($headerNormalized, 'cedula') || str_contains($headerNormalized, 'cédula') ||
-                str_contains($headerNormalized, 'documento') || str_contains($headerNormalized, 'dni') ||
-                str_contains($headerNormalized, 'identidad')) {
-                $documentColumn = $header;
-                break;
-            }
-        }
+        $documentColumn = $this->findDocumentColumn($headers, $rows);
 
         $found = false;
         if ($documentColumn) {
@@ -253,5 +217,59 @@ class CaracterizacionFormularioController extends Controller
             'found_in_caracterizacion' => $found,
             'document_column' => $documentColumn
         ]);
+    }
+
+    private function normalizeText($text)
+    {
+        return strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', (string)$text));
+    }
+
+    private function isValidDocumentNumber($value)
+    {
+        if (!is_numeric($value)) return false;
+        $length = strlen((string)$value);
+        return $length >= 6 && $length <= 12 && (int)$value > 100000;
+    }
+
+    private function validateDocumentColumn($columnName, $rows)
+    {
+        if (empty($rows)) return false;
+        $validCount = 0;
+        $totalChecked = min(20, count($rows));
+        for ($i = 0; $i < $totalChecked; $i++) {
+            if (!isset($rows[$i][$columnName])) continue;
+            $value = trim((string)$rows[$i][$columnName]);
+            if ($this->isValidDocumentNumber($value)) {
+                $validCount++;
+            }
+        }
+        return $validCount >= $totalChecked * 0.6;
+    }
+
+    private function findDocumentColumn($headers, $rows)
+    {
+        $priority = [
+            ['numero de documento de identidad del encuestado', 'numero documento identidad', 'número documento identidad', 'documento de identidad', 'numero de documento', 'número de documento'],
+            ['cedula de ciudadania', 'cédula de ciudadanía', 'cedula', 'cédula', 'dni'],
+            ['documento', 'identidad', 'id']
+        ];
+        foreach ($priority as $group) {
+            foreach ($headers as $header) {
+                $hn = $this->normalizeText($header);
+                foreach ($group as $kw) {
+                    if (str_contains($hn, $kw)) {
+                        if (!str_contains($hn, 'tipo de documento') && $this->validateDocumentColumn($header, $rows)) {
+                            return $header;
+                        }
+                    }
+                }
+            }
+        }
+        foreach ($headers as $header) {
+            if ($this->validateDocumentColumn($header, $rows)) {
+                return $header;
+            }
+        }
+        return null;
     }
 }

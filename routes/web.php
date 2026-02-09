@@ -165,9 +165,6 @@ Route::middleware([
         Route::get('reportes', [ReporteController::class,'index'])
             ->name('reportes.index');
 
-        Route::post('reportes/filtrar', [ReporteController::class,'filtrar'])
-            ->name('reportes.filtrar');
-
         // Estadísticas de corregimientos
         Route::get('reportes/estadisticas-corregimientos', [ReporteController::class,'estadisticasCorregimientosView'])
             ->name('reportes.estadisticas-corregimientos');
@@ -183,20 +180,17 @@ Route::middleware([
 
         Route::get('reportes/estadisticas-area/pdf', [ReporteController::class,'estadisticasAreaPDF'])
             ->name('reportes.estadisticas-area.pdf');
+        
+        Route::get('reportes/area-proyectos', [ReporteController::class,'areaProyectosView'])
+            ->name('reportes.area-proyectos');
+        Route::get('reportes/area-proyectos/pdf', [ReporteController::class,'areaProyectosPDF'])
+            ->name('reportes.area-proyectos.pdf');
+        Route::get('reportes/area-proyectos/vereda/pdf', [ReporteController::class,'areaProyectosVeredaPDF'])
+            ->name('reportes.area-proyectos.vereda.pdf');
 
         // API para datos de estadísticas (si se necesita AJAX)
         Route::get('api/reportes/estadisticas-corregimientos', [ReporteController::class,'estadisticasCorregimientos'])
             ->name('api.reportes.estadisticas-corregimientos');
-
-        // Área por corregimientos para proyectos productivos
-        Route::get('reportes/area-proyectos', [ReporteController::class,'areaProyectosView'])
-            ->name('reportes.area-proyectos');
-
-        Route::get('reportes/area-proyectos/pdf', [ReporteController::class,'areaProyectosPDF'])
-            ->name('reportes.area-proyectos.pdf');
-
-        Route::get('reportes/area-proyectos/vereda/pdf', [ReporteController::class,'areaProyectosVeredaPDF'])
-            ->name('reportes.area-proyectos.vereda.pdf');
 
         /*
         |----------------------------------------------------------------------

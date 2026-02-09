@@ -374,7 +374,7 @@
     <div class="progress-section">
         <div class="progress-header">
             <span class="progress-title">
-                <i class="bi bi-graph-up-arrow"></i> Progreso de la Encuesta
+                <i class="bi bi-graph-up-arrow"></i> Progreso del Formulario
             </span>
             <span class="progress-percentage">
                 <i class="bi bi-percent"></i>

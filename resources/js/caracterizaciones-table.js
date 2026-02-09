@@ -115,10 +115,33 @@ document.addEventListener('DOMContentLoaded', function() {
         const endIndex = startIndex + pageSize;
         const visibleRows = filteredData.slice(startIndex, endIndex);
 
+        function isValidUrl(str) {
+            try {
+                const u = new URL(String(str));
+                return !!u.protocol && (u.protocol === 'http:' || u.protocol === 'https:');
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function isImageUrl(str) {
+            return /\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i.test(String(str || ''));
+        }
+
+        function formatCell(value) {
+            const v = value ?? '';
+            if (isValidUrl(v)) {
+                const downloadAttr = isImageUrl(v) ? ' download' : '';
+                const label = isImageUrl(v) ? 'Descargar imagen' : v;
+                return `<a href="${v}" target="_blank" rel="noopener"${downloadAttr}>${label}</a>`;
+            }
+            return String(v);
+        }
+
         // Renderizar solo las filas visibles
         const html = visibleRows.map(row => {
             return '<tr>' + Config.headers.map(header =>
-                `<td>${row[header] || ''}</td>`
+                `<td>${formatCell(row[header])}</td>`
             ).join('') + '</tr>';
         }).join('');
 

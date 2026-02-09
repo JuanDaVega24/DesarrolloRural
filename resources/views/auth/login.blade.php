@@ -45,7 +45,9 @@
         .login-box {
             margin-top: 120px;
             width: 100%;
-            max-width: 420px;
+            height: auto;
+            min-height: 900px;
+            max-width: 640px;
             background: white;
             padding: 40px 35px;
             border-radius: 18px;

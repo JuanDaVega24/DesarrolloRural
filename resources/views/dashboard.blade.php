@@ -21,6 +21,34 @@
                     
 
                     {{-- Caracterización --}}
+                    @php
+                        $isAdmin = auth()->user()->hasRole('Administrador');
+                        $isTabulador = auth()->user()->hasRole('Tabulador');
+                        $hasPermiso = (auth()->user()->caracterizacion_permiso ?? false);
+                        $goToFormulario = $isTabulador && $hasPermiso;
+                    @endphp
+                    @if($goToFormulario)
+                   <a href="{{ route('caracterizaciones.formulario.show') }}" class="module-card group">
+    <div class="card-accent verde"></div>
+
+    <div class="card-icon verde">
+    <img src="{{ asset('images/icono-caracterizacion.png') }}" alt="Icono Caracterización" class="icon-img">
+    </div>
+
+    <h3 class="card-title">Caracterización</h3>
+
+    <p class="card-description">
+        Sistema integral para el registro, análisis y gestión de datos demográficos y socioeconómicos de la población bucaramanguesa.
+    </p>
+
+    <div class="card-footer">
+        <span class="card-link btn px-4 py-2 text-white  ">
+            Acceder al módulo
+            <i class="fas fa-arrow-right ms-2"></i>
+        </span>
+    </div>
+</a>
+                    @elseif($isAdmin)
                    <a href="{{ route('caracterizaciones.index') }}" class="module-card group">
     <div class="card-accent verde"></div>
 
@@ -41,6 +69,28 @@
         </span>
     </div>
 </a>
+                    @else
+                    <div class="module-card group" aria-disabled="true" title="Sin permisos para acceder" style="pointer-events: none; opacity: 0.6; filter: grayscale(0.3);">
+    <div class="card-accent verde"></div>
+
+    <div class="card-icon verde">
+    <img src="{{ asset('images/icono-caracterizacion.png') }}" alt="Icono Caracterización" class="icon-img">
+    </div>
+
+    <h3 class="card-title">Caracterización</h3>
+
+    <p class="card-description">
+        Sistema integral para el registro, análisis y gestión de datos demográficos y socioeconómicos de la población bucaramanguesa.
+    </p>
+
+    <div class="card-footer">
+        <span class="card-link btn px-4 py-2 text-white  ">
+            Sin permisos
+            <i class="fas fa-lock ms-2"></i>
+        </span>
+    </div>
+</div>
+                    @endif
 
                     {{-- Formulario de Proyectos Productivos --}}
                     <a href="{{ route('formularios.index') }}" class="module-card group">
@@ -103,10 +153,9 @@ Iniciativas planificadas que buscan desarrollar actividades agrícolas, pecuaria
                         <div class="card-icon azul">
                             <i class="fas fa-file-alt"></i>
                         </div>
-                        <h3 class="card-title">Reportes e Informes</h3>
+                        <h3 class="card-title">Reportes y Estadisticas</h3>
                         <p class="card-description">
-                            Generación automática de documentos, informes ejecutivos y análisis estadísticos configurables.
-                        </p>
+                            Generación automática de estadisitcas basadas en las caracterizaciones y proyectos productivos.                        </p>
                             <div class="card-footer ">
         <span class="card-link btn px-4 py-2 text-white  ">
             Acceder al módulo

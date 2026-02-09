@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Encuesta;
 use App\Models\Caracterizacion;
+use App\Models\ProyectoProductivo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ReporteController extends Controller
 {
@@ -30,9 +29,7 @@ class ReporteController extends Controller
             // Decodificar datos
             $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
             $rows = $data['rows'] ?? [];
-
-            // Contar TOTAL de filas en la caracterización (sin filtrar)
-            $totalFilasCaracterizacion = count($rows);
+            $headers = $data['headers'] ?? [];
 
             // Inicializar contadores por corregimiento
             $corregimientos = [
@@ -42,7 +39,6 @@ class ReporteController extends Controller
             ];
 
             $totalPersonas = 0;
-            $filasSinCorregimiento = 0;
 
             // Contar personas por corregimiento
             foreach ($rows as $row) {
@@ -50,31 +46,14 @@ class ReporteController extends Controller
 
                 $totalPersonas++; // Contar TODAS las filas válidas
 
-                // Buscar columna de corregimiento (puede tener diferentes nombres)
-                $corregimiento = null;
-
-                // Buscar por posibles nombres de columna - más flexible
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'Corregimiento_cz', 'CORREGIMIENTO'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                        $corregimiento = trim((string)$row[$key]);
-                        // Normalizar valores comunes
-                        if (in_array($corregimiento, ['1', '1.0', '01', 'Corregimiento 1', 'corregimiento 1'])) {
-                            $corregimiento = '1';
-                        } elseif (in_array($corregimiento, ['2', '2.0', '02', 'Corregimiento 2', 'corregimiento 2'])) {
-                            $corregimiento = '2';
-                        } elseif (in_array($corregimiento, ['3', '3.0', '03', 'Corregimiento 3', 'corregimiento 3'])) {
-                            $corregimiento = '3';
-                        }
-                        break;
-                    }
-                }
+                // Buscar columna de corregimiento
+                $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimiento);
 
                 // Si encontramos un corregimiento válido, incrementamos el contador correspondiente
                 if ($corregimiento && isset($corregimientos[$corregimiento])) {
                     $corregimientos[$corregimiento]['count']++;
-                } 
+                }
             }
 
             // Preparar datos para la vista
@@ -88,13 +67,9 @@ class ReporteController extends Controller
                 ]
             ];
 
-            // Obtener estadísticas de género
+            // Obtener estadísticas adicionales
             $generoStats = $this->getEstadisticasGeneroData();
-
-            // Obtener estadísticas de edad
             $edadStats = $this->getEstadisticasEdadData();
-
-            // Obtener estadísticas de área
             $areaStats = $this->getEstadisticasAreaData();
 
             return view('reportes.estadisticas-corregimientos', compact('estadisticas', 'generoStats', 'edadStats', 'areaStats'));
@@ -104,26 +79,6 @@ class ReporteController extends Controller
         }
     }
 
-    public function filtrar(Request $request)
-    {
-        $query = Encuesta::query();
-
-        if ($request->filled('municipio')) {
-            $query->where('municipio_nacimiento', $request->municipio);
-        }
-
-        if ($request->filled('genero')) {
-            $query->where('genero', $request->genero);
-        }
-
-        $resultados = $query->get();
-        return view('reportes.resultados', compact('resultados'));
-    }
-
-    public function exportarExcel()
-    {
-        // pendiente implementar con Laravel Excel
-    }
 
     /**
      * Exportar estadísticas de corregimientos a PDF
@@ -141,6 +96,7 @@ class ReporteController extends Controller
             // Decodificar datos
             $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
             $rows = $data['rows'] ?? [];
+            $headers = $data['headers'] ?? [];
 
             // Inicializar contadores por corregimiento
             $corregimientos = [
@@ -156,15 +112,8 @@ class ReporteController extends Controller
                 if (!is_array($row)) continue;
 
                 // Buscar columna de corregimiento
-                $corregimiento = null;
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        break;
-                    }
-                }
+                $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimiento);
 
                 // Si encontramos un corregimiento válido, incrementamos el contador
                 if ($corregimiento && isset($corregimientos[$corregimiento])) {
@@ -214,9 +163,7 @@ class ReporteController extends Controller
     {
         try {
             $generoStats = $this->getEstadisticasGeneroData();
-            
             return view('reportes.pdfs.estadisticas-corregimientos', compact('generoStats'));
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
         }
@@ -229,9 +176,7 @@ class ReporteController extends Controller
     {
         try {
             $edadStats = $this->getEstadisticasEdadData();
-            
             return view('reportes.pdfs.estadisticas-corregimientos', compact('edadStats'));
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
         }
@@ -244,9 +189,353 @@ class ReporteController extends Controller
     {
         try {
             $areaStats = $this->getEstadisticasAreaData();
-            
             return view('reportes.pdfs.estadisticas-corregimientos', compact('areaStats'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
+        }
+    }
 
+    public function areaProyectosView(Request $request)
+    {
+        $proyectos = ProyectoProductivo::whereNotNull('data')
+            ->where('data->total_rows', '>', 0)
+            ->select('id', 'nombre', 'ano', 'data')
+            ->orderBy('ano', 'desc')
+            ->orderBy('nombre')
+            ->get();
+
+        $proyectoSeleccionado = null;
+        $proyectoStats = null;
+        $proyectoStatsVereda = null;
+
+        if ($request->has('proyecto_id') && !empty($request->proyecto_id)) {
+            $proyectoSeleccionado = ProyectoProductivo::find($request->proyecto_id);
+            if ($proyectoSeleccionado && $proyectoSeleccionado->data) {
+                $data = is_string($proyectoSeleccionado->data) ? json_decode($proyectoSeleccionado->data, true) : $proyectoSeleccionado->data;
+                $rows = $data['rows'] ?? [];
+                $headers = $data['headers'] ?? [];
+
+                $areaPorCorregimiento = [
+                    1 => ['corregimiento' => 'Corregimiento 1', 'area' => 0, 'total_registros' => 0],
+                    2 => ['corregimiento' => 'Corregimiento 2', 'area' => 0, 'total_registros' => 0],
+                    3 => ['corregimiento' => 'Corregimiento 3', 'area' => 0, 'total_registros' => 0],
+                ];
+                $totalGeneral = ['area_total' => 0, 'total_registros' => 0];
+
+                $veredaStats = [];
+                $totalesVereda = ['area_total' => 0, 'total_registros' => 0];
+
+                foreach ($rows as $row) {
+                    if (!is_array($row)) continue;
+
+                    $areaValue = $this->findColumnValue($row, $headers, ['Área (ha)', 'area (ha)', 'area_ha', 'area', 'Area (ha)', 'Area', 'AREA (Ha)']);
+                    $area = null;
+                    if ($areaValue) {
+                        $areaValue = str_replace(',', '.', $areaValue);
+                        if (is_numeric($areaValue)) {
+                            $area = (float)$areaValue;
+                        }
+                    }
+
+                    $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                    $corregimiento = $this->normalizeCorregimiento($corregimiento);
+
+                    $vereda = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz', 'Vereda', 'Vereda_CZ']);
+
+                    if ($area !== null) {
+                        if ($corregimiento && isset($areaPorCorregimiento[$corregimiento])) {
+                            $areaPorCorregimiento[$corregimiento]['area'] += $area;
+                            $areaPorCorregimiento[$corregimiento]['total_registros']++;
+                            $totalGeneral['area_total'] += $area;
+                            $totalGeneral['total_registros']++;
+                        }
+
+                        if ($vereda) {
+                            $key = (string)$vereda;
+                            if (!isset($veredaStats[$key])) {
+                                $veredaStats[$key] = ['vereda' => $key, 'area' => 0, 'total_registros' => 0];
+                            }
+                            $veredaStats[$key]['area'] += $area;
+                            $veredaStats[$key]['total_registros']++;
+                            $totalesVereda['area_total'] += $area;
+                            $totalesVereda['total_registros']++;
+                        }
+                    }
+                }
+
+                $proyectoStats = [
+                    'chartData' => [
+                        'labels' => array_column($areaPorCorregimiento, 'corregimiento'),
+                        'datasets' => [
+                            [
+                                'label' => 'Área (ha)',
+                                'data' => array_column($areaPorCorregimiento, 'area'),
+                                'backgroundColor' => '#4A7C2F',
+                                'borderColor' => '#3d6625',
+                                'borderWidth' => 2,
+                                'borderRadius' => 4,
+                                'borderSkipped' => false,
+                            ],
+                        ],
+                    ],
+                    'detalles' => array_values($areaPorCorregimiento),
+                    'totales' => $totalGeneral,
+                ];
+
+                $veredasOrdenadas = array_values($veredaStats);
+                usort($veredasOrdenadas, function ($a, $b) {
+                    return strcasecmp($a['vereda'], $b['vereda']);
+                });
+
+                $proyectoStatsVereda = [
+                    'chartData' => [
+                        'labels' => array_column($veredasOrdenadas, 'vereda'),
+                        'datasets' => [
+                            [
+                                'label' => 'Área (ha)',
+                                'data' => array_column($veredasOrdenadas, 'area'),
+                                'backgroundColor' => '#0943B5',
+                                'borderColor' => '#083a99',
+                                'borderWidth' => 2,
+                                'borderRadius' => 4,
+                                'borderSkipped' => false,
+                            ],
+                        ],
+                    ],
+                    'detalles' => $veredasOrdenadas,
+                    'totales' => $totalesVereda,
+                ];
+            }
+        }
+
+        return view('reportes.area-proyectos', compact('proyectos', 'proyectoSeleccionado', 'proyectoStats', 'proyectoStatsVereda'));
+    }
+
+    /**
+     * Exportar PDF del análisis de área de proyectos (corregimientos/veredas)
+     */
+    public function areaProyectosPDF(Request $request)
+    {
+        try {
+            $proyectoSeleccionado = null;
+            $proyectoStats = null;
+            $proyectoStatsVereda = null;
+
+            if ($request->has('proyecto_id') && !empty($request->proyecto_id)) {
+                $proyectoSeleccionado = ProyectoProductivo::find($request->proyecto_id);
+                if ($proyectoSeleccionado && $proyectoSeleccionado->data) {
+                    $data = is_string($proyectoSeleccionado->data) ? json_decode($proyectoSeleccionado->data, true) : $proyectoSeleccionado->data;
+                    $rows = $data['rows'] ?? [];
+                    $headers = $data['headers'] ?? [];
+
+                    $areaPorCorregimiento = [
+                        1 => ['corregimiento' => 'Corregimiento 1', 'area' => 0, 'total_registros' => 0],
+                        2 => ['corregimiento' => 'Corregimiento 2', 'area' => 0, 'total_registros' => 0],
+                        3 => ['corregimiento' => 'Corregimiento 3', 'area' => 0, 'total_registros' => 0],
+                    ];
+                    $totalGeneral = ['area_total' => 0, 'total_registros' => 0];
+
+                    $veredaStats = [];
+                    $totalesVereda = ['area_total' => 0, 'total_registros' => 0];
+
+                    foreach ($rows as $row) {
+                        if (!is_array($row)) continue;
+
+                        $corregimiento = null;
+                        $area = 0;
+                        $vereda = null;
+
+                        foreach ($headers as $header) {
+                            if (isset($row[$header])) {
+                                $hn = $this->normalizeText($header);
+                                $value = $row[$header];
+
+                                if ($corregimiento === null) {
+                                    $corrCandidates = ['corregimiento', 'corregimiento cz', 'corr', 'numero de corregimiento'];
+                                    foreach ($corrCandidates as $kw) {
+                                        if (str_contains($hn, $kw)) {
+                                            $corregimiento = $this->normalizeCorregimiento($value);
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if ($area === 0) {
+                                    $areaCandidates = ['area', 'ha', 'hectareas', 'hectáreas'];
+                                    foreach ($areaCandidates as $kw) {
+                                        if (str_contains($hn, $kw)) {
+                                            $area = is_numeric($value) ? (float)$value : 0;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if ($vereda === null) {
+                                    $veredaCandidates = ['vereda', 'vereda cz', 'sector', 'zona'];
+                                    foreach ($veredaCandidates as $kw) {
+                                        if (str_contains($hn, $kw)) {
+                                            $vereda = trim((string)$value);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($corregimiento && isset($areaPorCorregimiento[$corregimiento])) {
+                            $areaPorCorregimiento[$corregimiento]['area'] += $area;
+                            $areaPorCorregimiento[$corregimiento]['total_registros']++;
+                            $totalGeneral['area_total'] += $area;
+                            $totalGeneral['total_registros']++;
+                        }
+
+                        if ($vereda) {
+                            if (!isset($veredaStats[$vereda])) {
+                                $veredaStats[$vereda] = ['vereda' => $vereda, 'area' => 0, 'total_registros' => 0];
+                            }
+                            $veredaStats[$vereda]['area'] += $area;
+                            $veredaStats[$vereda]['total_registros']++;
+                            $totalesVereda['area_total'] += $area;
+                            $totalesVereda['total_registros']++;
+                        }
+                    }
+
+                    $proyectoStats = [
+                        'chartData' => [
+                            'labels' => array_column(array_values($areaPorCorregimiento), 'corregimiento'),
+                            'datasets' => [
+                                [
+                                    'label' => 'Área (ha)',
+                                    'data' => array_map(function ($item) { return round($item['area'], 2); }, array_values($areaPorCorregimiento)),
+                                    'backgroundColor' => ['#4A7C2F', '#0943B5', '#A80521'],
+                                    'borderColor' => ['#3d6625', '#083a99', '#8f041d'],
+                                    'borderWidth' => 2,
+                                    'borderRadius' => 4,
+                                    'borderSkipped' => false,
+                                ],
+                            ],
+                        ],
+                        'detalles' => array_values($areaPorCorregimiento),
+                        'totales' => $totalGeneral,
+                    ];
+
+                    $veredasOrdenadas = array_values($veredaStats);
+                    usort($veredasOrdenadas, function ($a, $b) {
+                        return strcasecmp($a['vereda'], $b['vereda']);
+                    });
+                    $proyectoStatsVereda = [
+                        'chartData' => [
+                            'labels' => array_column($veredasOrdenadas, 'vereda'),
+                            'datasets' => [
+                                [
+                                    'label' => 'Área (ha)',
+                                    'data' => array_column($veredasOrdenadas, 'area'),
+                                    'backgroundColor' => '#0943B5',
+                                    'borderColor' => '#083a99',
+                                    'borderWidth' => 2,
+                                    'borderRadius' => 4,
+                                    'borderSkipped' => false,
+                                ],
+                            ],
+                        ],
+                        'detalles' => $veredasOrdenadas,
+                        'totales' => $totalesVereda,
+                    ];
+                }
+            }
+
+            return view('reportes.pdfs.area-proyectos', compact('proyectoSeleccionado', 'proyectoStats', 'proyectoStatsVereda'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
+        }
+    }
+
+    public function areaProyectosVeredaPDF(Request $request)
+    {
+        try {
+            $proyectoSeleccionado = null;
+            $proyectoStatsVereda = null;
+
+            if ($request->has('proyecto_id') && !empty($request->proyecto_id)) {
+                $proyectoSeleccionado = ProyectoProductivo::find($request->proyecto_id);
+                if ($proyectoSeleccionado && $proyectoSeleccionado->data) {
+                    $data = is_string($proyectoSeleccionado->data) ? json_decode($proyectoSeleccionado->data, true) : $proyectoSeleccionado->data;
+                    $rows = $data['rows'] ?? [];
+                    $headers = $data['headers'] ?? [];
+
+                    $veredaStats = [];
+                    $totalesVereda = ['area_total' => 0, 'total_registros' => 0];
+
+                    foreach ($rows as $row) {
+                        if (!is_array($row)) continue;
+
+                        $area = 0;
+                        $vereda = null;
+
+                        foreach ($headers as $header) {
+                            if (isset($row[$header])) {
+                                $hn = $this->normalizeText($header);
+                                $value = $row[$header];
+
+                                if ($area === 0) {
+                                    $areaCandidates = ['area', 'ha', 'hectareas', 'hectáreas'];
+                                    foreach ($areaCandidates as $kw) {
+                                        if (str_contains($hn, $kw)) {
+                                            $area = is_numeric($value) ? (float)$value : 0;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if ($vereda === null) {
+                                    $veredaCandidates = ['vereda', 'vereda cz', 'sector', 'zona'];
+                                    foreach ($veredaCandidates as $kw) {
+                                        if (str_contains($hn, $kw)) {
+                                            $vereda = trim((string)$value);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($vereda) {
+                            if (!isset($veredaStats[$vereda])) {
+                                $veredaStats[$vereda] = ['vereda' => $vereda, 'area' => 0, 'total_registros' => 0];
+                            }
+                            $veredaStats[$vereda]['area'] += $area;
+                            $veredaStats[$vereda]['total_registros']++;
+                            $totalesVereda['area_total'] += $area;
+                            $totalesVereda['total_registros']++;
+                        }
+                    }
+
+                    $veredasOrdenadas = array_values($veredaStats);
+                    usort($veredasOrdenadas, function ($a, $b) {
+                        return strcasecmp($a['vereda'], $b['vereda']);
+                    });
+                    $proyectoStatsVereda = [
+                        'chartData' => [
+                            'labels' => array_column($veredasOrdenadas, 'vereda'),
+                            'datasets' => [
+                                [
+                                    'label' => 'Área (ha)',
+                                    'data' => array_column($veredasOrdenadas, 'area'),
+                                    'backgroundColor' => '#0943B5',
+                                    'borderColor' => '#083a99',
+                                    'borderWidth' => 2,
+                                    'borderRadius' => 4,
+                                    'borderSkipped' => false,
+                                ],
+                            ],
+                        ],
+                        'detalles' => $veredasOrdenadas,
+                        'totales' => $totalesVereda,
+                    ];
+                }
+            }
+
+            return view('reportes.pdfs.area-proyectos', compact('proyectoSeleccionado', 'proyectoStatsVereda'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
         }
@@ -258,28 +547,16 @@ class ReporteController extends Controller
     private function getEstadisticasGeneroData()
     {
         try {
-            // Obtener datos de caracterización
             $caracterizacion = Caracterizacion::find(1);
 
             if (!$caracterizacion || !$caracterizacion->data) {
-                return [
-                    'chartData' => ['labels' => [], 'datasets' => []],
-                    'detalles' => [],
-                    'totales' => ['femenino' => 0, 'masculino' => 0, 'total' => 0]
-                ];
+                return $this->emptyStats('genero');
             }
 
-            // Decodificar datos
             $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
             $rows = $data['rows'] ?? [];
             $headers = $data['headers'] ?? [];
 
-            // Log headers para debugging (solo en desarrollo)
-            if (config('app.debug')) {
-                Log::info('Headers disponibles en caracterizaciones:', $headers);
-            }
-
-            // Inicializar contadores por corregimiento y género
             $estadisticasGenero = [
                 1 => ['corregimiento' => 'Corregimiento 1', 'femenino' => 0, 'masculino' => 0, 'total' => 0],
                 2 => ['corregimiento' => 'Corregimiento 2', 'femenino' => 0, 'masculino' => 0, 'total' => 0],
@@ -288,76 +565,16 @@ class ReporteController extends Controller
 
             $totalGeneral = ['femenino' => 0, 'masculino' => 0, 'total' => 0];
 
-            // Contar por género y corregimiento
             foreach ($rows as $row) {
                 if (!is_array($row)) continue;
 
-                // Buscar género - búsqueda flexible por nombre de columna
-                $genero = null;
-                $generoKeys = ['genero', 'género', 'sexo', 'gender', 'gen', 'Genero', 'Género', 'Sexo', 'Gender', 'Gen'];
+                // Buscar género
+                $generoValue = $this->findColumnValue($row, $headers, ['genero', 'género', 'sexo', 'gender', 'gen']);
+                $genero = $this->normalizeGenero($generoValue);
 
-                foreach ($generoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $generoValue = trim(strtolower((string)$row[$key]));
-                        // Normalizar valores comunes
-                        if (in_array($generoValue, ['femenino', 'f', 'mujer', 'female', 'feminine', 'femenina', 'mujeres'])) {
-                            $genero = 'femenino';
-                        } elseif (in_array($generoValue, ['masculino', 'm', 'hombre', 'male', 'masculine', 'masculina', 'hombres'])) {
-                            $genero = 'masculino';
-                        }
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$genero) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'genero') || str_contains($headerNormalized, 'género') ||
-                            str_contains($headerNormalized, 'sexo') || str_contains($headerNormalized, 'gender')) {
-                            if (isset($row[$header])) {
-                                $generoValue = trim(strtolower((string)$row[$header]));
-                                if (in_array($generoValue, ['femenino', 'f', 'mujer', 'female', 'feminine', 'femenina', 'mujeres'])) {
-                                    $genero = 'femenino';
-                                } elseif (in_array($generoValue, ['masculino', 'm', 'hombre', 'male', 'masculine', 'masculina', 'hombres'])) {
-                                    $genero = 'masculino';
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Buscar corregimiento - búsqueda flexible por nombre de columna
-                $corregimiento = null;
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'Corregimiento_cz', 'CORREGIMIENTO'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$corregimiento) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'corregimiento') || str_contains($headerNormalized, 'corregimiento')) {
-                            if (isset($row[$header])) {
-                                $corregimiento = trim((string)$row[$header]);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Debug: log primera fila
-                static $debugCount = 0;
-                if ($debugCount < 3) {
-                    Log::info('Fila ' . $debugCount . ':', ['genero_encontrado' => $genero, 'corregimiento_encontrado' => $corregimiento, 'valores_row' => $row]);
-                    $debugCount++;
-                }
+                // Buscar corregimiento
+                $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimiento);
 
                 // Si tenemos género y corregimiento válido, contar
                 if ($genero && $corregimiento && isset($estadisticasGenero[$corregimiento])) {
@@ -368,43 +585,36 @@ class ReporteController extends Controller
                 }
             }
 
-            // Preparar datos para gráfico de barras
-            $chartData = [
-                'labels' => array_column($estadisticasGenero, 'corregimiento'),
-                'datasets' => [
-                    [
-                        'label' => 'Femenino',
-                        'data' => array_column($estadisticasGenero, 'femenino'),
-                        'backgroundColor' => '#FF69B4', // Rosa
-                        'borderColor' => '#FF1493',
-                        'borderWidth' => 2,
-                        'borderRadius' => 4,
-                        'borderSkipped'=> false,
-                    ],
-                    [
-                        'label' => 'Masculino',
-                        'data' => array_column($estadisticasGenero, 'masculino'),
-                        'backgroundColor' => '#4169E1', // Azul real
-                        'borderColor' => '#000080',
-                        'borderWidth' => 2,
-                        'borderRadius' => 4,
-                        'borderSkipped'=> false,
-                    ]
-                ]
-            ];
-
             return [
-                'chartData' => $chartData,
+                'chartData' => [
+                    'labels' => array_column($estadisticasGenero, 'corregimiento'),
+                    'datasets' => [
+                        [
+                            'label' => 'Femenino',
+                            'data' => array_column($estadisticasGenero, 'femenino'),
+                            'backgroundColor' => '#FF69B4',
+                            'borderColor' => '#FF1493',
+                            'borderWidth' => 2,
+                            'borderRadius' => 4,
+                            'borderSkipped'=> false,
+                        ],
+                        [
+                            'label' => 'Masculino',
+                            'data' => array_column($estadisticasGenero, 'masculino'),
+                            'backgroundColor' => '#4169E1',
+                            'borderColor' => '#000080',
+                            'borderWidth' => 2,
+                            'borderRadius' => 4,
+                            'borderSkipped'=> false,
+                        ]
+                    ]
+                ],
                 'detalles' => array_values($estadisticasGenero),
                 'totales' => $totalGeneral
             ];
 
         } catch (\Exception $e) {
-            return [
-                'chartData' => ['labels' => [], 'datasets' => []],
-                'detalles' => [],
-                'totales' => ['femenino' => 0, 'masculino' => 0, 'total' => 0]
-            ];
+            return $this->emptyStats('genero');
         }
     }
 
@@ -414,24 +624,16 @@ class ReporteController extends Controller
     private function getEstadisticasEdadData()
     {
         try {
-            // Obtener datos de caracterización
             $caracterizacion = Caracterizacion::find(1);
 
             if (!$caracterizacion || !$caracterizacion->data) {
-                return [
-                    'chartData' => ['labels' => [], 'datasets' => []],
-                    'detalles' => [],
-                    'totales' => ['total' => 0],
-                    'rangos' => []
-                ];
+                return $this->emptyStats('edad');
             }
 
-            // Decodificar datos
             $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
             $rows = $data['rows'] ?? [];
             $headers = $data['headers'] ?? [];
 
-            // Definir rangos de edad
             $rangosEdad = [
                 '0-17' => ['min' => 0, 'max' => 17, 'label' => '0-17 años'],
                 '18-30' => ['min' => 18, 'max' => 30, 'label' => '18-30 años'],
@@ -440,7 +642,6 @@ class ReporteController extends Controller
                 '61+' => ['min' => 61, 'max' => 999, 'label' => '61+ años']
             ];
 
-            // Inicializar contadores por corregimiento y rango de edad
             $estadisticasEdad = [
                 1 => array_merge(['corregimiento' => 'Corregimiento 1'], array_fill_keys(array_keys($rangosEdad), 0), ['total' => 0]),
                 2 => array_merge(['corregimiento' => 'Corregimiento 2'], array_fill_keys(array_keys($rangosEdad), 0), ['total' => 0]),
@@ -449,68 +650,22 @@ class ReporteController extends Controller
 
             $totalGeneral = array_merge(array_fill_keys(array_keys($rangosEdad), 0), ['total' => 0]);
 
-            // Contar por edad y corregimiento
             foreach ($rows as $row) {
                 if (!is_array($row)) continue;
 
-                // Buscar fecha de nacimiento - búsqueda flexible por nombre de columna
-                $fechaNacimiento = null;
-                $fechaKeys = ['fecha_nacimiento', 'fecha_nac', 'nacimiento', 'birth', 'fecha de nacimiento', 'Fecha de Nacimiento'];
-
-                foreach ($fechaKeys as $key) {
-                    if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                        $fechaNacimiento = trim((string)$row[$key]);
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$fechaNacimiento) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'nacimiento') || str_contains($headerNormalized, 'nac') ||
-                            str_contains($headerNormalized, 'birth') || str_contains($headerNormalized, 'edad')) {
-                            if (isset($row[$header]) && !empty(trim((string)$row[$header]))) {
-                                $fechaNacimiento = trim((string)$row[$header]);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Calcular edad si tenemos fecha de nacimiento
+                // Buscar fecha de nacimiento
+                $fechaNacimiento = $this->findColumnValue($row, $headers, ['fecha_nacimiento', 'fecha_nac', 'nacimiento', 'birth', 'fecha de nacimiento', 'edad']);
+                
                 $edad = null;
                 if ($fechaNacimiento) {
                     $edad = $this->calcularEdad($fechaNacimiento);
                 }
 
-                // Buscar corregimiento - búsqueda flexible por nombre de columna
-                $corregimiento = null;
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'Corregimiento_cz', 'CORREGIMIENTO'];
+                // Buscar corregimiento
+                $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimiento);
 
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$corregimiento) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'corregimiento') || str_contains($headerNormalized, 'corregimiento')) {
-                            if (isset($row[$header])) {
-                                $corregimiento = trim((string)$row[$header]);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Si tenemos edad y corregimiento válido, contar
                 if ($edad !== null && $corregimiento && isset($estadisticasEdad[$corregimiento])) {
-                    // Determinar rango de edad
                     $rangoEncontrado = null;
                     foreach ($rangosEdad as $rango => $config) {
                         if ($edad >= $config['min'] && $edad <= $config['max']) {
@@ -528,18 +683,13 @@ class ReporteController extends Controller
                 }
             }
 
-            // Preparar datos para gráfico de barras apiladas
             $chartData = [
                 'labels' => array_column($estadisticasEdad, 'corregimiento'),
                 'datasets' => []
             ];
 
             $coloresRangos = [
-                '0-17' => '#3B82F6',    // Azul
-                '18-30' => '#10B981',   // Verde
-                '31-45' => '#F59E0B',   // Amarillo
-                '46-60' => '#EF4444',   // Rojo
-                '61+' => '#8B5CF6'      // Púrpura
+                '0-17' => '#3B82F6', '18-30' => '#10B981', '31-45' => '#F59E0B', '46-60' => '#EF4444', '61+' => '#8B5CF6'
             ];
 
             foreach ($rangosEdad as $rango => $config) {
@@ -560,13 +710,7 @@ class ReporteController extends Controller
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error en getEstadisticasEdadData: ' . $e->getMessage());
-            return [
-                'chartData' => ['labels' => [], 'datasets' => []],
-                'detalles' => [],
-                'totales' => ['total' => 0],
-                'rangos' => []
-            ];
+            return $this->emptyStats('edad');
         }
     }
 
@@ -576,23 +720,16 @@ class ReporteController extends Controller
     private function getEstadisticasAreaData()
     {
         try {
-            // Obtener datos de caracterización
             $caracterizacion = Caracterizacion::find(1);
 
             if (!$caracterizacion || !$caracterizacion->data) {
-                return [
-                    'chartData' => ['labels' => [], 'datasets' => []],
-                    'detalles' => [],
-                    'totales' => ['area_total' => 0]
-                ];
+                return $this->emptyStats('area');
             }
 
-            // Decodificar datos
             $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
             $rows = $data['rows'] ?? [];
             $headers = $data['headers'] ?? [];
 
-            // Inicializar contadores por corregimiento
             $estadisticasArea = [
                 1 => ['corregimiento' => 'Corregimiento 1', 'area' => 0, 'total_registros' => 0],
                 2 => ['corregimiento' => 'Corregimiento 2', 'area' => 0, 'total_registros' => 0],
@@ -601,87 +738,24 @@ class ReporteController extends Controller
 
             $totalGeneral = ['area_total' => 0, 'total_registros' => 0];
 
-            // Sumar áreas por corregimiento
             foreach ($rows as $row) {
                 if (!is_array($row)) continue;
 
-                // Buscar área - búsqueda flexible por nombre de columna
+                // Buscar área
                 $area = null;
-                $areaKeys = ['Área (ha)', 'area (ha)', 'area_ha', 'area', 'Area (ha)', 'Area', 'AREA (Ha)'];
-
-                foreach ($areaKeys as $key) {
-                    if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                        $areaValue = trim((string)$row[$key]);
-                        // Convertir formato europeo (coma como decimal) a formato PHP (punto como decimal)
-                        $areaValue = str_replace(',', '.', $areaValue);
-                        // Convertir a float si es numérico
-                        if (is_numeric($areaValue)) {
-                            $area = (float)$areaValue;
-                            break;
-                        }
+                $areaValue = $this->findColumnValue($row, $headers, ['Área (ha)', 'area (ha)', 'area_ha', 'area', 'Area (ha)', 'Area', 'AREA (Ha)']);
+                
+                if ($areaValue) {
+                    $areaValue = str_replace(',', '.', $areaValue);
+                    if (is_numeric($areaValue)) {
+                        $area = (float)$areaValue;
                     }
                 }
 
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if ($area === null) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'área') || str_contains($headerNormalized, 'area')) {
-                            if (isset($row[$header]) && !empty(trim((string)$row[$header]))) {
-                                $areaValue = trim((string)$row[$header]);
-                        // Convertir formato europeo (coma como decimal) a formato PHP (punto como decimal)
-                        $areaValue = str_replace(',', '.', $areaValue);
-                        // Convertir a float si es numérico
-                        if (is_numeric($areaValue)) {
-                            $area = (float)$areaValue;
-                            break;
-                        }
-                            }
-                        }
-                    }
-                }
+                // Buscar corregimiento
+                $corregimiento = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimiento);
 
-                // Buscar corregimiento - búsqueda flexible por nombre de columna
-                $corregimiento = null;
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'Corregimiento_cz', 'CORREGIMIENTO'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        // Normalizar valores comunes
-                        if (in_array($corregimiento, ['1', '1.0', '01', 'Corregimiento 1', 'corregimiento 1'])) {
-                            $corregimiento = '1';
-                        } elseif (in_array($corregimiento, ['2', '2.0', '02', 'Corregimiento 2', 'corregimiento 2'])) {
-                            $corregimiento = '2';
-                        } elseif (in_array($corregimiento, ['3', '3.0', '03', 'Corregimiento 3', 'corregimiento 3'])) {
-                            $corregimiento = '3';
-                        }
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$corregimiento) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'corregimiento') || str_contains($headerNormalized, 'corregimiento')) {
-                            if (isset($row[$header])) {
-                                $corregimiento = trim((string)$row[$header]);
-                                // Normalizar valores comunes
-                                if (in_array($corregimiento, ['1', '1.0', '01', 'Corregimiento 1', 'corregimiento 1'])) {
-                                    $corregimiento = '1';
-                                } elseif (in_array($corregimiento, ['2', '2.0', '02', 'Corregimiento 2', 'corregimiento 2'])) {
-                                    $corregimiento = '2';
-                                } elseif (in_array($corregimiento, ['3', '3.0', '03', 'Corregimiento 3', 'corregimiento 3'])) {
-                                    $corregimiento = '3';
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Si tenemos área y corregimiento válido, sumar
                 if ($area !== null && $corregimiento && isset($estadisticasArea[$corregimiento])) {
                     $estadisticasArea[$corregimiento]['area'] += $area;
                     $estadisticasArea[$corregimiento]['total_registros']++;
@@ -690,35 +764,27 @@ class ReporteController extends Controller
                 }
             }
 
-            // Preparar datos para gráfico de barras
-            $chartData = [
-                'labels' => array_column($estadisticasArea, 'corregimiento'),
-                'datasets' => [
-                    [
-                        'label' => 'Área (ha)',
-                        'data' => array_column($estadisticasArea, 'area'),
-                        'backgroundColor' => '#4A7C2F', // Verde
-                        'borderColor' => '#3d6625',
-                        'borderWidth' => 2,
-                        'borderRadius' => 4,
-                        'borderSkipped' => false,
-                    ]
-                ]
-            ];
-
             return [
-                'chartData' => $chartData,
+                'chartData' => [
+                    'labels' => array_column($estadisticasArea, 'corregimiento'),
+                    'datasets' => [
+                        [
+                            'label' => 'Área (ha)',
+                            'data' => array_column($estadisticasArea, 'area'),
+                            'backgroundColor' => '#4A7C2F',
+                            'borderColor' => '#3d6625',
+                            'borderWidth' => 2,
+                            'borderRadius' => 4,
+                            'borderSkipped' => false,
+                        ]
+                    ]
+                ],
                 'detalles' => array_values($estadisticasArea),
                 'totales' => $totalGeneral
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error en getEstadisticasAreaData: ' . $e->getMessage());
-            return [
-                'chartData' => ['labels' => [], 'datasets' => []],
-                'detalles' => [],
-                'totales' => ['area_total' => 0, 'total_registros' => 0]
-            ];
+            return $this->emptyStats('area');
         }
     }
 
@@ -728,519 +794,128 @@ class ReporteController extends Controller
     private function calcularEdad($fechaNacimiento)
     {
         try {
-            // Intentar diferentes formatos de fecha
-            $formatos = ['d/m/Y', 'Y-m-d', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
-
-            $fecha = null;
-            foreach ($formatos as $formato) {
-                $fecha = \DateTime::createFromFormat($formato, $fechaNacimiento);
-                if ($fecha !== false) {
-                    break;
-                }
+            // Si es solo un número (edad directa)
+            if (is_numeric($fechaNacimiento) && $fechaNacimiento < 120) {
+                return (int)$fechaNacimiento;
             }
 
-            // Si no se pudo parsear con formatos conocidos, intentar crear desde string
-            if ($fecha === false || $fecha === null) {
-                $fecha = new \DateTime($fechaNacimiento);
+            $formatos = ['d/m/Y', 'Y-m-d', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
+            $fecha = null;
+            
+            foreach ($formatos as $formato) {
+                $fecha = \DateTime::createFromFormat($formato, $fechaNacimiento);
+                if ($fecha !== false) break;
+            }
+
+            if (!$fecha) {
+                try {
+                    $fecha = new \DateTime($fechaNacimiento);
+                } catch (\Exception $e) {
+                    return null;
+                }
             }
 
             if ($fecha) {
-                $hoy = new \DateTime();
-                $edad = $hoy->diff($fecha)->y;
-                return $edad;
+                return (new \DateTime())->diff($fecha)->y;
             }
 
             return null;
         } catch (\Exception $e) {
-            // Log::warning('Error calculando edad para fecha: ' . $fechaNacimiento . ' - ' . $e->getMessage());
             return null;
         }
     }
 
-    /**
-     * Obtener estadísticas de distribución por género y corregimiento (API)
-     */
-    public function estadisticasGenero()
-    {
-        try {
-            $data = $this->getEstadisticasGeneroData();
-
-            return response()->json([
-                'success' => true,
-                'chartData' => $data['chartData'],
-                'detalles' => $data['detalles'],
-                'totales' => $data['totales']
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener estadísticas de género: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function exportarPDF()
-    {
-        // pendiente con DOMPDF
-    }
-
-    /**
-     * Obtener estadísticas de distribución por corregimientos desde caracterizaciones
-     */
     public function estadisticasCorregimientos()
     {
         try {
-            // Obtener datos de caracterización (ID=1 por defecto)
             $caracterizacion = Caracterizacion::find(1);
-
             if (!$caracterizacion || !$caracterizacion->data) {
-                return response()->json([
-                    'error' => 'No hay datos de caracterización disponibles'
-                ], 404);
+                return response()->json(['error' => 'No hay datos'], 404);
             }
-
-            // Decodificar datos
-            $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
-            $rows = $data['rows'] ?? [];
-
-            // Inicializar contadores por corregimiento
-            $corregimientos = [
-                1 => ['nombre' => 'Corregimiento 1', 'count' => 0],
-                2 => ['nombre' => 'Corregimiento 2', 'count' => 0],
-                3 => ['nombre' => 'Corregimiento 3', 'count' => 0]
-            ];
-
-            $totalPersonas = 0;
-
-            // Contar personas por corregimiento
-            foreach ($rows as $row) {
-                if (!is_array($row)) continue;
-
-                // Buscar columna de corregimiento (puede tener diferentes nombres)
-                $corregimiento = null;
-
-                // Buscar por posibles nombres de columna
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'CORREGIMIENTO'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        break;
-                    }
-                }
-
-                // Si encontramos un corregimiento válido, incrementamos el contador
-                if ($corregimiento && isset($corregimientos[$corregimiento])) {
-                    $corregimientos[$corregimiento]['count']++;
-                    $totalPersonas++;
-                }
-            }
-
-            // Preparar datos para gráfico pastel
-            $chartData = [
-                'labels' => array_column($corregimientos, 'nombre'),
-                'data' => array_column($corregimientos, 'count'),
-                'colors' => ['#A80521', '#0943B5', '#4A7C2F'], // Colores para gráfico pastel
-                'total' => $totalPersonas
-            ];
-
-            return response()->json([
-                'success' => true,
-                'chartData' => $chartData,
-                'detalles' => $corregimientos
-            ]);
-
+            return response()->json(['message' => 'Use la vista web para ver este reporte']);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener estadísticas: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Mostrar vista de área por corregimientos para proyectos productivos
-     */
-    public function areaProyectosView(Request $request)
+    // --- Helpers ---
+
+    private function findColumnValue($row, $headers, $possibleNames)
     {
-        try {
-            // Obtener todos los proyectos productivos
-            $proyectos = \App\Models\ProyectoProductivo::select('id', 'nombre')->orderBy('nombre')->get();
-
-            if ($request->has('proyecto_id') && $request->proyecto_id) {
-                $proyectoId = $request->proyecto_id;
-
-                // Verificar que el proyecto existe
-                $proyectoSeleccionado = \App\Models\ProyectoProductivo::find($proyectoId);
-                if (!$proyectoSeleccionado) {
-                    return redirect()->back()->with('error', 'Proyecto no encontrado');
-                }
-
-                // Obtener estadísticas del proyecto específico
-                $proyectoStats = $this->getEstadisticasProyectoAreaData($proyectoId);
-                $proyectoStatsVereda = $this->getEstadisticasProyectoVeredaData($proyectoId);
-
-                return view('reportes.area-proyectos', compact('proyectos', 'proyectoSeleccionado', 'proyectoStats', 'proyectoStatsVereda'));
+        // 1. Buscar coincidencia exacta en las llaves del row
+        foreach ($possibleNames as $name) {
+            if (isset($row[$name]) && trim((string)$row[$name]) !== '') {
+                return trim((string)$row[$name]);
             }
-
-            return view('reportes.area-proyectos', compact('proyectos'));
-
-        } catch (\Exception $e) {
-            return redirect()->route('reportes.index')->with('error', 'Error al cargar las estadísticas de proyectos: ' . $e->getMessage());
         }
+
+        // 2. Buscar por coincidencia parcial en los headers si no se encontró por llave directa
+        // (Esto es costoso, usar solo si es necesario y si los headers están disponibles)
+        if (!empty($headers)) {
+            foreach ($possibleNames as $name) {
+                $nameLower = strtolower($name);
+                foreach ($headers as $header) {
+                    if (str_contains(strtolower($header), $nameLower)) {
+                        if (isset($row[$header]) && trim((string)$row[$header]) !== '') {
+                            return trim((string)$row[$header]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
-    /**
-     * Obtener estadísticas de área por corregimiento para un proyecto específico
-     */
-    private function getEstadisticasProyectoAreaData($proyectoId)
+    private function normalizeCorregimiento($value)
     {
-        try {
-            // Obtener el proyecto específico
-            $proyecto = \App\Models\ProyectoProductivo::find($proyectoId);
+        if (!$value) return null;
+        
+        $value = strtolower(trim($value));
+        
+        if (in_array($value, ['1', '1.0', '01', 'corregimiento 1'])) return 1;
+        if (in_array($value, ['2', '2.0', '02', 'corregimiento 2'])) return 2;
+        if (in_array($value, ['3', '3.0', '03', 'corregimiento 3'])) return 3;
 
-            if (!$proyecto || !$proyecto->data) {
-                return [
-                    'chartData' => ['labels' => [], 'datasets' => []],
-                    'detalles' => [],
-                    'totales' => ['area_total' => 0, 'total_registros' => 0]
-                ];
-            }
+        return null;
+    }
 
-            // Decodificar datos del proyecto
-            $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
-            $rows = $data['rows'] ?? [];
-            $headers = $data['headers'] ?? [];
+    private function normalizeGenero($value)
+    {
+        if (!$value) return null;
+        
+        $value = strtolower(trim($value));
+        
+        if (in_array($value, ['femenino', 'f', 'mujer', 'female', 'feminine', 'femenina', 'mujeres'])) return 'femenino';
+        if (in_array($value, ['masculino', 'm', 'hombre', 'male', 'masculine', 'masculina', 'hombres'])) return 'masculino';
 
-            // Inicializar contadores por corregimiento
-            $estadisticasProyecto = [
-                1 => ['corregimiento' => 'Corregimiento 1', 'area' => 0, 'total_registros' => 0],
-                2 => ['corregimiento' => 'Corregimiento 2', 'area' => 0, 'total_registros' => 0],
-                3 => ['corregimiento' => 'Corregimiento 3', 'area' => 0, 'total_registros' => 0]
-            ];
+        return null;
+    }
 
-            $totalGeneral = ['area_total' => 0, 'total_registros' => 0];
-
-            // Procesar todas las filas del proyecto específico (ya están filtradas por proyecto)
-            foreach ($rows as $row) {
-                if (!is_array($row)) continue;
-
-                // Buscar área - búsqueda flexible por nombre de columna
-                $area = null;
-                $areaKeys = ['Área (ha)', 'area (ha)', 'area_ha', 'area', 'Area (ha)', 'Area', 'AREA (Ha)'];
-
-                foreach ($areaKeys as $key) {
-                    if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                        $areaValue = trim((string)$row[$key]);
-                        // Convertir formato europeo (coma como decimal) a formato PHP (punto como decimal)
-                        $areaValue = str_replace(',', '.', $areaValue);
-                        // Convertir a float si es numérico
-                        if (is_numeric($areaValue)) {
-                            $area = (float)$areaValue;
-                            break;
-                        }
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if ($area === null) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'área') || str_contains($headerNormalized, 'area')) {
-                            if (isset($row[$header]) && !empty(trim((string)$row[$header]))) {
-                                $areaValue = trim((string)$row[$header]);
-                                // Convertir a número, manejar formatos decimales
-                                // Si tiene punto pero no coma, convertir punto a coma (formato europeo)
-                                if (strpos($areaValue, '.') !== false && strpos($areaValue, ',') === false) {
-                                    $areaValue = str_replace('.', ',', $areaValue);
-                                }
-                                // Ahora convertir a float (PHP entiende coma como separador decimal)
-                                if (is_numeric(str_replace(',', '.', $areaValue))) {
-                                    $area = (float)str_replace(',', '.', $areaValue);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Buscar corregimiento - búsqueda flexible por nombre de columna
-                $corregimiento = null;
-                $corregimientoKeys = ['corregimiento', 'Corregimiento', 'corregimiento_cz', 'Corregimiento_CZ', 'Corregimiento_cz', 'CORREGIMIENTO'];
-
-                foreach ($corregimientoKeys as $key) {
-                    if (isset($row[$key])) {
-                        $corregimiento = trim((string)$row[$key]);
-                        // Normalizar valores comunes
-                        if (in_array($corregimiento, ['1', '1.0', '01', 'Corregimiento 1', 'corregimiento 1'])) {
-                            $corregimiento = '1';
-                        } elseif (in_array($corregimiento, ['2', '2.0', '02', 'Corregimiento 2', 'corregimiento 2'])) {
-                            $corregimiento = '2';
-                        } elseif (in_array($corregimiento, ['3', '3.0', '03', 'Corregimiento 3', 'corregimiento 3'])) {
-                            $corregimiento = '3';
-                        }
-                        break;
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if (!$corregimiento) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'corregimiento') || str_contains($headerNormalized, 'corregimiento')) {
-                            if (isset($row[$header])) {
-                                $corregimiento = trim((string)$row[$header]);
-                                // Normalizar valores comunes
-                                if (in_array($corregimiento, ['1', '1.0', '01', 'Corregimiento 1', 'corregimiento 1'])) {
-                                    $corregimiento = '1';
-                                } elseif (in_array($corregimiento, ['2', '2.0', '02', 'Corregimiento 2', 'corregimiento 2'])) {
-                                    $corregimiento = '2';
-                                } elseif (in_array($corregimiento, ['3', '3.0', '03', 'Corregimiento 3', 'corregimiento 3'])) {
-                                    $corregimiento = '3';
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Si tenemos área y corregimiento válido, sumar
-                if ($area !== null && $corregimiento && isset($estadisticasProyecto[$corregimiento])) {
-                    $estadisticasProyecto[$corregimiento]['area'] += $area;
-                    $estadisticasProyecto[$corregimiento]['total_registros']++;
-                    $totalGeneral['area_total'] += $area;
-                    $totalGeneral['total_registros']++;
-                }
-            }
-
-            // Preparar datos para gráfico de barras
-            $chartData = [
-                'labels' => array_column($estadisticasProyecto, 'corregimiento'),
-                'datasets' => [
-                    [
-                        'label' => 'Área (ha)',
-                        'data' => array_column($estadisticasProyecto, 'area'),
-                        'backgroundColor' => '#4A7C2F', // Verde
-                        'borderColor' => '#3d6625',
-                        'borderWidth' => 2,
-                        'borderRadius' => 4,
-                        'borderSkipped' => false,
-                    ]
-                ]
-            ];
-
-            return [
-                'chartData' => $chartData,
-                'detalles' => array_values($estadisticasProyecto),
-                'totales' => $totalGeneral
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('Error en getEstadisticasProyectoAreaData: ' . $e->getMessage());
+    private function emptyStats($type)
+    {
+        if ($type === 'genero') {
             return [
                 'chartData' => ['labels' => [], 'datasets' => []],
                 'detalles' => [],
-                'totales' => ['area_total' => 0, 'total_registros' => 0]
+                'totales' => ['femenino' => 0, 'masculino' => 0, 'total' => 0]
             ];
         }
-    }
-
-    /**
-     * Obtener estadísticas de área por vereda para un proyecto específico
-     */
-    private function getEstadisticasProyectoVeredaData($proyectoId)
-    {
-        try {
-            // Obtener el proyecto específico
-            $proyecto = \App\Models\ProyectoProductivo::find($proyectoId);
-
-            if (!$proyecto || !$proyecto->data) {
-                return [
-                    'chartData' => ['labels' => [], 'datasets' => []],
-                    'detalles' => [],
-                    'totales' => ['area_total' => 0, 'total_registros' => 0]
-                ];
-            }
-
-            // Decodificar datos del proyecto
-            $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
-            $rows = $data['rows'] ?? [];
-            $headers = $data['headers'] ?? [];
-
-            // Inicializar array para estadísticas por vereda
-            $estadisticasVereda = [];
-
-            $totalGeneral = ['area_total' => 0, 'total_registros' => 0];
-
-            // Procesar todas las filas del proyecto específico
-            foreach ($rows as $row) {
-                if (!is_array($row)) continue;
-
-                // Buscar área - búsqueda flexible por nombre de columna
-                $area = null;
-                $areaKeys = ['Área (ha)', 'area (ha)', 'area_ha', 'area', 'Area (ha)', 'Area', 'AREA (Ha)'];
-
-                foreach ($areaKeys as $key) {
-                    if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                        $areaValue = trim((string)$row[$key]);
-                        // Convertir formato europeo (coma como decimal) a formato PHP (punto como decimal)
-                        $areaValue = str_replace(',', '.', $areaValue);
-                        // Convertir a float si es numérico
-                        if (is_numeric($areaValue)) {
-                            $area = (float)$areaValue;
-                            break;
-                        }
-                    }
-                }
-
-                // Si no encontró por nombres exactos, buscar por similitud en headers
-                if ($area === null) {
-                    foreach ($headers as $header) {
-                        $headerNormalized = trim(strtolower($header));
-                        if (str_contains($headerNormalized, 'área') || str_contains($headerNormalized, 'area')) {
-                            if (isset($row[$header]) && !empty(trim((string)$row[$header]))) {
-                                $areaValue = trim((string)$row[$header]);
-                                // Convertir a número, manejar formatos decimales
-                                if (strpos($areaValue, '.') !== false && strpos($areaValue, ',') === false) {
-                                    $areaValue = str_replace('.', ',', $areaValue);
-                                }
-                                if (is_numeric(str_replace(',', '.', $areaValue))) {
-                                    $area = (float)str_replace(',', '.', $areaValue);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Buscar vereda - usando la columna "VEREDA" especificada por el usuario
-                $vereda = null;
-                if (isset($row['VEREDA']) && !empty(trim((string)$row['VEREDA']))) {
-                    $vereda = trim((string)$row['VEREDA']);
-                }
-
-                // Si no encontró por "VEREDA", buscar por otras variantes
-                if (!$vereda) {
-                    $veredaKeys = ['vereda', 'Vereda', 'VEREDA', 'vereda_cz', 'Vereda_cz'];
-                    foreach ($veredaKeys as $key) {
-                        if (isset($row[$key]) && !empty(trim((string)$row[$key]))) {
-                            $vereda = trim((string)$row[$key]);
-                            break;
-                        }
-                    }
-                }
-
-                // Si tenemos área y vereda válido, procesar
-                if ($area !== null && $vereda) {
-                    // Inicializar vereda si no existe
-                    if (!isset($estadisticasVereda[$vereda])) {
-                        $estadisticasVereda[$vereda] = [
-                            'vereda' => $vereda,
-                            'area' => 0,
-                            'total_registros' => 0
-                        ];
-                    }
-
-                    // Sumar área y contar registro
-                    $estadisticasVereda[$vereda]['area'] += $area;
-                    $estadisticasVereda[$vereda]['total_registros']++;
-                    $totalGeneral['area_total'] += $area;
-                    $totalGeneral['total_registros']++;
-                }
-            }
-
-            // Convertir a array indexado y ordenar por área descendente
-            $detalles = array_values($estadisticasVereda);
-            usort($detalles, function($a, $b) {
-                return $b['area'] <=> $a['area'];
-            });
-
-            // Preparar datos para gráfico de barras
-            $chartData = [
-                'labels' => array_column($detalles, 'vereda'),
-                'datasets' => [
-                    [
-                        'label' => 'Área (ha)',
-                        'data' => array_column($detalles, 'area'),
-                        'backgroundColor' => '#4A7C2F', // Verde
-                        'borderColor' => '#3d6625',
-                        'borderWidth' => 2,
-                        'borderRadius' => 4,
-                        'borderSkipped' => false,
-                    ]
-                ]
-            ];
-
-            return [
-                'chartData' => $chartData,
-                'detalles' => $detalles,
-                'totales' => $totalGeneral
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('Error en getEstadisticasProyectoVeredaData: ' . $e->getMessage());
+        if ($type === 'edad') {
             return [
                 'chartData' => ['labels' => [], 'datasets' => []],
                 'detalles' => [],
-                'totales' => ['area_total' => 0, 'total_registros' => 0]
+                'totales' => ['total' => 0],
+                'rangos' => []
             ];
         }
-    }
-
-    /**
-     * Exportar estadísticas de área por proyectos a PDF
-     */
-    public function areaProyectosPDF(Request $request)
-    {
-        try {
-            $proyectoId = $request->get('proyecto_id');
-
-            if (!$proyectoId) {
-                return redirect()->back()->with('error', 'Debe seleccionar un proyecto para exportar');
-            }
-
-            // Verificar que el proyecto existe
-            $proyectoSeleccionado = \App\Models\ProyectoProductivo::find($proyectoId);
-            if (!$proyectoSeleccionado) {
-                return redirect()->back()->with('error', 'Proyecto no encontrado');
-            }
-
-            // Obtener estadísticas del proyecto
-            $proyectoStats = $this->getEstadisticasProyectoAreaData($proyectoId);
-            
-            // Generar vista HTML optimizada para impresión/PDF
-            return view('reportes.pdfs.area-proyectos', compact('proyectoSeleccionado', 'proyectoStats'));
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
+        if ($type === 'area') {
+            return [
+                'chartData' => ['labels' => [], 'datasets' => []],
+                'detalles' => [],
+                'totales' => ['area_total' => 0]
+            ];
         }
-    }
-
-    /**
-     * Exportar PDF con estadísticas de área por vereda
-     */
-    public function areaProyectosVeredaPDF(Request $request)
-    {
-        try {
-            $proyectoId = $request->get('proyecto_id');
-
-            if (!$proyectoId) {
-                return redirect()->back()->with('error', 'Debe seleccionar un proyecto para exportar');
-            }
-
-            // Verificar que el proyecto existe
-            $proyectoSeleccionado = \App\Models\ProyectoProductivo::find($proyectoId);
-            if (!$proyectoSeleccionado) {
-                return redirect()->back()->with('error', 'Proyecto no encontrado');
-            }
-
-            // Obtener estadísticas del proyecto por vereda
-            $proyectoStatsVereda = $this->getEstadisticasProyectoVeredaData($proyectoId);
-            
-            // Generar vista HTML optimizada para impresión/PDF
-            return view('reportes.pdfs.area-proyectos', compact('proyectoSeleccionado', 'proyectoStatsVereda'));
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
-        }
+        return [];
     }
 }

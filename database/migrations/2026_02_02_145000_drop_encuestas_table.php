@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('encuestas');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
         Schema::create('encuestas', function (Blueprint $table) {
             $table->id();
 
@@ -18,8 +26,6 @@ return new class extends Migration
             $table->string('lugar_aplicacion')->nullable();
             $table->string('corregimiento')->nullable();
 
-
-       // 🔥 NUEVOS CAMPOS con FK
             $table->foreignId('corregimiento_id')->constrained()->cascadeOnDelete();
             $table->foreignId('vereda_id')->constrained()->cascadeOnDelete();
 
@@ -81,13 +87,5 @@ return new class extends Migration
 
             $table->timestamps();
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('encuestas');
     }
 };

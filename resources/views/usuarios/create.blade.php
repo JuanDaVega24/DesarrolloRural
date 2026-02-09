@@ -57,6 +57,14 @@
                         <option value="Tabulador">Tabulador</option>
                     </select>
                 </div>
+                
+                <div class="mb-3 position-relative" id="permisoCaracterizacionContainer">
+                    <i class="fa-solid fa-shield input-icon"></i>
+                    <select name="caracterizacion_permiso" class="form-control" required>
+                        <option value="0">No tiene permisos</option>
+                        <option value="1">Tiene permiso de Caracterización</option>
+                    </select>
+                </div>
 
                 {{-- Botón Crear --}}
                 <button class="btn-login mt-3">
@@ -73,6 +81,25 @@
             </form>
         </div>
     </div>
+
+    <script>
+        (function(){
+            const roleSelect = document.querySelector('select[name="role"]');
+            const permisoContainer = document.getElementById('permisoCaracterizacionContainer');
+            const toggle = () => {
+                const isAdmin = roleSelect.value === 'Administrador';
+                permisoContainer.style.display = isAdmin ? 'none' : '';
+                const permisoSelect = permisoContainer.querySelector('select[name="caracterizacion_permiso"]');
+                if (isAdmin) {
+                    permisoSelect.value = '0';
+                }
+            };
+            if (roleSelect && permisoContainer) {
+                toggle();
+                roleSelect.addEventListener('change', toggle);
+            }
+        })();
+    </script>
 
 
 </x-app-layout>

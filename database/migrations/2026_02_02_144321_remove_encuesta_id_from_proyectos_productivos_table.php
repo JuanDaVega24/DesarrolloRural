@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('encuestas', function (Blueprint $table) {
-            $table->string('tipo_tenencia')->nullable();
+        Schema::table('proyectos_productivos', function (Blueprint $table) {
+            $table->dropForeign(['encuesta_id']);
+            $table->dropColumn('encuesta_id');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('encuestas', function (Blueprint $table) {
-            $table->dropColumn('tipo_tenencia');
+        Schema::table('proyectos_productivos', function (Blueprint $table) {
+             $table->foreignId('encuesta_id')->nullable()->constrained()->nullOnDelete();
         });
     }
 };

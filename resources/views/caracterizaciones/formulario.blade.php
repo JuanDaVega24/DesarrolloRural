@@ -26,57 +26,72 @@
                 @php
                     // Mapeo de columnas con opciones predefinidas
                     $opcionesColumnas = [
-                        'Tipo de documento' => ['Cédula de Ciudadanía(CC)', 'Tarjeta de Identidad(TI)', 'Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
+                        'Tipo de documento' => ['Cédula de Ciudadanía(CC)', 'Tarjeta de Identidad(TI)', 'Registro Civil (RC)','Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
+                        'Tipo de documento del encuestado' => ['Cédula de Ciudadanía(CC)','Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
                         'Corregimiento' => ['1', '2', '3'],
                         'Vereda' => [], // Se llenará dinámicamente
                         'Veredas' => [], // Se llenará dinámicamente
                         'Nombre de la Vereda' => [], // Se llenará dinámicamente
-                        '¿Cuenta con un medio de transporte propio? ¿Cual?' => ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras','Ninguno'],
+                        '¿Cuenta con un medio de transporte propio? ¿Cual?' => ['Motocicleta', 'Automóvil', 'Furgón/Camión','Ninguno', 'Otras'],
                          'Tenencia o relación con la tierra'=> ['Propia', 'Arriendo', 'Aparcería', 'Usufructo', 'Comodato', 'Ocupación de hecho', 'Propiedad colectiva', 'Adjudicatario o Comunero', 'Adjudicatario(a)/ Viviente', 'Otras'],
-                        '¿Pertenece a una poblacion de especial protección constitucional?'=> ['Campesino', 'Población étnica', 'LGBTIQ+', 'Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado', 'Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto (RUV)', 'Cuidador/a', 'Otro'],
-                        'Población'=> ['Población étnica', 'Población con orientación sexualmente diversa','Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado/Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto armado', 'Cuidador/a', 'Otro'],
+                         '¿Pertenece a una población de especial protección constitucional?'=> ['Campesino', 'Mujer rural', 'Joven rural', 'Persona mayor', 'Persona con discapacidad', 'Cuidador/a', 'Víctima del conflicto (RUV)','Población étnica', 'LGBTIQ+',  'Cabeza de familia',  'Desmovilizado', 'Firmante del Acuerdo de Paz','Otro'],
+                        'Población'=> ['Población étnica',  'Persona con discapacidad', 'Víctima del conflicto armado', 'Persona mayor', 'Población con orientación sexualmente diversa','Joven rural', 'Mujer rural', 'Cuidador/a', 'Desmovilizado/Firmante del Acuerdo de Paz',  'Otro'],
                         'Material predominante de los pisos de esta vivienda' => ['Mármol, parqué, madera pulida y lacada', 'Baldosa, vinilo, tableta, ladrillo, laminado', 'Cemento, gravilla', 'Madera sin pulir, otros', 'Tierra, arena, barro'],
                         'Material predominante de las paredes exteriores de la vivienda' => ['Bloque, ladrillo, piedra, madera pulida', 'Concreto vaciado', 'Material prefabricado', 'Tapia pisada, bahareque, adobe', 'Madera burda, tabla, guadua, otros materiales de origen vegetal', 'Otros materiales (Zinc, tela, cartón, plásticos)'],
                         'Fuente de agua para el consumo humano'=> ['Acueducto metropolitano', 'Acueducto veredal', 'Nacimiento / quebrada', 'Pila comunitaria','Otras'],
                         'Combustible y o fuente energética para cocinar'=> ['Madera', 'Gas Natural', 'Gas propano','Electricidad', 'Carbón', 'Biogás', 'Ninguno'],
                         'Medios de comunicación de los cuales dispone en la finca'=> ['Prensa', 'Radio', 'Televisión','Correo electrónico', 'Internet', 'Celular', 'Telefono fijo'],
                         'Uso de las fuentes hídricas con que cuenta el predio'=> ['Agropecuario', 'Doméstico'],
-                        'Vías de acceso a la finca'=> ['Carretera pavimentada', 'Carretera destapada', 'Camino de herradura'],
+                        'Vías de acceso a la finca'=> ['Carretera pavimentada', 'Carretera destapada', 'Camino de herradura','Otro'],
                         '¿Donde almacena las herramientas e insumos agropecuarios que emplea en sus labores?'=> ['En la vivienda', 'En bodega contigua a la vivienda', 'Al aire libre'],
                         'Tipo de servicio sanitario (inodoro) que tiene la vivienda' => ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
                         'Tipo de sistema de riego empleado' => ['Superficial (Por gravedad o inundación)', 'Prenomsurizado (Goteo, aspersión, microaspersión)', 'Manual o por mateo'],
                         'El destino final de la producción es' => ['Autoconsumo', 'Venta a intermediarios (plazas de mercado/ Central de abastos)', 'Venta a cooperativa', 'Mercadillos campesinos', 'Exportación', 'Otras'],
-                        'Tipo de vivienda' => ['Casa', 'Apartamento', 'Tipo cuarto', 'No hay vivienda', 'Otra'],
-                        'género' => ['Masculino', 'Femenino', 'Otro'],
-                        'tipodeserviciosanitarioinodoroquetienelavivienda' => ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
-                        'tipodefuentehídricaconquecuentaelpredio' => ['Nacimiento', 'Rio', 'Quebrada', 'Lago', 'Pozo'],
-                        'condicionesdeocupacióndelavivienda' => ['Ocupada por la familia', 'Vivienda temporal (Vacaciones, trabajo, etc.)', 'Desocupada', 'Ocupada por viviente(s) y los dueños no viven en le predio'],
-                        'nivel educativo' => ['Primaria Completa', 'Primaria incompleta', 'Secundaria incompleta', 'Secundaria completa', 'Técnico', 'Tecnológica', 'Profesional', 'Especializacion', 'Maestria','Doctorado', 'Ninguna'],
-                        'Tipo de maquinaria y o equipo'=> ['Ahoyadora', 'Equipo de inseminacion', 'Fumigadora', 'Guadañadora', 'Motosierra', 'Picadora de pasto', 'Hidrolavadora', 'Motobomba','Sistema de riego', 'Tostadora de café / cacao', 'Trilladora', 'Molino', 'Despulpadora', 'Módulo ecólogico para el despulpado de café', 'Planta eléctrica ', 'Báscula', 'Minitractor / Motocultor', 'Cajón de fermentador de cacao'],
-                        'Con que'=> ['Mensual', 'Trimestral','Semestral', 'Anual'],
-                        'Tipo de control'=> ['Químico', 'Biologico'],
+                        'Tipo de vivienda' => ['Casa', 'Apartamento', 'Tipo cuarto', 'No hay vivienda', 'Otro'],
+                        'género' => ['Masculino', 'Femenino', 'No Binario','Otro'],
+                        'Parentesco con el jefe del hogar'=> ['Cabeza del hogar(jefe o jefa) ', 'Pareja (Cónyuge, compañero/a, esposo/a)','Hijo/a, hijastro/a', 'Yerno, nuera', 'Nieto/a', 'Hermano/a, hermanastro/a', 'Otro pariente','Empleado/a domestico/a', 'Otro no pariente'],
 
-                        'Tipo de infraestructura'=> ['Aprisco', 'Bodega de almacenamiento de agro insumos ', 'Manga', 'Corral', 'Embarcado', 'Área de manejo de residuos sólidos (ordinarios y peligrosos)', 'Beneficiadero de café ', 'Biodigestor','Brete', 'Compostera', 'Establo', 'Galpón', 'Invernadero', 'Pesebrera', 'Silo', 'Marquesina', 'Casa elva', 'Vivero', 'Trapiche'],
-                        'En que consistió el proyecto'=> ['Entrega de insumos, herramientas y/o equipos', 'Transferencia de conocimientos', 'Transferencia económica', 'Construcción o adecuación de infraestructura'],
+                        'tipodeserviciosanitarioinodoroquetienelavivienda' => ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
+                        'Tipo de fuente hídrica con que cuenta el predio' => ['Nacimiento', 'Rio', 'Quebrada', 'Lago', 'Pozo', 'Otro'],
+                        'condiciones de ocupación de la vivienda' => ['Ocupada por la familia', 'Vivienda temporal (Vacaciones, trabajo, etc.)', 'Desocupada', 'Ocupada por viviente(s) y los dueños no viven en le predio'],
+                        'nivel educativo' => ['Primaria Completa', 'Primaria incompleta', 'Secundaria incompleta', 'Secundaria completa', 'Técnico', 'Tecnológica', 'Profesional', 'Especializacion', 'Maestria','Doctorado', 'Ninguna'],
+                        'Tipo de maquinaria y o equipo'=> ['Ahoyadora', 'Equipo de inseminacion', 'Fumigadora', 'Guadañadora', 'Motosierra', 'Picadora de pasto', 'Hidrolavadora', 'Motobomba','Sistema de riego', 'Tostadora de café / cacao', 'Trilladora', 'Molino', 'Despulpadora', 'Módulo ecólogico para el despulpado de café', 'Planta eléctrica ', 'Báscula', 'Minitractor / Motocultor', 'Cajón de fermentador de cacao', 'Otros'],
+                        'Con que Frecuencia realiza control de arvenses'=> ['Mensual', 'Trimestral','Semestral', 'Anual'],
+                        'Tipo de control'=> ['Químico', 'Biologico', 'Otro'],
+
+                        'Tipo de infraestructura'=> ['Aprisco', 'Bodega de almacenamiento de agro insumos ', 'Manga', 'Corral', 'Embarcado', 'Área de manejo de residuos sólidos (ordinarios y peligrosos)', 'Beneficiadero de café ', 'Biodigestor','Brete', 'Compostera', 'Establo', 'Galpón', 'Invernadero', 'Pesebrera', 'Silo', 'Marquesina', 'Casa elva', 'Vivero', 'Trapiche', 'Otro'],
+                        'En que consistió el proyecto'=> ['Entrega de insumos, herramientas y/o equipos', 'Transferencia de conocimientos', 'Transferencia económica', 'Construcción o adecuación de infraestructura', 'Otro'],
                         'Qué barreras enfrentó'=> ['Falta de garantías (recursos económicos o tierra para exigidos como garantía para otorgar crédito', 'Falta de información y/o educación financiera (falta de conocimiento sobre productos financieros, tasas de interés y cómo gestionarlos)', 'Ingresos irregulares', 'Otro'],
                         'Qué tipo de fertilizantes empleó'=> ['Químico', 'Orgánico', 'Mixto'],
                         'Método de aplicacion'=> ['Edáfica', 'Foliar', 'Mixto'],
                         'Frecuencia de aplicación'=> ['Semanal', 'Mensual', 'Trimestral', 'Anual'],
                         'Realiza control'=> ['Manual', 'Mecánico', 'Químico', 'Biológico', 'No'],
-                        'Qué elementos de protección emplea'=> ['Gafas', 'Guantes', 'Mascarilla', 'Botas', 'Traje impermeable'],
-                        'Qué información registra'=> ['Ingresos y egresos', 'Aplicación de fertilizantes', 'Cosecha', 'Inventario de insumos, herramientas y/o equipos', 'Mano de obra empleada'],
+                        'Qué elementos de protección emplea'=> ['Gafas', 'Guantes', 'Mascarilla', 'Botas', 'Traje impermeable', 'Otro'],
+                        'Qué información registra'=> ['Ingresos y egresos', 'Aplicación de fertilizantes', 'Cosecha', 'Inventario de insumos, herramientas y/o equipos', 'Mano de obra empleada', 'Otro'],
                         'Qué fenómeno natural lo afecto' => ['Lluvia torrencial', 'Sequía', 'Ola de calor', 'Ola de frío', 'Vientos fuertes', 'Terremoto','Deslizamiento / Remoción de masa', 'Inundación', 'Desboradmiento de ríos / quebradas', 'Otro'],
-                        'Qué solución propone para superar la afectación' => ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación'],
+                        'Qué solución propone para superar la afectación' => ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación', 'Otro'],
                         'Destino de aguas residuales' => ['Alcantarillado', 'Pozo séptico', 'Ninguno'],
                         'La mayor parte del terreno que conforma esta unidad productiva agropecuaria es:'=> ['Plano', 'Quebrado (con pendiente)'],
                         'Realiza actividades productivas agrícolas'=> ['Si', 'No'],
                         'Realiza actividades agroindustriales'=> ['Si', 'No'],                    
                         'Realiza actividades pecuarias'=> ['Si', 'No'],
                         'Orientación de la actividad'=> ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otros' ],
-                        'Qué entidad lo gestionó'=> ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)'],
+                        'Qué entidad lo gestionó'=> ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
                         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias'=> ['Si', 'No'],
                         'Qué hace con los envases de plaguicidas vacíos'=> ['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
                         'Fuente de la electricidad'=> ['Redes eléctricas', 'Generador', 'Panel solar', 'Otro'],
+                        'Principales fuentes de ingresos del hogar actividades Agricolas'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+                        'Actividades Pecuarias'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+                        'Empleo Formal'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+                        'Actividades Comerciales'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+                        'Lugar de aplicación'=> ['Casa', 'Finca', 'Lote'],
+                        'En qué entidad financiera lo solicitó'=> ['Banco Agrario', 'Cooperativa Financiera', 'Otro'],
+        'Que afectación o daño hubo en la unidad productiva'=> ['Destrucción de cultivos', 'Destrucción de Infraestructura', 'Pérdida de ganado/animales', 'Pérdida de cosecha', 'Pérdida de terreno', 'Alteración del ciclo productivo', 'Reducción del rendimiento y calidad de los productos agrícolas', 'Destrucción parcial o total de la vivienda',  'Otro'],
+        'Tipo de cultivo'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+                        'Tiene registro Sanitario INVIMA'=> ['Si', 'No','No aplica'],
+                        'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Actividad productiva'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+                        'Afectación'=> ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
 
 
                         ];
@@ -93,7 +108,7 @@
                           
 
                             [
-                                'trigger_field' => 'Tiene familiares', // Campo que dispara la acción
+                                'trigger_field' => 'Nucleo familiar', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Tipo de Vivienda'              // Campo donde se reanuda el formulario
                             ],
@@ -140,6 +155,12 @@
                                 'trigger_field' => 'Agregar otro producto', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Tiene una marca para sus productos agroindustriales'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Tiene una marca para sus productos agroindustriales', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Realiza actividades pecuarias'              // Campo donde se reanuda el formulario
                             ],
 
                              [
@@ -228,7 +249,7 @@
                             ],
 
                              [
-                                'trigger_field' => 'Agregar otra actividad productiva', // Campo que dispara la acción
+                                'trigger_field' => 'Agregar otra actividad', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Qué solución propone para superar la afectación'              // Campo donde se reanuda el formulario
                             ],
@@ -250,6 +271,25 @@
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Tiene o posee otro(s) predio(s) no continuos en los que desarrolla actividades productivas agropecuarias'              // Campo donde se reanuda el formulario
                             ],
+
+                            [
+                                'trigger_field' => 'Aplicó el fertilizante siguiendo parámetros técnicos y o indicaciones de un profesional', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Realiza control de arvenses'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Realiza control de arvenses', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Ha realizado control de plagas y enfermedades en la Unidad productiva'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Posee sistema de riego para los cultivos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Uso del suelo en el predio: Agricultura (ha)'              // Campo donde se reanuda el formulario
+                            ],
+                           
                            
                             
                            
@@ -296,8 +336,7 @@
                     </script>
 
                     <div class="form-header">
-                        <h2 class="form-title">Datos de los Registros</h2>
-                        <p class="form-subtitle">Complete el formulario para cada registro. Use "Agregar Registro" para incluir múltiples entradas.</p>
+                        <h2 class="form-title">Datos del Registro</h2>
                     </div>
 
                     {{-- Mensaje de advertencia --}}
@@ -372,20 +411,26 @@
                                     if (!$esCampoAutomatico) {
                                         // Primero verificar si la columna tiene opciones específicas definidas
                                         $tieneOpcionesEspecificas = false;
-                                        $columnaNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $columna));
+                                        $columnaNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $columna));
+                                        $columnaNormalizedNoDigits = preg_replace('/\d+/', '', $columnaNormalizedFull);
                                         foreach ($opcionesColumnas as $key => $opciones) {
-                                            $keyNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $key));
-                                            if (str_contains($columnaNormalized, $keyNormalized) || str_contains($keyNormalized, $columnaNormalized)) {
+                                            $keyNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $key));
+                                            $keyNormalizedNoDigits = preg_replace('/\d+/', '', $keyNormalizedFull);
+                                            if ($columnaNormalizedFull === $keyNormalizedFull || $columnaNormalizedFull === $keyNormalizedNoDigits || $columnaNormalizedNoDigits === $keyNormalizedFull || $columnaNormalizedNoDigits === $keyNormalizedNoDigits || str_contains($columnaNormalizedFull, $keyNormalizedFull)) {
                                                 $tieneOpcionesEspecificas = true;
                                                 break;
                                             }
                                         }
 
+                                        if ($tieneOpcionesEspecificas && (str_contains($columnaLower, 'numero de documento') || str_contains($columnaLower, 'numero de documento de identidad del encuestado'))) {
+                                            $tieneOpcionesEspecificas = false;
+                                        }
+
                                         if ($tieneOpcionesEspecificas) {
                                             // Definir qué campos deben ser checkbox (selección múltiple)
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
-                                            str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') || str_contains($columnaLower, 'el destino final de la producción es')
-                                            
+                                            str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') ||
+                                            str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva')
                                             
 
 
@@ -397,11 +442,11 @@
                                         } elseif (str_contains($columnaLower, 'genero') || str_contains($columnaLower, 'tenencia') ||
                                                   str_contains($columnaLower, 'categoria') ||
                                                  (str_contains($columnaLower, 'estado') && !str_contains($columnaLower, 'encuestador')) || str_contains($columnaLower, 'condicion') ||
-                                                 str_contains($columnaLower, 'corregimiento') ||
-                                                 str_contains($columnaLower, 'cuenta') ||  
+                                                 str_contains($columnaLower, 'corregimiento') || str_contains($columnaLower, 'está legalmente constituida')||
+                                                 str_contains($columnaLower, 'cuenta') ||
                                                  str_contains($columnaLower, 'pertenece a una población de especial protección constitucional') || str_contains($columnaLower, 'población') ||
                                                  str_contains($columnaLower, 'sabe leer y escribir') || str_contains($columnaLower, 'agregar') ||
-                                                 str_contains($columnaLower, 'tiene familiares') || str_contains($columnaLower, 'posee') || 
+                                                 str_contains($columnaLower, 'nucleo familiar') || str_contains($columnaLower, 'posee') || 
                                                  str_contains($columnaLower, 'alimentario') || str_contains($columnaLower, 'tiene una marca para sus productos agroindustriales') ||
                                                  str_contains($columnaLower, 'está registrada ante cámara de comercio') || str_contains($columnaLower, 'tiene registro sanitario invima') ||
                                                  str_contains($columnaLower, 'hace parte de alguna asociación u organización de productores agropecuarios') || str_contains($columnaLower, 'ha enfrentado barreras para el acceso a crédito') ||
@@ -417,8 +462,8 @@
                                                 str_contains($columnaLower, 'empleó trabajo colectivo para realizar las actividades agropecuarias en los últimos 30 días (minga, convite, mano de obra prestada)') || str_contains($columnaLower, 'cuenta con maquinaria y o equipo para el desarrollo de actividades agropecuarias o agroindustriales en la unidad productiva') ||
                                                 str_contains($columnaLower, 'ha realizado control de plagas y enfermedades en la unidad productiva') || str_contains($columnaLower, 'conoce y aplica buenas prácticas agrícolas ganaderas en la unidad productiva') ||
                                                 str_contains($columnaLower, 'ingresan al cultivo nuevamente después de la aplicación de plaguicidas') || str_contains($columnaLower, 'lleva registros de las actividades que desarrolla en la unidad productiva') ||
-                                                str_contains($columnaLower, 'la mayor parte del terreno que conforma esta unidad productiva agropecuaria es:')
-
+                                                str_contains($columnaLower, 'la mayor parte del terreno que conforma esta unidad productiva agropecuaria es:') || 
+                                                str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') || str_contains($columnaLower, 'comercialización') || str_contains($columnaLower, 'autoconsumo')
 
 
                                                  ) {
@@ -428,19 +473,20 @@
                                         
                                         } elseif (str_contains($columnaLower, 'correo') || str_contains($columnaLower, 'email') || str_contains($columnaLower, 'mail')) {
                                             $tipoCampo = 'email';
+                                        } elseif (str_contains($columnaLower, 'evidencia') && (str_contains($columnaLower, 'foto') || str_contains($columnaLower, 'fotograf'))) {
+                                            $tipoCampo = 'file';
                                         } elseif (str_contains($columnaLower, 'cedula') || str_contains($columnaLower, 'cédula') ||
                                                   str_contains($columnaLower, 'dni')) {
                                             $tipoCampo = 'text'; // Mantener como text para números largos
-                                        } elseif (str_contains($columnaLower, 'precio') || str_contains($columnaLower, 'valor') || 
-                                                  str_contains($columnaLower, 'número') || str_contains($columnaLower, 'Número de documento') || 
-                                                  str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || str_contains($columnaLower, 'hembras') ||
-                                                  str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') || str_contains($columnaLower, 'machos') ||
-                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') ||
-                                                  str_contains($columnaLower, 'pecuaria') || str_contains($columnaLower, 'empleo formal') || str_contains($columnaLower, 'actividades comerciales') ||
-                                                str_contains($columnaLower, 'usos del suelo en el predio agricultura (ha)') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') ||
-                                               str_contains($columnaLower, 'rastrojo (ha)')
-                                               
-                                               
+                                        } elseif (str_contains($columnaLower, 'precio') || str_contains($columnaLower, 'valor') || str_contains($columnaLower, 'numero predial') ||
+                                                  str_contains($columnaLower, 'numero de documento de identidad del encuestado') || str_contains($columnaLower, 'número de documento') || 
+                                                  str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || str_contains($columnaLower, 'hombres') ||
+                                                  str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') || str_contains($columnaLower, 'mujeres') ||  str_contains($columnaLower, 'cuántas personas (incluido el productor y los miembros del núcleo trabajaron de manera permanente en la unidad productiva agropecuaria para realizar las actividades productivas en los últimos 30 días') ||
+                                                  str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'cuántos de los trabajadores permanentes pertenecen al hogar del productor') ||
+                                                str_contains($columnaLower, 'uso del suelo en el predio: agricultura (ha)') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') || str_contains($columnaLower, 'jornales') || str_contains($columnaLower, 'rastrojo (ha)') ||
+                                               str_contains($columnaLower, 'hembras') || str_contains($columnaLower, 'machos') || str_contains($columnaLower, 'número de plantas') || str_contains($columnaLower, 'nivel de producción anual apróx (kilos)')
+                                               || str_contains($columnaLower, 'capacidad de producción mensual') || str_contains($columnaLower, 'número de contacto del encuestador')
+                                               || str_contains($columnaLower, 'unidades afectadas')
                                                
                                                
                                                   ) {
@@ -460,7 +506,15 @@
                                                 $tipoCampo = 'number';
                                             }
                                         }
-                                        if (trim($columnaLower) === 'Actividades pecuarias') {
+                                        if (trim($columnaLower) === 'actividades pecuarias') {
+                                            $tipoCampo = 'select';
+                                        }
+                                        if (trim($columnaLower) === 'realiza actividades pecuarias') {
+                                            $tipoCampo = 'select';
+                                        }
+                                        
+                                        // Forzar que el campo de documento del encuestado sea numérico
+                                        if (str_contains($columnaLower, 'numero de documento de identidad del encuestado')) {
                                             $tipoCampo = 'number';
                                         }
                                     }
@@ -475,23 +529,51 @@
                                             <span style="color: var(--verde); font-size: 0.8rem;">(Automático)</span>
                                         @endif
                                     </label>
+                                    @php
+                                        $columnaNormalizedExact = strtolower(str_replace(['á','é','í','ó','ú'], ['a','e','i','o','u'], $columna));
+                                        $isDocField = trim($columnaNormalizedExact) === 'numero de documento de identidad del encuestado';
+                                    @endphp
+                                    @if($isDocField)
+                                        <div id="duplicate-{{ $fieldId }}" class="field-error" style="color:#dc3545"></div>
+                                    @endif
 
                                     @if($tipoCampo === 'select')
                                         <select id="{{ $fieldId }}" class="form-control form-select select-otro-trigger"
                                                 @if($esCampoAutomatico) readonly disabled @endif>
                                             <option value="">Seleccione</option>
                                             @php
-                                                $columnaNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $columna));
+                                                $columnaNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $columna));
+                                                $columnaNormalizedNoDigits = preg_replace('/\d+/', '', $columnaNormalizedFull);
                                                 $opcionesEncontradas = null;
                                                 $tieneOpcionOtro = false;
 
-                                                // Buscar opciones específicas para esta columna
+                                                // Buscar opciones específicas para esta columna (priorizar coincidencia exacta y luego la coincidencia más larga)
+                                                $bestLen = 0;
                                                 foreach ($opcionesColumnas as $key => $opciones) {
-                                                    $keyNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $key));
-
-                                                    if (str_contains($columnaNormalized, $keyNormalized) || str_contains($keyNormalized, $columnaNormalized)) {
+                                                    $keyNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $key));
+                                                    $keyNormalizedNoDigits = preg_replace('/\d+/', '', $keyNormalizedFull);
+                                                    if ($columnaNormalizedFull === $keyNormalizedFull) {
                                                         $opcionesEncontradas = $opciones;
+                                                        $bestLen = strlen($keyNormalizedFull);
                                                         break;
+                                                    } elseif ($columnaNormalizedFull === $keyNormalizedNoDigits) {
+                                                        $opcionesEncontradas = $opciones;
+                                                        $bestLen = strlen($keyNormalizedNoDigits);
+                                                        break;
+                                                    } elseif ($columnaNormalizedNoDigits === $keyNormalizedFull) {
+                                                        $opcionesEncontradas = $opciones;
+                                                        $bestLen = strlen($keyNormalizedFull);
+                                                        break;
+                                                    } elseif ($columnaNormalizedNoDigits === $keyNormalizedNoDigits) {
+                                                        $opcionesEncontradas = $opciones;
+                                                        $bestLen = strlen($keyNormalizedNoDigits);
+                                                        break;
+                                                    } elseif (str_contains($columnaNormalizedFull, $keyNormalizedFull)) {
+                                                        $len = strlen($keyNormalizedFull);
+                                                        if ($len > $bestLen) {
+                                                            $bestLen = $len;
+                                                            $opcionesEncontradas = $opciones;
+                                                        }
                                                     }
                                                 }
 
@@ -505,6 +587,7 @@
                                                 } elseif (str_contains(strtolower($columna), 'género') || str_contains(strtolower($columna), 'sexo')) {
                                                     echo "<option value=\"Masculino\">Masculino</option>";
                                                     echo "<option value=\"Femenino\">Femenino</option>";
+                                                   echo "<option value=\"No binario\">No Binario</option>";
                                                     echo "<option value=\"Otro\">Otro</option>";
                                                     $tieneOpcionOtro = true;
                                                 } elseif (str_contains(strtolower($columna), 'condicion')) {
@@ -513,6 +596,9 @@
                                                         echo "<option value=\"{$condicion}\">{$condicion}</option>";
                                                     }
                                                     $tieneOpcionOtro = true;
+                                                } elseif (str_contains(strtolower($columna), 'vereda')) {
+                                                    // Campo de Vereda: opciones se poblarán dinámicamente vía JS según Corregimiento
+                                                    // No agregar opciones "Sí/No" por defecto
                                                 } else {
                                                     echo "<option value=\"Sí\">Sí</option>";
                                                     echo "<option value=\"No\">No</option>";
@@ -528,13 +614,15 @@
                                         
                                         <div class="checkbox-group-container p-2 border rounded" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa;">
                                             @php
-                                                $columnaNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $columna));
+                                                $columnaNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $columna));
+                                                $columnaNormalizedNoDigits = preg_replace('/\d+/', '', $columnaNormalizedFull);
                                                 $opcionesEncontradas = null;
                                                 $tieneOpcionOtroCheckbox = false;
 
                                                 foreach ($opcionesColumnas as $key => $opciones) {
-                                                    $keyNormalized = strtolower(str_replace([' ', '_', '-', '(', ')'], ['', '', '', '', ''], $key));
-                                                    if (str_contains($columnaNormalized, $keyNormalized) || str_contains($keyNormalized, $columnaNormalized)) {
+                                                    $keyNormalizedFull = strtolower(str_replace([' ', '_', '-', '(', ')', ':', '¿', '?', '¡', '!', ',', '.', ';'], ['', '', '', '', '', '', '', '', '', '', '', ''], $key));
+                                                    $keyNormalizedNoDigits = preg_replace('/\d+/', '', $keyNormalizedFull);
+                                                    if ($columnaNormalizedFull === $keyNormalizedFull || $columnaNormalizedFull === $keyNormalizedNoDigits || $columnaNormalizedNoDigits === $keyNormalizedFull || $columnaNormalizedNoDigits === $keyNormalizedNoDigits) {
                                                         $opcionesEncontradas = $opciones;
                                                         break;
                                                     }
@@ -557,11 +645,15 @@
                                         @if($tieneOpcionOtroCheckbox)
                                             <input type="text" id="{{ $fieldId }}_otro" class="form-control mt-2 input-otro-especificar-checkbox" style="display: none;" placeholder="Especifique cuál..." data-target="{{ $fieldId }}">
                                         @endif
+                                    @elseif($tipoCampo === 'file')
+                                        <input type="file" id="{{ $fieldId }}_file" class="form-control" accept="image/*">
+                                        <input type="text" id="{{ $fieldId }}" class="form-control mt-2" readonly>
+                                        <div id="{{ $fieldId }}_status" class="small text-muted mt-1"></div>
                                     @else
                                         <input type="{{ $tipoCampo }}" id="{{ $fieldId }}"
                                                class="form-control"
                                                placeholder="@if($esCampoAutomatico) Se generará automáticamente @else Ingrese {{ strtolower($columna) }} @endif"
-                                               @if($esCampoAutomatico) readonly @endif
+                                               @if($esCampoAutomatico || str_contains($columnaLower, 'numero predial')) readonly @endif
                                                @if($tipoCampo === 'number') step="any" @endif>
                                     @endif
 
@@ -582,19 +674,7 @@
                         </div>
                     </div>
 
-                    {{-- Botones de acción --}}
-                    <div class="registro-actions-section">
-                        <div class="action-buttons">
-                            <button type="button" id="btn-agregar-registro" class="btn-add-registro">
-                                <i class="fas fa-plus"></i>
-                                Agregar Registro
-                            </button>
-                            <button type="button" id="btn-limpiar-formulario" class="btn-clean-form">
-                                <i class="fas fa-eraser"></i>
-                                Limpiar Formulario
-                            </button>
-                        </div>
-                    </div>
+                    {{-- Botones de acción eliminados por requerimiento --}}
 
                     {{-- Campo oculto para datos acumulados --}}
                     <input type="hidden" name="beneficiarios_acumulados" id="beneficiarios_acumulados" value="[]">
@@ -610,7 +690,7 @@
                 <div class="form-actions">
                     <button type="submit" class="btn-submit">
                         <i class="fas fa-save"></i>
-                        Terminar y Guardar Registros
+                        Terminar y Guardar Registro
                     </button>
                     <a href="{{ route('caracterizaciones.index') }}" class="btn-cancel">
                         <i class="fas fa-times"></i>
@@ -643,53 +723,69 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Mapeo de columnas con opciones predefinidas
     const opcionesColumnas = {
-        'Tipo de documento': ['CC', 'TI', 'CE', 'PA', 'RC', 'Otro'],
+        'Tipo de documento' : ['Cédula de Ciudadanía(CC)', 'Tarjeta de Identidad(TI)', 'Registro Civil (RC)','Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
+        'Tipo de documento del encuestado': ['Cédula de Ciudadanía(CC)','Cédula de Extranjería(CE)', 'Carné diplomático(CD)', 'Salvoconducto(SC)', 'Permiso especial de Permanencia(PEP)',  'Documento extranjero(DE)','Otro'],
+
         'Corregimiento': ['1', '2', '3'],
-        '¿¿Cuenta con un medio de transporte propio? ¿Cual??': ['Motocicleta', 'Automóvil', 'Furgón/Camión', 'Otras', 'Ninguno'],
+        '¿Cuenta con un medio de transporte propio? ¿Cual?': ['Motocicleta', 'Automóvil', 'Furgón/Camión','Ninguno', 'Otras'],
         'Tenencia o relación con la tierra': ['Propia', 'Arriendo', 'Aparcería', 'Usufructo', 'Comodato', 'Ocupación de hecho', 'Propiedad colectiva', 'Adjudicatario o Comunero', 'Adjudicatario(a)/ Viviente', 'Otras'],
-        '¿Pertenece a una poblacion de especial protección constitucional?': ['Campesino', 'Población étnica', 'LGBTIQ+', 'Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado', 'Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto (RUV)', 'Cuidador/a', 'Otro'],
-        'Población': ['Población étnica', 'Población con orientación sexualmente diversa','Persona mayor', 'Cabeza de familia', 'Mujer rural', 'Desmovilizado/Firmante del Acuerdo de Paz', 'Joven rural', 'Persona con discapacidad', 'Víctima del conflicto armado', 'Cuidador/a', 'Otro'],
+        '¿Pertenece a una población de especial protección constitucional?': ['Campesino', 'Mujer rural', 'Joven rural', 'Persona mayor', 'Persona con discapacidad', 'Cuidador/a', 'Víctima del conflicto (RUV)','Población étnica', 'LGBTIQ+',  'Cabeza de familia',  'Desmovilizado', 'Firmante del Acuerdo de Paz','Otro'],
+        'Población': ['Población étnica',  'Persona con discapacidad', 'Víctima del conflicto armado', 'Persona mayor', 'Población con orientación sexualmente diversa','Joven rural', 'Mujer rural', 'Cuidador/a', 'Desmovilizado/Firmante del Acuerdo de Paz',  'Otro'],
         'Material predominante de los pisos de esta vivienda': ['Mármol, parqué, madera pulida y lacada', 'Baldosa, vinilo, tableta, ladrillo, laminado', 'Cemento, gravilla', 'Madera sin pulir, otros', 'Tierra, arena, barro'],
         'Material predominante de las paredes exteriores de la vivienda': ['Bloque, ladrillo, piedra, madera pulida', 'Concreto vaciado', 'Material prefabricado', 'Tapia pisada, bahareque, adobe', 'Madera burda, tabla, guadua, otros materiales de origen vegetal', 'Otros materiales (Zinc, tela, cartón, plásticos)'],
         'Fuente de agua para el consumo humano': ['Acueducto metropolitano', 'Acueducto veredal', 'Nacimiento / quebrada', 'Pila comunitaria','Otras'],
         'Combustible y o fuente energética para cocinar': ['Madera', 'Gas Natural', 'Gas Natural', 'Gas propano','Electricidad', 'Carbón', 'Biogás', 'Ninguno'],
         'Medios de comunicación de los cuales dispone en la finca': ['Prensa', 'Radio', 'Televisión','Correo electrónico', 'Internet', 'Celular', 'Telefono fijo'],
         'Uso de las fuentes hídricas con que cuenta el predio': ['Agropecuario', 'Doméstico'],
-        'Vías de acceso a la finca': ['Carretera pavimentada', 'Carretera destapada', 'Camino de herradura'],
+        'Vías de acceso a la finca': ['Carretera pavimentada', 'Carretera destapada', 'Camino de herradura', 'Otro'],
         '¿Donde almacena las herramientas e insumos agropecuarios que emplea en sus labores?': ['En la vivienda', 'En bodega contigua a la vivienda', 'Al aire libre'],
         'Tipo de servicio sanitario (inodoro) que tiene la vivienda': ['Inodoro conectado al alcantarillado', 'Inodoro conectado a pozo séptico', 'Inodoro sin conexión', 'Letrina', 'Inodoro con descarga directa a fuente de agua', 'No cuenta con servicio sanitario'],
         'Tipo de sistema de riego empleado': ['Superficial (Por gravedad o inundación)', 'Presurizado (Goteo, aspersión, microaspersión)', 'Manual o por mateo'],
         'El destino final de la producción es': ['Autoconsumo', 'Venta a intermediarios (plazas de mercado/ Central de abastos)', 'Venta a cooperativa', 'Mercadillos campesinos', 'Exportación', 'Otras'],
-        'género': ['Masculino', 'Femenino', 'Otro'],
-        'nivel educativo': ['Primaria Completa', 'Primaria incompleta', 'Secundaria incompleta', 'Secundaria completa', 'Técnico', 'Tecnológica', 'Profesional', 'Especializacion', 'Maestria','Doctorado', 'Ninguna'],
-        'Tipo de vivienda': ['Casa', 'Apartamento', 'Tipo cuarto', 'No hay vivienda', 'Otra'],
-        'condicionesdeocupacióndelavivienda': ['Ocupada por la familia', 'Vivienda temporal (Vacaciones, trabajo, etc.)', 'Desocupada', 'Ocupada por viviente(s) y los dueños no viven en le predio'],  
-        'tipodefuentehídricaconquecuentaelpredio': ['Nacimiento', 'Rio', 'Quebrada', 'Lago', 'Pozo'],
-        'Tipo de maquinaria y o equipo': ['Ahoyadora', 'Equipo de inseminacion', 'Fumigadora', 'Guadañadora', 'Motosierra', 'Picadora de pasto', 'Hidrolavadora', 'Motobomba','Sistema de riego', 'Tostadora de café / cacao', 'Trilladora', 'Molino', 'Despulpadora', 'Módulo ecólogico para el despulpado de café', 'Planta eléctrica ', 'Báscula', 'Minitractor / Motocultor', 'Cajón de fermentador de cacao'],
-        'Con que': ['Mensual', 'Trimestral','Semestral', 'Anual'],
+        'género': ['Masculino', 'Femenino','No Binario', 'Otro'],
+        'Parentesco con el jefe del hogar': ['Cabeza del hogar(jefe o jefa) ', 'Pareja (Cónyuge, compañero/a, esposo/a)','Hijo/a, hijastro/a', 'Yerno, nuera', 'Nieto/a', 'Hermano/a, hermanastro/a', 'Otro pariente','Empleado/a domestico/a', 'Otro no pariente'],
 
-        'Tipo de infraestructura': ['Aprisco', 'Bodega de almacenamiento de agro insumos ', 'Manga', 'Corral', 'Embarcado', 'Área de manejo de residuos sólidos (ordinarios y peligrosos)', 'Beneficiadero de café ', 'Biodigestor','Brete', 'Compostera', 'Establo', 'Galpón', 'Invernadero', 'Pesebrera', 'Silo', 'Marquesina', 'Casa elva', 'Vivero', 'Trapiche'],
-        'En que consistió el proyecto': ['Entrega de insumos, herramientas y/o equipos', 'Transferencia de conocimientos', 'Transferencia económica', 'Construcción o adecuación de infraestructura'],
+        'nivel educativo': ['Primaria Completa', 'Primaria incompleta', 'Secundaria incompleta', 'Secundaria completa', 'Técnico', 'Tecnológica', 'Profesional', 'Especializacion', 'Maestria','Doctorado', 'Ninguna'],
+        'Tipo de vivienda': ['Casa', 'Apartamento', 'Tipo cuarto', 'No hay vivienda', 'Otro'],
+        'condiciones de ocupación de la vivienda': ['Ocupada por la familia', 'Vivienda temporal (Vacaciones, trabajo, etc.)', 'Desocupada', 'Ocupada por viviente(s) y los dueños no viven en le predio'],  
+        'Tipo de fuente hídrica con que cuenta el predio': ['Nacimiento', 'Rio', 'Quebrada', 'Lago', 'Pozo', 'Otro'],
+        'Tipo de maquinaria y o equipo': ['Ahoyadora', 'Equipo de inseminacion', 'Fumigadora', 'Guadañadora', 'Motosierra', 'Picadora de pasto', 'Hidrolavadora', 'Motobomba','Sistema de riego', 'Tostadora de café / cacao', 'Trilladora', 'Molino', 'Despulpadora', 'Módulo ecólogico para el despulpado de café', 'Planta eléctrica ', 'Báscula', 'Minitractor / Motocultor', 'Cajón de fermentador de cacao', 'Otro'],
+        'Con que Frecuencia realiza control de arvenses': ['Mensual', 'Trimestral','Semestral', 'Anual'],
+
+        'Tipo de infraestructura': ['Aprisco', 'Bodega de almacenamiento de agro insumos ', 'Manga', 'Corral', 'Embarcado', 'Área de manejo de residuos sólidos (ordinarios y peligrosos)', 'Beneficiadero de café ', 'Biodigestor','Brete', 'Compostera', 'Establo', 'Galpón', 'Invernadero', 'Pesebrera', 'Silo', 'Marquesina', 'Casa elva', 'Vivero', 'Trapiche', 'Otro'],
+        'En que consistió el proyecto': ['Entrega de insumos, herramientas y/o equipos', 'Transferencia de conocimientos', 'Transferencia económica', 'Construcción o adecuación de infraestructura', 'Otro'],
         'Qué barreras enfrentó': ['Falta de garantías (recursos económicos o tierra para exigidos como garantía para otorgar crédito', 'Falta de información y/o educación financiera (falta de conocimiento sobre productos financieros, tasas de interés y cómo gestionarlos)', 'Ingresos irregulares', 'Otro'],
         'Qué tipo de fertilizantes empleó': ['Químico', 'Orgánico', 'Mixto'],
         'Método de aplicacion': ['Edáfica', 'Foliar', 'Mixto'],
         'Frecuencia de aplicación': ['Semanal', 'Mensual', 'Trimestral', 'Anual'],
         'Realiza control': ['Manual', 'Mecánico', 'Químico', 'Biológico', 'No'],
-        'Tipo de control': ['Químico', 'Biologico'],
-        'Qué elementos de protección emplea': ['Gafas', 'Guantes', 'Mascarilla', 'Botas', 'Traje impermeable'],
-        'Qué información registra': ['Ingresos y egresos', 'Aplicación de fertilizantes', 'Cosecha', 'Inventario de insumos, herramientas y/o equipos', 'Mano de obra empleada'],
+        'Tipo de control': ['Químico', 'Biologico', 'Otro'],
+        'Qué elementos de protección emplea': ['Gafas', 'Guantes', 'Mascarilla', 'Botas', 'Traje impermeable', 'Otro'],
+        'Qué información registra': ['Ingresos y egresos', 'Aplicación de fertilizantes', 'Cosecha', 'Inventario de insumos, herramientas y/o equipos', 'Mano de obra empleada', 'Otro'],
         'Qué fenómeno natural lo afecto': ['Lluvia torrencial', 'Sequía', 'Ola de calor', 'Ola de frío', 'Vientos fuertes', 'Terremoto','Deslizamiento / Remoción de masa', 'Inundación', 'Desboradmiento de ríos / quebradas', 'Otro'],
-        'Qué solución propone para superar la afectación': ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación'],
+        'Qué solución propone para superar la afectación': ['Implementar sistemas de riego por goteo', 'Entrega de tanques para el almacenamiento de agua', 'Reconversión de cultivos con variedades mejoradas', 'Reforestación', 'Transferencia de conocimientos', 'Complementos nutricionales','Apoyo para el acceso a crédito y/o alivios en obligaciones crediticias (reducción de intereses, acuerdo de pago y condonación parcial de la deuda)', 'Entrega de insumos y/o materialespara la resiembra de cultivos', 'Entrega de materiales para la reparación y/o adecuación de vivienda', 'Construcción de vivienda nueva', 'Reubicación', 'Otro'],
         'Destino de aguas residuales': ['Alcantarillado', 'Pozo séptico', 'Ninguno'],
         'La mayor parte del terreno que conforma esta unidad productiva agropecuaria es:': ['Plano', 'Quebrado (con pendiente)'],
         'Realiza actividades productivas agrícolas': ['Si', 'No'],
         'Realiza actividades agroindustriales': ['Si', 'No'],                    
         'Realiza actividades pecuarias': ['Si', 'No'],
         'Orientación de la actividad': ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otros' ],
-        'Qué entidad lo gestionó': ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)'],
+        'Qué entidad lo gestionó': ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias': ['Si', 'No'],
         'Qué hace con los envases de plaguicidas vacíos':['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
         'Fuente de la electricidad': ['Redes eléctricas', 'Generador', 'Panel solar', 'Otro'],
+        'Que afectación o daño hubo en la unidad productiva': ['Destrucción de cultivos', 'Destrucción de Infraestructura', 'Pérdida de ganado/animales', 'Pérdida de cosecha', 'Pérdida de terreno', 'Alteración del ciclo productivo', 'Reducción del rendimiento y calidad de los productos agrícolas', 'Destrucción parcial o total de la vivienda', 'Otro'],
+        'Principales fuentes de ingresos del hogar actividades Agricolas': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Actividades Pecuarias': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Empleo Formal': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Actividades Comerciales': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Lugar de aplicación': ['Casa', 'Finca', 'Lote'],
+        'En qué entidad financiera lo solicitó': ['Banco Agrario', 'Cooperativa Financiera', 'Otro'],
+        'Tipo de cultivo': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Tiene registro Sanitario INVIMA': ['Si', 'No','No aplica'],
+        'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
+        'Actividad productiva': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Afectación': ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
 
         
     };
@@ -701,52 +797,79 @@ document.addEventListener('DOMContentLoaded', function () {
     const corregimientoFields = Array.from(document.querySelectorAll('select, input')).filter(el => el.id.includes('corregimiento'));
     const veredaFields = Array.from(document.querySelectorAll('select, input')).filter(el => el.id.includes('vereda'));
 
-    if (corregimientoFields.length > 0 && veredaFields.length > 0) {
-        const corregimientoSelect = corregimientoFields[0];
-        const veredaSelect = veredaFields[0];
-        
-        function poblarVeredas(idCorregimiento) {
-             // Verificar si veredaSelect es realmente un SELECT
-             if (veredaSelect.tagName !== 'SELECT') {
-                 console.warn('El campo vereda no es un select, no se pueden poblar opciones.');
-                 return;
-             }
+    // Función auxiliar: obtener sufijo numérico al final del id
+    function getNumericSuffix(id) {
+        const m = (id || '').match(/(\d+)$/);
+        return m ? parseInt(m[1], 10) : null;
+    }
 
-             // Limpiar opciones actuales
-             while (veredaSelect.options.length > 0) {
-                 veredaSelect.remove(0);
-             }
-             
-             // Opción por defecto
-             const defaultOption = document.createElement('option');
-             defaultOption.value = "";
-             defaultOption.textContent = "Seleccione Vereda";
-             veredaSelect.add(defaultOption);
-             
-             if (idCorregimiento && veredasMap[idCorregimiento]) {
-                 veredasMap[idCorregimiento].forEach(vereda => {
-                     const option = document.createElement('option');
-                     option.value = vereda;
-                     option.textContent = vereda;
-                     veredaSelect.add(option);
-                 });
-             }
+    // Poblar un select de vereda según un id de corregimiento
+    function poblarVeredaDesde(veredaEl, idCorregimiento) {
+        if (!veredaEl || veredaEl.tagName !== 'SELECT') return;
+        while (veredaEl.options.length > 0) veredaEl.remove(0);
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "Seleccione Vereda";
+        veredaEl.add(defaultOption);
+        if (idCorregimiento && veredasMap[idCorregimiento]) {
+            veredasMap[idCorregimiento].forEach(vereda => {
+                const option = document.createElement('option');
+                option.value = vereda;
+                option.textContent = vereda;
+                veredaEl.add(option);
+            });
         }
-        
-        corregimientoSelect.addEventListener('change', function() {
-            poblarVeredas(this.value);
+    }
+
+    // Emparejar cada vereda con su corregimiento por sufijo
+    if (corregimientoFields.length > 0 && veredaFields.length > 0) {
+        const corrList = corregimientoFields.map(el => ({ el, id: el.id, suffix: getNumericSuffix(el.id) }));
+
+        veredaFields.forEach(veredaEl => {
+            const vSuffix = getNumericSuffix(veredaEl.id);
+
+            // 1) Si tiene sufijo: buscar corregimiento con el mismo sufijo
+            let pair = corrList.find(c => c.suffix !== null && c.suffix === vSuffix);
+
+            // 2) Si no hay, buscar corregimiento con sufijo inmediatamente anterior (ej: vereda11 -> corregimiento10)
+            if (!pair && vSuffix !== null) {
+                pair = corrList.find(c => c.suffix !== null && c.suffix === (vSuffix - 1));
+            }
+
+            // 3) Si aún no hay, y vereda no tiene sufijo, usar el corregimiento sin sufijo (campo base)
+            if (!pair && vSuffix === null) {
+                pair = corrList.find(c => c.suffix === null) || corrList[0];
+            }
+
+            // 4) Si sigue sin emparejar y tiene sufijo, usar el primer corregimiento con cualquier sufijo (pero no el base para evitar cruces)
+            if (!pair && vSuffix !== null) {
+                pair = corrList.find(c => c.suffix !== null) || corrList[0];
+            }
+
+            if (pair && pair.el) {
+                // Listener para poblar SOLO este vereda cuando cambie su corregimiento emparejado
+                pair.el.addEventListener('change', function () {
+                    poblarVeredaDesde(veredaEl, this.value);
+                });
+
+                // Poblar inicial si ya hay valor
+                if (pair.el.value) {
+                    poblarVeredaDesde(veredaEl, pair.el.value);
+                } else {
+                    // Asegurar estado default
+                    poblarVeredaDesde(veredaEl, null);
+                }
+            }
         });
-        
-        // Cargar inicial si hay valor
-        if (corregimientoSelect.value) {
-            poblarVeredas(corregimientoSelect.value);
-        }
     }
 
     // Inicializar campos automáticos al cargar la página
     function inicializarCamposAutomaticos() {
-        horaInicioFormulario = new Date().toISOString().slice(0, 16); // Formato datetime-local
-            const loggedEmail = "{{ auth()->check() ? auth()->user()->email : '' }}";
+        horaInicioFormulario = new Date().toISOString().slice(0, 16);
+            @php
+                $loggedEmail = auth()->check() ? auth()->user()->email : (Auth::guard('admin')->check() ? Auth::guard('admin')->user()->email : '');
+            @endphp
+            const loggedEmail = "{{ $loggedEmail }}";
         
         // Inicializar listeners para checkboxes
         document.querySelectorAll('.checkbox-dynamic').forEach(checkbox => {
@@ -793,6 +916,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Si estamos editando y viene con "Otro", sería más complejo, pero para nuevos registros:
                 toggleOtro();
             }
+        });
+
+        const fileInputs = document.querySelectorAll('input[type="file"][id$="_file"]');
+        fileInputs.forEach(fi => {
+            fi.addEventListener('change', function () {
+                const baseId = this.id.replace(/_file$/, '');
+                const textInput = document.getElementById(baseId);
+                const statusEl = document.getElementById(baseId + '_status');
+                if (this.files && this.files[0]) {
+                    if (textInput) textInput.value = this.files[0].name;
+                    if (statusEl) statusEl.textContent = 'Archivo seleccionado';
+                    limpiarErrorCampo(baseId);
+                } else {
+                    if (textInput) textInput.value = '';
+                    if (statusEl) statusEl.textContent = '';
+                }
+            });
         });
 
         // Establecer valores en los campos automáticos
@@ -969,6 +1109,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             data['{{ $columna }}'] = val_{{ $fieldId }};
+            const {{ $fieldId }}_file = document.getElementById('{{ $fieldId }}_file');
+            if ({{ $fieldId }}_file && {{ $fieldId }}_file.files && {{ $fieldId }}_file.files[0]) {
+                data['{{ $columna }}'] = {{ $fieldId }}_file.files[0].name;
+            }
         @endforeach
 
         return data;
@@ -997,9 +1141,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 // Excluir Hora Final de la validación ya que se llena al enviar
                 $esHoraFinal = str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final');
+                $esObservaciones = str_contains(strtolower($columna), 'observacion') || str_contains(strtolower($columna), 'observaciones');
+                // Campos automáticos que no deben bloquear el envío si están vacíos
+                $esCorreoTabulador = str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador');
+                $esNumeroPredial = str_contains(strtolower($columna), 'numero predial') || str_contains(strtolower($columna), 'número predial');
             @endphp
 
-           @if(!$esHoraFinal)
+           @if(!$esHoraFinal && !$esObservaciones && !$esCorreoTabulador && !$esNumeroPredial)
     const {{ $fieldId }} = document.getElementById('{{ $fieldId }}');
 
     if ({{ $fieldId }}) {
@@ -1020,8 +1168,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     valido = false;
                 }
             } else if (!val) {
-                mostrarErrorCampo('{{ $fieldId }}', 'Este campo es obligatorio');
-                valido = false;
+                const {{ $fieldId }}_file = document.getElementById('{{ $fieldId }}_file');
+                if ({{ $fieldId }}_file && {{ $fieldId }}_file.files && {{ $fieldId }}_file.files[0]) {
+                    const txt = document.getElementById('{{ $fieldId }}');
+                    if (txt) txt.value = {{ $fieldId }}_file.files[0].name;
+                    limpiarErrorCampo('{{ $fieldId }}');
+                } else {
+                    mostrarErrorCampo('{{ $fieldId }}', 'Este campo es obligatorio');
+                    valido = false;
+                }
             }
         }
     }
@@ -1374,8 +1529,79 @@ document.addEventListener('DOMContentLoaded', function () {
     // Inicializar campos condicionales
     inicializarCamposCondicionales();
 
-    btnAgregar.addEventListener('click', agregarRegistro);
-    btnLimpiar.addEventListener('click', limpiarFormulario);
+    const documentFieldIds = [];
+    @foreach($columnasReferencia as $columna)
+        @php
+            $fieldId = strtolower($columna);
+            $fieldId = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $fieldId);
+            $fieldId = str_replace(['#', '/'], '_', $fieldId);
+            $fieldId = preg_replace('/\s+/u', '_', $fieldId);
+            if (!preg_match('/^[a-zA-Z]/', $fieldId)) {
+                $fieldId = 'field_' . $fieldId;
+            }
+            $normalized = strtolower(str_replace(['á','é','í','ó','ú'], ['a','e','i','o','u'], $columna));
+            $isDoc = trim($normalized) === 'numero de documento de identidad del encuestado';
+        @endphp
+        @if($isDoc)
+            documentFieldIds.push('{{ $fieldId }}');
+        @endif
+    @endforeach
+
+    function setupDocDuplicateCheck(id) {
+        const el = document.getElementById(id);
+        const msgEl = document.getElementById('duplicate-' + id);
+        if (!el || !msgEl) return;
+        let debounceTimer = null;
+        const check = () => {
+            const val = el.value.trim();
+            if (!val) {
+                msgEl.textContent = '';
+                msgEl.classList.remove('show');
+                return;
+            }
+            if (debounceTimer) clearTimeout(debounceTimer);
+            msgEl.textContent = 'Verificando...';
+            msgEl.style.color = '#6c757d';
+            msgEl.classList.add('show');
+            debounceTimer = setTimeout(() => {
+                fetch('{{ route("caracterizaciones.formulario.validar-cedula") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ cedula: val })
+                })
+                .then(r => {
+                    if (!r.ok) throw new Error('Estado ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    if (d && d.found_in_caracterizacion) {
+                        msgEl.textContent = 'Esta persona ya se encuentra caracterizada';
+                        msgEl.style.color = '#dc3545';
+                        msgEl.classList.add('show');
+                    } else {
+                        msgEl.textContent = '';
+                        msgEl.classList.remove('show');
+                    }
+                })
+                .catch(() => {
+                    msgEl.textContent = 'Error al verificar';
+                    msgEl.style.color = '#dc3545';
+                    msgEl.classList.add('show');
+                });
+            }, 300);
+        };
+        el.addEventListener('input', check);
+        el.addEventListener('change', check);
+    }
+
+    documentFieldIds.forEach(setupDocDuplicateCheck);
+
+    if (btnAgregar) btnAgregar.addEventListener('click', agregarRegistro);
+    if (btnLimpiar) btnLimpiar.addEventListener('click', limpiarFormulario);
 
     // Event listeners para los botones del mensaje de advertencia
     const btnAceptar = document.getElementById('btn-aceptar');
@@ -1388,26 +1614,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', function (e) {
-        if (registros.length === 0) {
+        if (!validar()) {
             e.preventDefault();
-            alert('Debe agregar al menos un registro.');
             return;
         }
-
-        // Establecer hora de finalización para todos los registros
+        const datos = obtenerDatos();
         horaFinFormulario = new Date().toISOString().slice(0, 16);
-
-        // Actualizar el campo oculto con la hora de finalización
-        registros = registros.map(registro => {
-            @foreach($columnasReferencia as $columna)
-                @if(str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final'))
-                    registro['{{ $columna }}'] = horaFinFormulario;
-                @endif
-            @endforeach
-            return registro;
-        });
-
-        // Actualizar el campo oculto con los registros actualizados
+        @foreach($columnasReferencia as $columna)
+            @if(str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final'))
+                datos['{{ $columna }}'] = horaFinFormulario;
+            @endif
+        @endforeach
+        registros = [datos];
         inputAcumulados.value = JSON.stringify(registros);
     });
 
