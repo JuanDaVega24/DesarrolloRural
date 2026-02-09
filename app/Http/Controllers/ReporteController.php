@@ -892,6 +892,35 @@ class ReporteController extends Controller
         return null;
     }
 
+    /**
+     * Normalizar texto para búsqueda (quitar acentos, convertir a minúsculas, etc.)
+     */
+    private function normalizeText($text)
+    {
+        // Convertir a minúsculas
+        $text = strtolower(trim($text));
+
+        // Reemplazar caracteres con acentos
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c'
+        ];
+
+        $text = str_replace(array_keys($replacements), array_values($replacements), $text);
+
+        // Reemplazar múltiples espacios por uno solo
+        $text = preg_replace('/\s+/', ' ', $text);
+
+        // Quitar caracteres especiales pero mantener letras, números y espacios
+        $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
+
+        return trim($text);
+    }
+
     private function emptyStats($type)
     {
         if ($type === 'genero') {

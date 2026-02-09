@@ -402,7 +402,7 @@
                                     } elseif (str_contains($columnaLower, 'hora') && str_contains($columnaLower, 'final') && !str_contains($columnaLower, 'nombres') && !str_contains($columnaLower, 'apellidos')) {
                                         $esCampoAutomatico = true;
                                         $tipoCampo = 'datetime-local';
-                                    } elseif (str_contains($columnaLower, 'correo electrónico del tabulador') || str_contains($columnaLower, 'correo electronico del tabulador')) {
+                                    } elseif (str_contains($columnaLower, 'correo electrónico del tabulador') || str_contains($columnaLower, 'correo electronico del tabulador') || str_contains($columnaLower, 'email del tabulador')) {
                                         $esCampoAutomatico = true;
                                         $tipoCampo = 'email';
                                     }
@@ -692,7 +692,7 @@
                         <i class="fas fa-save"></i>
                         Terminar y Guardar Registro
                     </button>
-                    <a href="{{ route('caracterizaciones.index') }}" class="btn-cancel">
+                    <a href="{{ auth()->user()->hasRole('Administrador') ? route('caracterizaciones.index') : route('dashboard') }}" class="btn-cancel">
                         <i class="fas fa-times"></i>
                         Cancelar
                     </a>
@@ -867,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function inicializarCamposAutomaticos() {
         horaInicioFormulario = new Date().toISOString().slice(0, 16);
             @php
-                $loggedEmail = auth()->check() ? auth()->user()->email : (Auth::guard('admin')->check() ? Auth::guard('admin')->user()->email : '');
+                $loggedEmail = auth()->check() ? auth()->user()->email : (auth()->guard('admin')->check() ? auth()->guard('admin')->user()->email : '');
             @endphp
             const loggedEmail = "{{ $loggedEmail }}";
         
@@ -964,7 +964,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Se establecerá al enviar el formulario
                     @elseif(str_contains(strtolower($columna), 'id'))
                         campo{{ $fieldId }}.value = contadorRegistros;
-                    @elseif(str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador'))
+                    @elseif(str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador') || str_contains(strtolower($columna), 'email del tabulador'))
                         campo{{ $fieldId }}.value = loggedEmail;
                     @endif
                 }
@@ -1142,12 +1142,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Excluir Hora Final de la validación ya que se llena al enviar
                 $esHoraFinal = str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final');
                 $esObservaciones = str_contains(strtolower($columna), 'observacion') || str_contains(strtolower($columna), 'observaciones');
+                $esEvidencia = str_contains(strtolower($columna), 'evidencia fotografica') || str_contains(strtolower($columna), 'evidencia fotografica');
+
+                
                 // Campos automáticos que no deben bloquear el envío si están vacíos
-                $esCorreoTabulador = str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador');
+                $esCorreoTabulador = str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador') || str_contains(strtolower($columna), 'email del tabulador');
                 $esNumeroPredial = str_contains(strtolower($columna), 'numero predial') || str_contains(strtolower($columna), 'número predial');
             @endphp
 
-           @if(!$esHoraFinal && !$esObservaciones && !$esCorreoTabulador && !$esNumeroPredial)
+           @if(!$esHoraFinal && !$esObservaciones && !$esCorreoTabulador && !$esNumeroPredial && !$esEvidencia)
     const {{ $fieldId }} = document.getElementById('{{ $fieldId }}');
 
     if ({{ $fieldId }}) {

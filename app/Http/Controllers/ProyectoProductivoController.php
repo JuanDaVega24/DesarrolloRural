@@ -127,13 +127,38 @@ class ProyectoProductivoController extends Controller
 
     public function edit(ProyectoProductivo $proyecto)
     {
-        return view('proyectos.edit', compact('proyecto'));
+        return view('proyectos_productivos.edit', compact('proyecto'));
     }
 
     public function update(Request $request, ProyectoProductivo $proyecto)
     {
-        $proyecto->update($request->all());
-        return redirect()->route('proyectos.index')->with('success','Proyecto actualizado');
+        $data = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'ano' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
+            'descripcion' => 'nullable|string|max:1000',
+            'metodo_creacion' => 'required|in:manual,excel',
+        ]);
+
+        $origenAnterior = $proyecto->origen;
+
+        $proyecto->update([
+            'nombre' => $data['nombre'],
+            'ano' => $data['ano'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'origen' => $data['metodo_creacion'],
+        ]);
+
+        // Si el proyecto es o cambió a Manual, redirigir a la gestión de formularios
+        if ($data['metodo_creacion'] === 'manual') {
+            return redirect()->route('formularios.index')->with('success', 'Proyecto actualizado. Puede gestionarlo en la sección de Formularios.');
+        }
+
+        // Si cambió de Manual a Excel, redirigir a la carga del archivo
+        if ($origenAnterior !== 'excel' && $data['metodo_creacion'] === 'excel') {
+            return redirect()->route('proyectos.upload-excel', $proyecto)->with('success', 'Proyecto cambiado a Excel. Por favor cargue el archivo correspondiente.');
+        }
+
+        return redirect()->route('proyectos.index')->with('success', 'Proyecto actualizado correctamente.');
     }
 
     public function destroy(ProyectoProductivo $proyecto)
@@ -694,7 +719,7 @@ class ProyectoProductivoController extends Controller
         // Estrategia 1: Buscar por nombres de columna específicos (prioridad alta)
         $documentKeywords = [
             // Alta prioridad - términos muy específicos colombianos
-            ['cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula', 'número de documento', 'numero de documento'],
+            ['numero de documento de identidad del encuestado', 'número de documento de identidad del encuestado', 'cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula', 'número de documento', 'numero de documento'],
 
             // Media-alta prioridad - términos específicos
             ['cédula', 'cedula', 'cc', 'ced'],
@@ -1392,6 +1417,13 @@ class ProyectoProductivoController extends Controller
                 "Nombres y apellidos familiar {$i}", "Nombre familiar {$i}",
                 "Nombre{$i}", "Nombre {$i}"
             ];
+            
+            // Para el primer familiar, a veces no tiene el sufijo "1"
+            if ($i === 1) {
+                $namePatterns[] = "Nombres y apellidos familiar";
+                $namePatterns[] = "Nombre familiar";
+            }
+            
             $nombre = $this->findColumnValue($row, $headers, $namePatterns);
             
             // Si no hay nombre, saltamos este índice (asumiendo que el nombre es obligatorio para que exista el familiar)
@@ -1415,6 +1447,11 @@ class ProyectoProductivoController extends Controller
                 "Tipo de documento" . ($i + 1), "Tipo de documento " . ($i + 1), // Si Main es 1, Fam 1 es 2
                 "Tipo de documento{$i}", "Tipo de documento {$i}"
             ];
+            
+            if ($i === 1) {
+                $typePatterns[] = "Tipo de documento familiar";
+            }
+            
             $familiar['tipo'] = $this->findColumnValue($row, $headers, $typePatterns);
 
             // 3. Buscar NÚMERO DE DOCUMENTO del familiar i
@@ -1425,6 +1462,14 @@ class ProyectoProductivoController extends Controller
                 "Número de documento familiar {$i}", "Numero de documento familiar {$i}",
                 "Número de documento de identidad {$i}", "Número de documento de identidad{$i}"
             ];
+            
+            if ($i === 1) {
+                $numPatterns[] = "Número de documento";
+                $numPatterns[] = "Numero de documento";
+                $numPatterns[] = "Número de documento familiar";
+                $numPatterns[] = "Numero de documento familiar";
+            }
+            
             $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns);
 
             $familiares[] = $familiar;

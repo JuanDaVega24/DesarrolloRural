@@ -65,7 +65,7 @@ class FormularioController extends Controller
 
         // Para proyectos manuales, usar campos fijos del formulario estático
         $headers = [
-            '# DEL SORTEO',
+            '# NUMERO',
             'CÉDULA',
             'NOMBRE COMPLETO',
             'GENERO',

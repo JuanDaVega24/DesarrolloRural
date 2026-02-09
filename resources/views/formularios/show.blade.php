@@ -72,7 +72,7 @@
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-hashtag"></i>
-                                    # DEL SORTEO
+                                    # NUMERO
                                     <span class="required-indicator">*</span>
                                 </label>
                                 <input type="number" id="numero_sorteo" class="form-control"
@@ -211,8 +211,9 @@
                                     VEREDA
                                     <span class="required-indicator">*</span>
                                 </label>
-                                <input type="text" id="vereda" class="form-control"
-                                       placeholder="Ingrese vereda">
+                                <select id="vereda" class="form-control form-select">
+                                    <option value="">Seleccione vereda</option>
+                                </select>
                             <div id="error-vereda" class="field-error"></div>
 
                             
@@ -274,9 +275,8 @@
                                     EVIDENCIA FOTOGRAFICA (Consultado por la Alcaldía)
                                 </label>
                                 <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                    <input type="file" id="evidencia_file" class="form-control" accept="image/*">
                                     <input type="text" id="evidencia_fotografica" class="form-control"
-                                           placeholder="Nombre del archivo seleccionado" readonly>
+                                           placeholder="Evidencia Fotográfica" readonly>
                                 </div>
                                 <div id="error-evidencia_fotografica" class="field-error"></div>
                             </div>
@@ -358,6 +358,41 @@ document.addEventListener('DOMContentLoaded', function () {
     let beneficiarios = [];
     let contador = 1;
 
+    // --- LÓGICA DINÁMICA DE VEREDAS ---
+    const veredasMap = @json(json_decode(file_get_contents(resource_path('js/veredas.json')), true));
+    const corregimientoSelect = document.getElementById('corregimiento');
+    const veredaSelect = document.getElementById('vereda');
+
+    function poblarVeredas(idCorregimiento) {
+        if (!veredaSelect) return;
+
+        // Limpiar opciones actuales
+        while (veredaSelect.options.length > 0) {
+            veredaSelect.remove(0);
+        }
+        
+        // Opción por defecto
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "Seleccione vereda";
+        veredaSelect.add(defaultOption);
+
+        if (idCorregimiento && veredasMap[idCorregimiento]) {
+            veredasMap[idCorregimiento].forEach(vereda => {
+                const option = document.createElement('option');
+                option.value = vereda;
+                option.textContent = vereda;
+                veredaSelect.add(option);
+            });
+        }
+    }
+
+    if (corregimientoSelect) {
+        corregimientoSelect.addEventListener('change', function() {
+            poblarVeredas(this.value);
+        });
+    }
+
     const evidenciaFileInput = document.getElementById('evidencia_file');
     const evidenciaNombreInput = document.getElementById('evidencia_fotografica');
     if (evidenciaFileInput && evidenciaNombreInput) {
@@ -425,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const consulta_bd = document.getElementById('consulta_bd');
 
         return {
-            '# DEL SORTEO': numero_sorteo.value.trim(),
+            '# NUMERO': numero_sorteo.value.trim(),
             'CÉDULA': cedula.value.trim(),
             'NOMBRE COMPLETO': nombre_completo.value.trim(),
             'GENERO': genero.value.trim(),
@@ -495,6 +530,10 @@ document.addEventListener('DOMContentLoaded', function () {
             .forEach(c => c.value = '');
         const evidenciaFile = document.getElementById('evidencia_file');
         if (evidenciaFile) evidenciaFile.value = '';
+        
+        // Resetear lista de veredas
+        poblarVeredas('');
+        
         limpiarTodosErrores();
     }
 

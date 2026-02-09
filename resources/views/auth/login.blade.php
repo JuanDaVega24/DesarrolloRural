@@ -46,7 +46,7 @@
             margin-top: 120px;
             width: 100%;
             height: auto;
-            min-height: 900px;
+            min-height: 700px;
             max-width: 640px;
             background: white;
             padding: 40px 35px;
@@ -153,7 +153,7 @@
 
         .escudo {
             width: 150px;
-            height: 120px;
+            height: 200px;
             margin: 0 auto;
             border-radius: 50%;
             display: flex;
