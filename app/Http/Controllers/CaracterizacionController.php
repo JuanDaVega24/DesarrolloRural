@@ -242,7 +242,7 @@ class CaracterizacionController extends Controller
                 ], 400);
             }
 
-            return back()->with('error', $errorMessage);
+            return redirect()->route('caracterizaciones.index')->with('error', $errorMessage);
         }
     }
 

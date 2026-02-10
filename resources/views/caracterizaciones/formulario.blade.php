@@ -719,7 +719,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Variables para campos automáticos
     let horaInicioFormulario = null;
     let horaFinFormulario = null;
-      let contadorRegistros = {{ $siguienteId ?? 1 }};
+    let contadorRegistros = {{ $siguienteId ?? 1 }};
+    const loggedEmail = "{{ Auth::user()->email ?? '' }}";
 
     // Mapeo de columnas con opciones predefinidas
     const opcionesColumnas = {
@@ -939,11 +940,16 @@ document.addEventListener('DOMContentLoaded', function () {
         @foreach($columnasReferencia as $columna)
             @php
                 $columnaLower = strtolower($columna);
+                // Usar EXACTAMENTE la misma lógica de generación de ID que en la parte HTML
                 $fieldId = strtolower($columna);
-                $fieldId = str_replace([' ', '(', ')', '¿', '?', '¡', '!', '¿', '¡', ',', '.', ';', ':', '"', "'"], ['_', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], $fieldId);
+                $fieldId = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $fieldId);
+                $fieldId = str_replace(['#', '/'], '_', $fieldId);
+                $fieldId = preg_replace('/\s+/u', '_', $fieldId);
+                
                 if (!preg_match('/^[a-zA-Z]/', $fieldId)) {
                     $fieldId = 'field_' . $fieldId;
                 }
+                
                 $esCampoAutomatico = false;
 
                 if (preg_match('/(^|[\s_])id($|[\s_])/', $columnaLower) && !str_contains($columnaLower, 'cedula') && !str_contains($columnaLower, 'documento')) {
@@ -951,6 +957,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 } elseif (str_contains($columnaLower, 'hora') && str_contains($columnaLower, 'inicio') && !str_contains($columnaLower, 'nombres') && !str_contains($columnaLower, 'apellidos')) {
                     $esCampoAutomatico = true;
                 } elseif (str_contains($columnaLower, 'hora') && str_contains($columnaLower, 'final') && !str_contains($columnaLower, 'nombres') && !str_contains($columnaLower, 'apellidos')) {
+                    $esCampoAutomatico = true;
+                } elseif (str_contains($columnaLower, 'correo electrónico del tabulador') || str_contains($columnaLower, 'correo electronico del tabulador') || str_contains($columnaLower, 'email del tabulador')) {
                     $esCampoAutomatico = true;
                 }
             @endphp
@@ -966,7 +974,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         campo{{ $fieldId }}.value = contadorRegistros;
                     @elseif(str_contains(strtolower($columna), 'correo electrónico del tabulador') || str_contains(strtolower($columna), 'correo electronico del tabulador') || str_contains(strtolower($columna), 'email del tabulador'))
                         campo{{ $fieldId }}.value = loggedEmail;
+                        // Forzar actualización visual
+                        campo{{ $fieldId }}.setAttribute('value', loggedEmail);
                     @endif
+                } else {
+                    console.warn('Campo automático no encontrado: {{ $fieldId }}');
                 }
             @endif
         @endforeach

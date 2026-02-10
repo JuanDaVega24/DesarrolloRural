@@ -547,10 +547,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const cedulaElement = document.getElementById('cedula');
         const cedula = cedulaElement.value.trim();
         if (cedula) {
-            validarCedulaExistente(cedula, function(duplicadoInfo) {
-                if (duplicadoInfo.found_in_previous_year || duplicadoInfo.found_in_current_year) {
-                    // Mostrar mensaje de advertencia en la página
-                    mostrarMensajeAdvertencia(duplicadoInfo);
+            validarCedulaExistente(cedula, function(res) {
+                if (res.foundRecent) {
+                    // Mostrar mensaje de advertencia grande y bloquear
+                    mostrarMensajeAdvertencia(res);
+                } else if (res.foundOld) {
+                    // Mostrar mensaje de advertencia pero permitir
+                    if(confirm('⚠️ ADVERTENCIA:\nEl beneficiario participó en proyectos antiguos:\n' + res.oldProjects.join(', ') + '\n\n¿Desea agregarlo de todas formas?')) {
+                        agregarBeneficiarioConfirmado();
+                    }
                 } else {
                     // No hay duplicados, agregar directamente
                     agregarBeneficiarioConfirmado();
@@ -565,21 +570,17 @@ document.addEventListener('DOMContentLoaded', function () {
     /* =========================
        MOSTRAR MENSAJE DE ADVERTENCIA
     ========================== */
-    function mostrarMensajeAdvertencia(duplicadoInfo) {
+    function mostrarMensajeAdvertencia(res) {
         const mensajeAdvertencia = document.getElementById('mensaje-advertencia');
         const detallesDiv = document.getElementById('mensaje-advertencia-detalles');
 
         let detalles = '';
 
-        if (duplicadoInfo.found_in_previous_year) {
-            detalles += `• En el año ${duplicadoInfo.previous_year}: ${duplicadoInfo.previous_year_projects.join(', ')}\n`;
+        if (res.recentProjects && res.recentProjects.length > 0) {
+            detalles = '• Inscrito en: ' + res.recentProjects.join(', ');
         }
 
-        if (duplicadoInfo.found_in_current_year) {
-            detalles += `• En el año ${duplicadoInfo.current_year}: ${duplicadoInfo.current_year_projects.join(', ')}\n`;
-        }
-
-        detallesDiv.textContent = detalles.trim();
+        detallesDiv.textContent = detalles;
         mensajeAdvertencia.style.display = 'block';
 
         // Hacer scroll al mensaje
@@ -591,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ========================== */
     function ocultarMensajeAdvertencia() {
         const mensajeAdvertencia = document.getElementById('mensaje-advertencia');
-        mensajeAdvertencia.style.display = 'none';
+        if(mensajeAdvertencia) mensajeAdvertencia.style.display = 'none';
     }
 
     /* =========================
@@ -631,15 +632,41 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert('Error al validar cédula: ' + data.error);
+                console.error('Error al validar cédula: ' + data.error);
                 return;
             }
-            callback(data);
+            
+            const projects = data.projects || [];
+            let foundRecent = false;
+            let foundOld = false;
+            let recentProjects = [];
+            let oldProjects = [];
+            
+            projects.forEach(p => {
+                // Si el proyecto es del año actual o anterior -> Reciente
+                // El usuario especificó: "Si existe en proyectos de mas de 1 año anterior mostrar mensaje pero no restringir"
+                // Esto implica: Año < (currentYear - 1) -> Old.
+                // Año >= (currentYear - 1) -> Recent (Restrict).
+                if (p.ano >= currentYear - 1) {
+                    foundRecent = true;
+                    recentProjects.push(`${p.nombre} (${p.ano})`);
+                } else {
+                    foundOld = true;
+                    oldProjects.push(`${p.nombre} (${p.ano})`);
+                }
+            });
+            
+            callback({
+                foundRecent: foundRecent,
+                foundOld: foundOld,
+                recentProjects: recentProjects,
+                oldProjects: oldProjects,
+                projects: projects
+            });
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al validar cédula. Continuando...');
-            callback({found_in_previous_year: false, found_in_current_year: false});
+            callback({foundRecent: false, foundOld: false});
         });
     }
 
@@ -700,6 +727,45 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Debe agregar al menos un beneficiario.');
         }
     });
+
+    // --- VALIDACIÓN EN TIEMPO REAL CÉDULA ---
+    const cedulaInput = document.getElementById('cedula');
+    const cedulaError = document.getElementById('error-cedula');
+    let cedulaDebounce;
+
+    if (cedulaInput) {
+        cedulaInput.addEventListener('input', function() {
+            const val = this.value.trim();
+            
+            // Limpiar estado inicial
+            cedulaError.textContent = '';
+            cedulaError.style.color = '';
+            cedulaError.style.display = 'none';
+            ocultarMensajeAdvertencia(); // Ocultar mensaje grande si se corrige la cédula
+            
+            clearTimeout(cedulaDebounce);
+            
+            if (!val) return;
+            
+            cedulaDebounce = setTimeout(() => {
+                validarCedulaExistente(val, function(res) {
+                    if (res.foundRecent) {
+                        cedulaError.innerHTML = '<i class="fas fa-times-circle"></i> ⛔ Esta persona ya está inscrita en proyectos recientes: ' + res.recentProjects.join(', ');
+                        cedulaError.style.color = '#dc3545'; // Rojo
+                        cedulaError.style.display = 'block';
+                        
+                        // Mostrar mensaje grande de bloqueo inmediatamente al escribir
+                        mostrarMensajeAdvertencia(res);
+                        
+                    } else if (res.foundOld) {
+                        cedulaError.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ⚠️ Esta persona participó en proyectos anteriores: ' + res.oldProjects.join(', ');
+                        cedulaError.style.color = '#e67e22'; // Naranja oscuro
+                        cedulaError.style.display = 'block';
+                    }
+                });
+            }, 500);
+        });
+    }
 
 });
 </script>

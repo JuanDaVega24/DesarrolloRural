@@ -1263,7 +1263,7 @@ class ProyectoProductivoController extends Controller
             $veredaValue = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz', 'Vereda', 'Vereda_CZ']);
 
             // Extraer información de familiares
-            $familiaresInfo = $this->extractFamiliaresInfo($row, $headers);
+            $familiaresInfo = $this->extractFamiliaresInfo($row, $headers, $documento);
 
             // Obtener nombre del principal
             $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
@@ -1399,7 +1399,7 @@ class ProyectoProductivoController extends Controller
     /**
      * Extraer información de familiares de la fila de caracterización
      */
-    private function extractFamiliaresInfo($row, $headers)
+    private function extractFamiliaresInfo($row, $headers, $mainDocumentValue = null)
     {
         $familiares = [];
         
@@ -1470,7 +1470,8 @@ class ProyectoProductivoController extends Controller
                 $numPatterns[] = "Numero de documento familiar";
             }
             
-            $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns);
+            $excludeValues = $mainDocumentValue ? [$mainDocumentValue] : [];
+            $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns, $excludeValues);
 
             $familiares[] = $familiar;
         }
@@ -1481,12 +1482,16 @@ class ProyectoProductivoController extends Controller
     /**
      * Buscar valor de columna usando múltiples nombres posibles
      */
-    private function findColumnValue($row, $headers, $possibleNames)
+    private function findColumnValue($row, $headers, $possibleNames, $excludeValues = [])
     {
         foreach ($possibleNames as $name) {
             if (in_array($name, $headers) && isset($row[$name])) {
                 $value = trim((string)$row[$name]);
                 if (!empty($value)) {
+                    // Si el valor está en la lista de excluidos, saltar
+                    if (in_array($value, $excludeValues)) {
+                        continue;
+                    }
                     return $value;
                 }
             }

@@ -151,3 +151,19 @@
                 font-size: 0.875rem;
             }
         }
+
+        /* === COMPACT TABLE === */
+        .data-card .table td {
+            padding-top: 0.1rem;
+            padding-bottom: 0rem;
+            line-height: 1.1;
+            vertical-align: middle;
+        }
+
+         .data-card .table th {
+            padding-top: 0.7rem;
+            padding-bottom: 0.7rem;
+            line-height: 1.1;
+            vertical-align: middle;
+        }
+    

@@ -157,74 +157,40 @@ class FormularioController extends Controller
     }
 
     /**
-     * Validar si una cédula existe en proyectos productivos de años anteriores o mismo año
+     * Validar si una cédula existe en cualquier proyecto productivo
      */
     public function validarCedula(Request $request)
     {
         $cedula = $request->input('cedula');
-        $currentYear = $request->input('current_year');
 
-        if (!$cedula || !$currentYear) {
-            return response()->json(['error' => 'Cédula y año actual son requeridos'], 400);
+        if (!$cedula) {
+            return response()->json(['error' => 'Cédula es requerida'], 400);
         }
 
-        $documentColumn = null;
-        $foundInPreviousYear = false;
-        $foundInCurrentYear = false;
-        $previousYearProjects = [];
-        $currentYearProjects = [];
+        $foundProjects = [];
 
-        // Buscar en proyectos del año anterior
-        $previousYear = $currentYear - 1;
-        $proyectosAnteriores = ProyectoProductivo::where('ano', $previousYear)
-            ->whereNotNull('data')
+        // Buscar en todos los proyectos con datos
+        $proyectos = ProyectoProductivo::whereNotNull('data')
             ->where('data->total_rows', '>', 0)
             ->get();
 
-        foreach ($proyectosAnteriores as $proyecto) {
+        foreach ($proyectos as $proyecto) {
             $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
             $headers = $data['headers'] ?? [];
             $rows = $data['rows'] ?? [];
 
-            if (!$documentColumn) {
-                $documentColumn = $this->findDocumentColumn($headers, $rows);
-            }
+            $documentColumn = $this->findDocumentColumn($headers, $rows);
 
             if ($documentColumn && $this->cedulaExistsInRows($cedula, $rows, $documentColumn)) {
-                $foundInPreviousYear = true;
-                $previousYearProjects[] = $proyecto->nombre;
-            }
-        }
-
-        // Buscar en proyectos del mismo año (excluyendo proyectos manuales en proceso)
-        $proyectosMismoAno = ProyectoProductivo::where('ano', $currentYear)
-            ->whereNotNull('data')
-            ->where('data->total_rows', '>', 0)
-            ->where('origen', '!=', 'manual') // Excluir proyectos manuales que están en proceso
-            ->get();
-
-        foreach ($proyectosMismoAno as $proyecto) {
-            $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
-            $headers = $data['headers'] ?? [];
-            $rows = $data['rows'] ?? [];
-
-            if (!$documentColumn) {
-                $documentColumn = $this->findDocumentColumn($headers, $rows);
-            }
-
-            if ($documentColumn && $this->cedulaExistsInRows($cedula, $rows, $documentColumn)) {
-                $foundInCurrentYear = true;
-                $currentYearProjects[] = $proyecto->nombre;
+                $foundProjects[] = [
+                    'nombre' => $proyecto->nombre,
+                    'ano' => $proyecto->ano
+                ];
             }
         }
 
         return response()->json([
-            'found_in_previous_year' => $foundInPreviousYear,
-            'found_in_current_year' => $foundInCurrentYear,
-            'previous_year_projects' => $previousYearProjects,
-            'current_year_projects' => $currentYearProjects,
-            'previous_year' => $previousYear,
-            'current_year' => $currentYear
+            'projects' => $foundProjects
         ]);
     }
 
