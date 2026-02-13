@@ -1,5 +1,0 @@
-Credenciales del administrador
-
-Email: admin@desarrollorural.com
-
-password: admin123
