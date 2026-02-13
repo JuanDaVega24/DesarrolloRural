@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('proyectos_productivos', function (Blueprint $table) {
             $table->dropColumn('estado');
-            $table->string('sector'); // agrícola, textil, pecuario, etc.
+            $table->string('sector')->nullable(); // agrícola, textil, pecuario, etc.
             $table->decimal('costo_estimado', 12, 2)->nullable();
             $table->enum('estado', ['Propuesto', 'En ejecución', 'Finalizado'])->default('Propuesto');
             $table->date('fecha_inicio')->nullable();

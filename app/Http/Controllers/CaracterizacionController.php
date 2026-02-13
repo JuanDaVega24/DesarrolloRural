@@ -138,6 +138,13 @@ class CaracterizacionController extends Controller
 
     public function processExcel(Request $request, Caracterizacion $caracterizacion)
     {
+
+           // Aumentar límites de PHP para manejar archivos grandes
+        set_time_limit(300); // 5 minutos
+        ini_set('memory_limit', '1024M'); // 1GB de memoria
+        ini_set('max_execution_time', '300');
+        ini_set('max_input_time', '300');
+        
         $this->authorizeCaracterizacionAccess();
         $request->validate([
             'excel_file' => 'required|file|mimes:xlsx,xls|max:51200', // 50MB max

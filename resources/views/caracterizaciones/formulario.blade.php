@@ -75,7 +75,7 @@
                         'Realiza actividades productivas agrícolas'=> ['Si', 'No'],
                         'Realiza actividades agroindustriales'=> ['Si', 'No'],                    
                         'Realiza actividades pecuarias'=> ['Si', 'No'],
-                        'Orientación de la actividad'=> ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otros' ],
+                        'Orientación de la actividad'=> ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otro'],
                         'Qué entidad lo gestionó'=> ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
                         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias'=> ['Si', 'No'],
                         'Qué hace con los envases de plaguicidas vacíos'=> ['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
@@ -87,11 +87,14 @@
                         'Lugar de aplicación'=> ['Casa', 'Finca', 'Lote'],
                         'En qué entidad financiera lo solicitó'=> ['Banco Agrario', 'Cooperativa Financiera', 'Otro'],
         'Que afectación o daño hubo en la unidad productiva'=> ['Destrucción de cultivos', 'Destrucción de Infraestructura', 'Pérdida de ganado/animales', 'Pérdida de cosecha', 'Pérdida de terreno', 'Alteración del ciclo productivo', 'Reducción del rendimiento y calidad de los productos agrícolas', 'Destrucción parcial o total de la vivienda',  'Otro'],
-        'Tipo de cultivo'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Tipo de cultivo'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora', 'Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
                         'Tiene registro Sanitario INVIMA'=> ['Si', 'No','No aplica'],
                         'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar'=> ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
-        'Actividad productiva'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Actividad productiva'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
                         'Afectación'=> ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
+                        'Acuicultura'=> ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
+                        'Otras especies'=> ['Cerdos (traspatio)', 'Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'Picos o pavos', 'Patos y gansos', 'Codornices', 'Avestruces', 'Cuyes', 'Conejos', 'Colmenas de abejas para producción de miel', 'Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'Aves ornamentales', 'Caninos hembra', 'Caninos macho', 'Felinos hembra','Felinos macho', 'Tortuga / Morrocoy', 'No'],      
+                        'Búfalos, equinos, ovinos o caprinos'=> ['Caballos', 'Yeguas','Mulos', 'Mulas', 'Burros', 'Burras', 'Cabros', 'Cabras','Ovejos', 'Ovejas','Búfalos machos', 'Búfalos hembras', 'No'],
 
 
                         ];
@@ -290,7 +293,23 @@
                                 'skip_to_field' => 'Uso del suelo en el predio: Agricultura (ha)'              // Campo donde se reanuda el formulario
                             ],
                            
-                           
+                            [
+                                'trigger_field' => 'Acuicultura', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Búfalos, equinos, ovinos o caprinos'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Búfalos, equinos, ovinos o caprinos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Otras especies'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Otras especies', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Especie diferente a las anteriores'              // Campo donde se reanuda el formulario
+                            ],
                             
                            
 
@@ -431,7 +450,6 @@
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
                                             str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') ||
                                             str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva')
-                                            
 
 
                                             ) {
@@ -463,8 +481,9 @@
                                                 str_contains($columnaLower, 'ha realizado control de plagas y enfermedades en la unidad productiva') || str_contains($columnaLower, 'conoce y aplica buenas prácticas agrícolas ganaderas en la unidad productiva') ||
                                                 str_contains($columnaLower, 'ingresan al cultivo nuevamente después de la aplicación de plaguicidas') || str_contains($columnaLower, 'lleva registros de las actividades que desarrolla en la unidad productiva') ||
                                                 str_contains($columnaLower, 'la mayor parte del terreno que conforma esta unidad productiva agropecuaria es:') || 
-                                                str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') || str_contains($columnaLower, 'comercialización') || str_contains($columnaLower, 'autoconsumo')
-
+                                                str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') || str_contains($columnaLower, 'comercialización') || str_contains($columnaLower, 'autoconsumo') ||
+                                                str_contains($columnaLower, 'búfalos, equinos, ovinos o caprinos') ||
+                                            str_contains($columnaLower, 'acuicultura') || str_contains($columnaLower, 'otras especies')
 
                                                  ) {
                                             $tipoCampo = 'select';
@@ -483,7 +502,7 @@
                                                   str_contains($columnaLower, 'edad') || str_contains($columnaLower, 'Área (ha)') || str_contains($columnaLower, 'hombres') ||
                                                   str_contains($columnaLower, 'área') || str_contains($columnaLower, 'cantidad') || str_contains($columnaLower, 'mujeres') ||  str_contains($columnaLower, 'cuántas personas (incluido el productor y los miembros del núcleo trabajaron de manera permanente en la unidad productiva agropecuaria para realizar las actividades productivas en los últimos 30 días') ||
                                                   str_contains($columnaLower, 'celular') || str_contains($columnaLower, 'altitud') || str_contains($columnaLower, 'cuántos de los trabajadores permanentes pertenecen al hogar del productor') ||
-                                                str_contains($columnaLower, 'uso del suelo en el predio: agricultura (ha)') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') || str_contains($columnaLower, 'jornales') || str_contains($columnaLower, 'rastrojo (ha)') ||
+                                                str_contains($columnaLower, 'uso del suelo en el predio agricultura (ha) ') ||  str_contains($columnaLower, 'ganaderia (ha)') ||  str_contains($columnaLower, 'conservacion (ha)') || str_contains($columnaLower, 'jornales') || str_contains($columnaLower, 'rastrojo (ha)') ||
                                                str_contains($columnaLower, 'hembras') || str_contains($columnaLower, 'machos') || str_contains($columnaLower, 'número de plantas') || str_contains($columnaLower, 'nivel de producción anual apróx (kilos)')
                                                || str_contains($columnaLower, 'capacidad de producción mensual') || str_contains($columnaLower, 'número de contacto del encuestador')
                                                || str_contains($columnaLower, 'unidades afectadas')
@@ -520,7 +539,21 @@
                                     }
                                 @endphp
 
-                                <div class="form-group" @if(isset($conditionalFieldMap[$columna])) data-conditional="true" data-trigger-field="{{ str_replace([' ', '(', ')'], ['_', '', ''], strtolower($conditionalFieldMap[$columna]['trigger_field'])) }}" data-trigger-value="{{ $conditionalFieldMap[$columna]['trigger_value'] }}" style="display: none;" @endif>
+                                @php
+                                    $triggerFieldId = '';
+                                    if (isset($conditionalFieldMap[$columna])) {
+                                        $tf = strtolower($conditionalFieldMap[$columna]['trigger_field']);
+                                        $tf = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $tf);
+                                        $tf = str_replace(['#', '/'], '_', $tf);
+                                        $tf = preg_replace('/\s+/u', '_', $tf);
+                                        if (!preg_match('/^[a-zA-Z]/', $tf)) {
+                                            $tf = 'field_' . $tf;
+                                        }
+                                        $triggerFieldId = $tf;
+                                    }
+                                @endphp
+
+                                <div class="form-group" @if(isset($conditionalFieldMap[$columna])) data-conditional="true" data-trigger-field="{{ $triggerFieldId }}" data-trigger-value="{{ $conditionalFieldMap[$columna]['trigger_value'] }}" style="display: none;" @endif>
                                     <label class="form-label">
                                         <i class="fas fa-tag"></i>
                                         {{ $columna }}
@@ -580,7 +613,7 @@
                                                 if ($opcionesEncontradas) {
                                                     foreach ($opcionesEncontradas as $opcion) {
                                                         echo "<option value=\"{$opcion}\">{$opcion}</option>";
-                                                        if (strtolower($opcion) === 'otro' || strtolower($opcion) === 'otras') {
+                                                        if (in_array(strtolower($opcion), ['otro', 'otros', 'otras', 'otra'])) {
                                                             $tieneOpcionOtro = true;
                                                         }
                                                     }
@@ -770,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'Realiza actividades productivas agrícolas': ['Si', 'No'],
         'Realiza actividades agroindustriales': ['Si', 'No'],                    
         'Realiza actividades pecuarias': ['Si', 'No'],
-        'Orientación de la actividad': ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otros' ],
+        'Orientación de la actividad': ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otro'],
         'Qué entidad lo gestionó': ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias': ['Si', 'No'],
         'Qué hace con los envases de plaguicidas vacíos':['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
@@ -782,12 +815,14 @@ document.addEventListener('DOMContentLoaded', function () {
         'Actividades Comerciales': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
         'Lugar de aplicación': ['Casa', 'Finca', 'Lote'],
         'En qué entidad financiera lo solicitó': ['Banco Agrario', 'Cooperativa Financiera', 'Otro'],
-        'Tipo de cultivo': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Tipo de cultivo': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva', 'Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
         'Tiene registro Sanitario INVIMA': ['Si', 'No','No aplica'],
         'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
-        'Actividad productiva': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
+        'Actividad productiva': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
         'Afectación': ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
-
+        'Búfalos, equinos, ovinos o caprinos': ['Caballos', 'Yeguas','Mulos', 'Mulas', 'Burros', 'Burras', 'Cabros', 'Cabras','Ovejos', 'Ovejas','Búfalos machos', 'Búfalos hembras', 'No'],
+        'Acuicultura': ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
+        'Otras especies': ['Cerdos (traspatio)', 'Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'Picos o pavos', 'Patos y gansos', 'Codornices', 'Avestruces', 'Cuyes', 'Conejos', 'Colmenas de abejas para producción de miel', 'Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'Aves ornamentales', 'Caninos hembra', 'Caninos macho', 'Felinos hembra','Felinos macho', 'Tortuga / Morrocoy', 'No'],
         
     };
 
@@ -898,7 +933,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Función para alternar visibilidad
                 const toggleOtro = () => {
                     const val = select.value.toLowerCase();
-                    if (val === 'otro' || val === 'otras') {
+                    const variants = ['otro', 'otros', 'otras', 'otra'];
+                    const isOtro = variants.some(v => val.includes(v));
+                    
+                    if (isOtro) {
                         inputOtro.style.display = 'block';
                         inputOtro.focus();
                     } else {
@@ -1077,6 +1115,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const values = Array.from(checkboxes).map(cb => cb.value);
         
         hiddenField.value = values.join(',');
+        
+        // Disparar evento change para que las reglas de salto (skip logic) se activen
+        hiddenField.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     /* =========================
@@ -1109,21 +1150,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if ({{ $fieldId }}.classList.contains('checkbox-result')) {
                      // Lógica para checkbox
-                     let values = val_{{ $fieldId }}.split(',').filter(v => v);
-                     // Remover 'Otro' de la lista
-                     values = values.filter(v => !['otro', 'otros', 'otras', 'otra'].includes(v.toLowerCase()));
-                     // Agregar el valor especificado
-                     if (otroVal) values.push(otroVal);
-                     val_{{ $fieldId }} = values.join(',');
+                     // Dividir por coma y limpiar espacios de cada valor
+                     let values = val_{{ $fieldId }}.split(',').map(v => v.trim()).filter(v => v);
+                     // Remover 'Otro' (en todas sus variantes) de la lista
+                     const variantesOtro = ['otro', 'otros', 'otras', 'otra'];
+                     values = values.filter(v => !variantesOtro.includes(v.toLowerCase()));
+                     // Agregar el valor especificado si existe
+                     if (otroVal) {
+                         values.push(otroVal);
+                     }
+                     val_{{ $fieldId }} = values.join(', '); // Usar espacio para mejor visualización en tabla
                 } else {
                      // Lógica para select (reemplazo total)
                      val_{{ $fieldId }} = otroVal;
                 }
             }
-            data['{{ $columna }}'] = val_{{ $fieldId }};
+            data[{!! json_encode($columna) !!}] = val_{{ $fieldId }};
             const {{ $fieldId }}_file = document.getElementById('{{ $fieldId }}_file');
             if ({{ $fieldId }}_file && {{ $fieldId }}_file.files && {{ $fieldId }}_file.files[0]) {
-                data['{{ $columna }}'] = {{ $fieldId }}_file.files[0].name;
+                data[{!! json_encode($columna) !!}] = {{ $fieldId }}_file.files[0].name;
             }
         @endforeach
 
@@ -1338,8 +1383,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let nombrePrincipal = 'Registro sin nombre';
             @foreach($columnasReferencia as $columna)
                 @if(str_contains(strtolower($columna), 'nombre'))
-                    if (r['{{ $columna }}']) {
-                        nombrePrincipal = r['{{ $columna }}'];
+                    if (r[{!! json_encode($columna) !!}]) {
+                        nombrePrincipal = r[{!! json_encode($columna) !!}];
                     }
                 @endif
             @endforeach
@@ -1390,12 +1435,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!el.id) return false;
                     // Coincidencia exacta
                     if (el.id === baseTriggerId) return true;
-                    // Coincidencia con sufijo numérico (ej: campo1, campo_1)
-                    if (el.id.startsWith(baseTriggerId)) {
-                        const suffix = el.id.substring(baseTriggerId.length);
-                        // Permitir solo números o guion bajo seguido de números
-                        return /^[_]?\d+$/.test(suffix);
-                    }
+                    
+                    // IMPORTANTE: No coincidir con sub-checkboxes (ej: campo_0, campo_1)
+                    // porque ellos no contienen el valor agregado y confunden la lógica.
+                    // Solo permitimos sufijos si NO existe el ID base (raro) o si el elemento 
+                    // es el campo principal de datos.
                     return false;
                 });
 
@@ -1407,7 +1451,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     const checkRangeCondition = function () {
                         const currentValue = triggerElement.value;
                         const allFormGroups = Array.from(document.querySelectorAll('#registro-form .form-group'));
-                        const shouldHide = (currentValue === triggerValue);
+                        
+                        // Para checkboxes: verificar si el valor gatillo está presente
+                        let shouldHide = false;
+                        const tVal = String(triggerValue).toLowerCase();
+                        const cVal = String(currentValue).toLowerCase();
+
+                        if (triggerElement.classList.contains('checkbox-result')) {
+                            // Es un campo checkbox, verificar si el valor está en los seleccionados
+                            const values = cVal.split(',').map(v => v.trim());
+                            shouldHide = values.includes(tVal);
+                        } else {
+                            // Es un campo select u otro, usar comparación directa
+                            shouldHide = (cVal === tVal);
+                        }
+
+                        console.log(`DEBUG: Checking condition for ${triggerFieldId} (value: "${currentValue}") with triggerValue: "${triggerValue}". shouldHide: ${shouldHide}`);
 
                         let triggerIndex = -1;
                         let targetIndex = -1;
@@ -1419,8 +1478,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (groupFieldId === skipToFieldId) targetIndex = index;
                         });
 
+                        console.log(`DEBUG: triggerIndex: ${triggerIndex}, targetIndex: ${targetIndex}`);
+
                         // Salir si los campos no se encuentran o están en el orden incorrecto
                         if (triggerIndex === -1 || targetIndex === -1 || triggerIndex >= targetIndex) {
+                            console.log('DEBUG: Fields not found or wrong order, returning');
                             return;
                         }
 
@@ -1476,7 +1538,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Función para verificar y mostrar/ocultar
                 const checkCondition = function() {
                     const currentValue = triggerElement.value;
-                    if (currentValue === triggerValue) {
+                    const tVal = String(triggerValue).toLowerCase();
+                    const cVal = String(currentValue).toLowerCase();
+                    
+                    let isMatch = false;
+                    if (triggerElement.classList.contains('checkbox-result')) {
+                        const values = cVal.split(',').map(v => v.trim());
+                        isMatch = values.includes(tVal);
+                    } else {
+                        isMatch = (cVal === tVal);
+                    }
+
+                    if (isMatch) {
                         field.style.display = 'block';
                     } else {
                         field.style.display = 'none';
@@ -1637,7 +1710,7 @@ document.addEventListener('DOMContentLoaded', function () {
         horaFinFormulario = new Date().toISOString().slice(0, 16);
         @foreach($columnasReferencia as $columna)
             @if(str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final'))
-                datos['{{ $columna }}'] = horaFinFormulario;
+                datos[{!! json_encode($columna) !!}] = horaFinFormulario;
             @endif
         @endforeach
         registros = [datos];

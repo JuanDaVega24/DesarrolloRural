@@ -455,6 +455,23 @@
         </span>
     </div>
                 </a>
+
+                {{-- Nuevo panel: Cultivos por Corregimientos y Veredas --}}
+                <a href="{{ route('filtros.cultivos-corregimiento') }}" class="filtros-panel">
+                    <div class="validacion-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h3 class="validacion-title">Cultivos por corregimientos y veredas de la cz</h3>
+                    <p class="validacion-description">
+                        Visualizar gráficos y datos cuantitativos sobre los cultivos existentes por cada corregimiento y vereda.
+                    </p>
+                      <div class="card-footer">
+        <span class="card-link btn px-4 py-2 text-white  ">
+            Acceder al módulo
+            <i class="fas fa-arrow-right ms-2"></i>
+        </span>
+    </div>
+                </a>
             </div>
 
         </div>

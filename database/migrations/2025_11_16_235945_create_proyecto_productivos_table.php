@@ -21,7 +21,7 @@ return new class extends Migration
         $table->date('fecha_inicio')->nullable();
         $table->date('fecha_fin')->nullable();
 
-        $table->foreignId('encuesta_id')->nullable()->constrained()->nullOnDelete();
+      
 
         $table->timestamps();
     });

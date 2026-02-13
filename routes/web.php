@@ -209,6 +209,10 @@ Route::middleware([
             return view('filtros.comparar-proyectos');
         })->name('filtros.comparar-proyectos');
 
+        // Ruta para cultivos por corregimiento
+        Route::get('filtros/cultivos-corregimiento', [ReporteController::class, 'cultivosPorCorregimiento'])
+            ->name('filtros.cultivos-corregimiento');
+
         // API routes for validation
         Route::get('api/proyectos-excel', [ProyectoProductivoController::class, 'getProyectosExcel']);
         Route::get('api/anios-disponibles', [ProyectoProductivoController::class, 'getAniosDisponibles']);

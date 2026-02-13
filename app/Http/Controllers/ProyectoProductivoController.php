@@ -710,7 +710,7 @@ class ProyectoProductivoController extends Controller
         ]);
     }
 
-    /**
+    /**,
      * Buscar columna de documento en los headers
      * Implementa detección inteligente con múltiples estrategias
      */
@@ -1470,7 +1470,206 @@ class ProyectoProductivoController extends Controller
                 $numPatterns[] = "Numero de documento familiar";
             }
             
+            // Para el primer familiar, excluir el documento del encuestado
+            // Además, excluir específicamente el campo "Numero de documento de identidad del encuestado"
             $excludeValues = $mainDocumentValue ? [$mainDocumentValue] : [];
+            
+            // Buscar el valor del campo "Numero de documento de identidad del encuestado" y excluirlo también
+            $encuestadoDocumentColumn = $this->findColumnValue($row, $headers, ['Numero de documento de identidad del encuestado', 'Número de documento de identidad del encuestado']);
+            if (!empty($encuestadoDocumentColumn)) {
+                $excludeValues[] = $encuestadoDocumentColumn;
+            }
+            
+            // Buscar el valor del campo "Tipo de documento1" y excluirlo también (para evitar que tome el documento del encuestado)
+            $tipoDocumentoMain = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1']);
+            if (!empty($tipoDocumentoMain)) {
+                $excludeValues[] = $tipoDocumentoMain;
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos" (principal) y excluirlo también
+            $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+            if (!empty($principalNombre)) {
+                $excludeValues[] = $principalNombre;
+            }
+            
+            // Buscar el valor del campo "primer nombre" y excluirlo también
+            $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
+            if (!empty($primerNombre)) {
+                $excludeValues[] = $primerNombre;
+            }
+            
+            // Buscar el valor del campo "primer apellido" y excluirlo también
+            $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
+            if (!empty($primerApellido)) {
+                $excludeValues[] = $primerApellido;
+            }
+            
+            // Buscar el valor del campo "segundo apellido" y excluirlo también
+            $segundoApellido = $this->findColumnValue($row, $headers, ['segundo apellido', 'Segundo Apellido']);
+            if (!empty($segundoApellido)) {
+                $excludeValues[] = $segundoApellido;
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos1" (para el primer familiar) y excluirlo también
+            if ($i === 1) {
+                $nombreFamiliar1 = $this->findColumnValue($row, $headers, ['Nombres y apellidos1', 'nombres y apellidos1', 'Nombres y apellidos 1', 'nombres y apellidos 1']);
+                if (!empty($nombreFamiliar1)) {
+                    $excludeValues[] = $nombreFamiliar1;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos2" (para el segundo familiar) y excluirlo también
+            if ($i === 2) {
+                $nombreFamiliar2 = $this->findColumnValue($row, $headers, ['Nombres y apellidos2', 'nombres y apellidos2', 'Nombres y apellidos 2', 'nombres y apellidos 2']);
+                if (!empty($nombreFamiliar2)) {
+                    $excludeValues[] = $nombreFamiliar2;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos3" (para el tercer familiar) y excluirlo también
+            if ($i === 3) {
+                $nombreFamiliar3 = $this->findColumnValue($row, $headers, ['Nombres y apellidos3', 'nombres y apellidos3', 'Nombres y apellidos 3', 'nombres y apellidos 3']);
+                if (!empty($nombreFamiliar3)) {
+                    $excludeValues[] = $nombreFamiliar3;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos4" (para el cuarto familiar) y excluirlo también
+            if ($i === 4) {
+                $nombreFamiliar4 = $this->findColumnValue($row, $headers, ['Nombres y apellidos4', 'nombres y apellidos4', 'Nombres y apellidos 4', 'nombres y apellidos 4']);
+                if (!empty($nombreFamiliar4)) {
+                    $excludeValues[] = $nombreFamiliar4;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos5" (para el quinto familiar) y excluirlo también
+            if ($i === 5) {
+                $nombreFamiliar5 = $this->findColumnValue($row, $headers, ['Nombres y apellidos5', 'nombres y apellidos5', 'Nombres y apellidos 5', 'nombres y apellidos 5']);
+                if (!empty($nombreFamiliar5)) {
+                    $excludeValues[] = $nombreFamiliar5;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos6" (para el sexto familiar) y excluirlo también
+            if ($i === 6) {
+                $nombreFamiliar6 = $this->findColumnValue($row, $headers, ['Nombres y apellidos6', 'nombres y apellidos6', 'Nombres y apellidos 6', 'nombres y apellidos 6']);
+                if (!empty($nombreFamiliar6)) {
+                    $excludeValues[] = $nombreFamiliar6;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos7" (para el séptimo familiar) y excluirlo también
+            if ($i === 7) {
+                $nombreFamiliar7 = $this->findColumnValue($row, $headers, ['Nombres y apellidos7', 'nombres y apellidos7', 'Nombres y apellidos 7', 'nombres y apellidos 7']);
+                if (!empty($nombreFamiliar7)) {
+                    $excludeValues[] = $nombreFamiliar7;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos8" (para el octavo familiar) y excluirlo también
+            if ($i === 8) {
+                $nombreFamiliar8 = $this->findColumnValue($row, $headers, ['Nombres y apellidos8', 'nombres y apellidos8', 'Nombres y apellidos 8', 'nombres y apellidos 8']);
+                if (!empty($nombreFamiliar8)) {
+                    $excludeValues[] = $nombreFamiliar8;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos9" (para el noveno familiar) y excluirlo también
+            if ($i === 9) {
+                $nombreFamiliar9 = $this->findColumnValue($row, $headers, ['Nombres y apellidos9', 'nombres y apellidos9', 'Nombres y apellidos 9', 'nombres y apellidos 9']);
+                if (!empty($nombreFamiliar9)) {
+                    $excludeValues[] = $nombreFamiliar9;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos10" (para el décimo familiar) y excluirlo también
+            if ($i === 10) {
+                $nombreFamiliar10 = $this->findColumnValue($row, $headers, ['Nombres y apellidos10', 'nombres y apellidos10', 'Nombres y apellidos 10', 'nombres y apellidos 10']);
+                if (!empty($nombreFamiliar10)) {
+                    $excludeValues[] = $nombreFamiliar10;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos11" (para el undécimo familiar) y excluirlo también
+            if ($i === 11) {
+                $nombreFamiliar11 = $this->findColumnValue($row, $headers, ['Nombres y apellidos11', 'nombres y apellidos11', 'Nombres y apellidos 11', 'nombres y apellidos 11']);
+                if (!empty($nombreFamiliar11)) {
+                    $excludeValues[] = $nombreFamiliar11;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos12" (para el duodécimo familiar) y excluirlo también
+            if ($i === 12) {
+                $nombreFamiliar12 = $this->findColumnValue($row, $headers, ['Nombres y apellidos12', 'nombres y apellidos12', 'Nombres y apellidos 12', 'nombres y apellidos 12']);
+                if (!empty($nombreFamiliar12)) {
+                    $excludeValues[] = $nombreFamiliar12;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos13" (para el decimotercer familiar) y excluirlo también
+            if ($i === 13) {
+                $nombreFamiliar13 = $this->findColumnValue($row, $headers, ['Nombres y apellidos13', 'nombres y apellidos13', 'Nombres y apellidos 13', 'nombres y apellidos 13']);
+                if (!empty($nombreFamiliar13)) {
+                    $excludeValues[] = $nombreFamiliar13;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos14" (para el decimocuarto familiar) y excluirlo también
+            if ($i === 14) {
+                $nombreFamiliar14 = $this->findColumnValue($row, $headers, ['Nombres y apellidos14', 'nombres y apellidos14', 'Nombres y apellidos 14', 'nombres y apellidos 14']);
+                if (!empty($nombreFamiliar14)) {
+                    $excludeValues[] = $nombreFamiliar14;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos15" (para el decimoquinto familiar) y excluirlo también
+            if ($i === 15) {
+                $nombreFamiliar15 = $this->findColumnValue($row, $headers, ['Nombres y apellidos15', 'nombres y apellidos15', 'Nombres y apellidos 15', 'nombres y apellidos 15']);
+                if (!empty($nombreFamiliar15)) {
+                    $excludeValues[] = $nombreFamiliar15;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos16" (para el decimosexto familiar) y excluirlo también
+            if ($i === 16) {
+                $nombreFamiliar16 = $this->findColumnValue($row, $headers, ['Nombres y apellidos16', 'nombres y apellidos16', 'Nombres y apellidos 16', 'nombres y apellidos 16']);
+                if (!empty($nombreFamiliar16)) {
+                    $excludeValues[] = $nombreFamiliar16;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos17" (para el decimoséptimo familiar) y excluirlo también
+            if ($i === 17) {
+                $nombreFamiliar17 = $this->findColumnValue($row, $headers, ['Nombres y apellidos17', 'nombres y apellidos17', 'Nombres y apellidos 17', 'nombres y apellidos 17']);
+                if (!empty($nombreFamiliar17)) {
+                    $excludeValues[] = $nombreFamiliar17;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos18" (para el decimoctavo familiar) y excluirlo también
+            if ($i === 18) {
+                $nombreFamiliar18 = $this->findColumnValue($row, $headers, ['Nombres y apellidos18', 'nombres y apellidos18', 'Nombres y apellidos 18', 'nombres y apellidos 18']);
+                if (!empty($nombreFamiliar18)) {
+                    $excludeValues[] = $nombreFamiliar18;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos19" (para el decimonoveno familiar) y excluirlo también
+            if ($i === 19) {
+                $nombreFamiliar19 = $this->findColumnValue($row, $headers, ['Nombres y apellidos19', 'nombres y apellidos19', 'Nombres y apellidos 19', 'nombres y apellidos 19']);
+                if (!empty($nombreFamiliar19)) {
+                    $excludeValues[] = $nombreFamiliar19;
+                }
+            }
+            
+            // Buscar el valor del campo "Nombres y apellidos20" (para el vigésimo familiar) y excluirlo también
+            if ($i === 20) {
+                $nombreFamiliar20 = $this->findColumnValue($row, $headers, ['Nombres y apellidos20', 'nombres y apellidos20', 'Nombres y apellidos 20', 'nombres y apellidos 20']);
+                if (!empty($nombreFamiliar20)) {
+                    $excludeValues[] = $nombreFamiliar20;
+                }
+            }
+            
             $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns, $excludeValues);
 
             $familiares[] = $familiar;
@@ -1489,7 +1688,7 @@ class ProyectoProductivoController extends Controller
                 $value = trim((string)$row[$name]);
                 if (!empty($value)) {
                     // Si el valor está en la lista de excluidos, saltar
-                    if (in_array($value, $excludeValues)) {
+                    if (!empty($excludeValues) && in_array($value, $excludeValues)) {
                         continue;
                     }
                     return $value;

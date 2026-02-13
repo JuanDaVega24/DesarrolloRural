@@ -947,4 +947,162 @@ class ReporteController extends Controller
         }
         return [];
     }
+
+    /**
+     * Normalizar nombre de cultivo para agrupar similares
+     */
+    private function normalizeCultivoName($name)
+    {
+        $name = $this->normalizeText($name);
+        
+        // Mapeo de normalización manual para casos comunes
+        $mappings = [
+            'platano' => ['platano','platana', 'platanos', 'platalo', 'platanos banano', 'platano banano'],
+            'cacao' => ['cacao', 'caco', 'cacaco'],
+            'maiz' => ['maiz', 'maizes'],
+            'café' => ['cafe', 'cafes', 'café', 'CAFE', 'CAFÉ'],
+            'arroz' => ['arroz', 'arrozes'],
+            'yuca' => ['yuca', 'yucas'],
+            'frijol' => ['frijol', 'frijoles'],
+            'aguacate' => ['aguacate', 'aguacates'],
+            'mango' => ['mango', 'mangos'],
+            'banano' => ['banano', 'bananos'],
+            'limon' => ['limon', 'limones'],
+            'naranja' => ['naranja', 'naranjas', 'naranjo'],
+            'mandarina' => ['mandarina', 'mandarinas'],
+            'uva' => ['uva', 'uvas'],
+             'habichuela' => ['abichuela'],
+             'aji' => ['aji'],
+             'tomate' => ['tomate', 'tomates'],
+             'ahuyama' => ['ahuyama'],
+             'citricos' => ['citricos', 'citrico', 'cítrico'],
+             'caña' => ['cana', 'CAÑA', 'caña'],
+        ];
+
+        foreach ($mappings as $normalized => $variants) {
+            foreach ($variants as $variant) {
+                if ($name === $variant || str_contains($name, $variant)) {
+                    return ucfirst($normalized);
+                }
+            }
+        }
+
+        return ucfirst($name);
+    }
+
+    /**
+     * Mostrar cultivos por corregimientos y veredas
+     */
+    public function cultivosPorCorregimiento()
+    {
+        try {
+            $caracterizacion = Caracterizacion::find(1);
+            if (!$caracterizacion || !$caracterizacion->data) {
+                return redirect()->route('filtros.index')->with('error', 'No hay datos de caracterización disponibles');
+            }
+
+            $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
+            $rows = $data['rows'] ?? [];
+            $headers = $data['headers'] ?? [];
+
+            $cultivosData = [];
+            $totalCultivos = 0;
+
+            foreach ($rows as $row) {
+                $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimientos', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimientoValue) ?? 'Sin especificar';
+                $vereda = $this->findColumnValue($row, $headers, ['vereda', 'veredas', 'vereda_cz', 'Vereda', 'Vereda_CZ']) ?? 'Sin especificar';
+                $cultivosEnFila = $this->findCultivosInRow($row, $headers);
+
+                foreach ($cultivosEnFila as $cultivoOriginal) {
+                    if (empty($cultivoOriginal)) continue;
+
+                    $cultivo = $this->normalizeCultivoName($cultivoOriginal);
+
+                    if (!isset($cultivosData[$cultivo])) {
+                        $cultivosData[$cultivo] = [
+                            'total' => 0,
+                            'corregimientos' => [], // Estructura: [id => ['total' => X, 'veredas' => [nombre => Y]]]
+                        ];
+                    }
+
+                    $cultivosData[$cultivo]['total']++;
+                    $totalCultivos++;
+
+                    // Agrupación jerárquica: Cultivo -> Corregimiento -> Vereda
+                    if (!isset($cultivosData[$cultivo]['corregimientos'][$corregimiento])) {
+                        $cultivosData[$cultivo]['corregimientos'][$corregimiento] = [
+                            'total' => 0,
+                            'veredas' => []
+                        ];
+                    }
+                    $cultivosData[$cultivo]['corregimientos'][$corregimiento]['total']++;
+
+                    if (!isset($cultivosData[$cultivo]['corregimientos'][$corregimiento]['veredas'][$vereda])) {
+                        $cultivosData[$cultivo]['corregimientos'][$corregimiento]['veredas'][$vereda] = 0;
+                    }
+                    $cultivosData[$cultivo]['corregimientos'][$corregimiento]['veredas'][$vereda]++;
+                }
+            }
+
+            // Ordenar cultivos por total descendente
+            uasort($cultivosData, function($a, $b) {
+                return $b['total'] <=> $a['total'];
+            });
+
+            // Ordenar corregimientos y veredas
+            foreach ($cultivosData as &$cData) {
+                ksort($cData['corregimientos']);
+                foreach ($cData['corregimientos'] as &$corrData) {
+                    arsort($corrData['veredas']);
+                }
+            }
+
+            return view('filtros.cultivos-por-corregimiento', compact('cultivosData', 'totalCultivos'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('filtros.index')->with('error', 'Error al procesar los datos: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Buscar cultivos en una fila de datos
+     */
+    private function findCultivosInRow($row, $headers)
+    {
+        $cultivos = [];
+        $cultivosKeywords = ['Tipo de cultivo'];
+
+        foreach ($row as $key => $value) {
+            if (!is_string($value)) continue;
+            
+            $header = is_numeric($key) && isset($headers[$key]) ? $headers[$key] : $key;
+            $headerLower = strtolower($header);
+            $valueLower = strtolower($value);
+
+            // Verificar si el encabezado contiene palabras clave de cultivos
+            foreach ($cultivosKeywords as $keyword) {
+                if (str_contains($headerLower, $keyword)) {
+                    // Limpiar y dividir el valor por comas o puntos y coma
+                    $cultivosEncontrados = array_map('trim', preg_split('/[,;]/', $value));
+                    foreach ($cultivosEncontrados as $cultivo) {
+                        if (!empty($cultivo) && strlen($cultivo) > 2) {
+                            $cultivos[] = $cultivo;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            // También buscar en el valor si contiene nombres comunes de cultivos
+            $cultivosComunes = ['cafe','café','savila', 'caña', 'mora', 'cacao', 'aguacate', 'banano','platano', 'yuca','mango','mango tomy','citricos','limon','limón tahiti', 'naranja','mandarina','uva','maíz', 'guanabana','guayaba', 'zapote','maracuya','pitahaya', 'hortalizas','apio','pimentón', 'tomate', 'frijol','habichuela','ahuyama','hierbas aromáticas', 'aji'];
+            foreach ($cultivosComunes as $cultivoComun) {
+                if (str_contains($valueLower, $cultivoComun)) {
+                    $cultivos[] = $cultivoComun;
+                }
+            }
+        }
+
+        return array_unique($cultivos);
+    }
 }
