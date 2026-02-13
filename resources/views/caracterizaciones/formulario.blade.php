@@ -179,7 +179,7 @@
                             ],
 
                              [
-                                'trigger_field' => 'Agregar otra especie', // Campo que dispara la acción
+                                'trigger_field' => '¿Agregar otra especie?', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Realiza otras actividades productivas no agropecuarias o agroindustriales en el predio'              // Campo donde se reanuda el formulario
                             ],
@@ -446,12 +446,12 @@
                                         }
 
                                         if ($tieneOpcionesEspecificas) {
-                                            // Definir qué campos deben ser checkbox (selección múltiple)
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
                                             str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') ||
-                                            str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva')
-
-
+                                            str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva') ||
+                                            str_contains($columnaLower, 'acuicultura') ||
+                                            str_contains($columnaLower, 'búfalos, equinos, ovinos o caprinos') ||
+                                            str_contains($columnaLower, 'otras especies')
                                             ) {
                                                 $tipoCampo = 'checkbox';
                                             } else {
@@ -1084,6 +1084,32 @@ document.addEventListener('DOMContentLoaded', function () {
     function handleCheckboxChange(checkbox) {
         const fieldId = checkbox.getAttribute('data-target');
         const value = checkbox.value.toLowerCase();
+
+        const exclusiveNoFields = [
+            generateFieldId('Acuicultura'),
+            generateFieldId('Búfalos, equinos, ovinos o caprinos'),
+            generateFieldId('Otras especies')
+        ];
+
+        if (exclusiveNoFields.includes(fieldId)) {
+            const groupContainer = checkbox.closest('.checkbox-group-container');
+            if (groupContainer) {
+                const allCheckboxes = groupContainer.querySelectorAll(`.checkbox-dynamic[data-target="${fieldId}"]`);
+                if (value === 'no' && checkbox.checked) {
+                    allCheckboxes.forEach(cb => {
+                        if (cb !== checkbox) {
+                            cb.checked = false;
+                        }
+                    });
+                } else if (value !== 'no' && checkbox.checked) {
+                    allCheckboxes.forEach(cb => {
+                        if (cb !== checkbox && cb.value.toLowerCase() === 'no') {
+                            cb.checked = false;
+                        }
+                    });
+                }
+            }
+        }
         
         // Verificar si es una opción "Otro"
         if (['otro', 'otros', 'otras', 'otra'].includes(value)) {
@@ -1431,16 +1457,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Buscar todos los elementos que coincidan con el patrón (nombre base + números opcionales)
                 const allInputs = document.querySelectorAll('#registro-form select, #registro-form input');
+                const triggerRegex = new RegExp(`^${baseTriggerId}(\\d+)?$`);
+                const targetRegex = new RegExp(`^${skipToFieldId}(\\d+)?$`);
                 const matchingElements = Array.from(allInputs).filter(el => {
                     if (!el.id) return false;
-                    // Coincidencia exacta
-                    if (el.id === baseTriggerId) return true;
-                    
-                    // IMPORTANTE: No coincidir con sub-checkboxes (ej: campo_0, campo_1)
-                    // porque ellos no contienen el valor agregado y confunden la lógica.
-                    // Solo permitimos sufijos si NO existe el ID base (raro) o si el elemento 
-                    // es el campo principal de datos.
-                    return false;
+                    // Coincidir con el ID base o el ID con sufijo numérico (ej: campo1)
+                    // Evitar sub-checkboxes (ej: campo_0) porque no contienen el valor agregado.
+                    return triggerRegex.test(el.id);
                 });
 
                 console.log(`DEBUG: Processing rule for ${range.trigger_field} (Base ID: ${baseTriggerId}). Found ${matchingElements.length} matches.`);
@@ -1475,7 +1498,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         allFormGroups.forEach((group, index) => {
                             const groupFieldId = group.querySelector('input, select')?.id;
                             if (groupFieldId === triggerFieldId) triggerIndex = index;
-                            if (groupFieldId === skipToFieldId) targetIndex = index;
+                            if (groupFieldId && targetRegex.test(groupFieldId)) targetIndex = index;
                         });
 
                         console.log(`DEBUG: triggerIndex: ${triggerIndex}, targetIndex: ${targetIndex}`);
