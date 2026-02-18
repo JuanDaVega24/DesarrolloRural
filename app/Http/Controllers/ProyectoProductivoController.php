@@ -719,7 +719,7 @@ class ProyectoProductivoController extends Controller
         // Estrategia 1: Buscar por nombres de columna específicos (prioridad alta)
         $documentKeywords = [
             // Alta prioridad - términos muy específicos colombianos
-            ['numero de documento de identidad del encuestado', 'número de documento de identidad del encuestado', 'cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula', 'número de documento', 'numero de documento'],
+            ['numero de documento de identidad', 'número de documento de identidad', 'número de documento', 'numero de documento','cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
 
             // Media-alta prioridad - términos específicos
             ['cédula', 'cedula', 'cc', 'ced'],
@@ -740,6 +740,9 @@ class ProyectoProductivoController extends Controller
                 $headerNormalized = $this->normalizeText($header);
                 foreach ($priorityGroup as $keyword) {
                     if (str_contains($headerNormalized, $keyword)) {
+                        if (preg_match('/\\d\\s*$/', $headerNormalized) || str_contains($headerNormalized, 'familiar')) {
+                            continue;
+                        }
                         if ($this->validateDocumentColumn($header, $rows)) {
                             return $header;
                         }
@@ -852,6 +855,17 @@ class ProyectoProductivoController extends Controller
         $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
 
         return trim($text);
+    }
+
+    private function abbreviateDocumentType($tipo)
+    {
+        $t = $this->normalizeText((string)$tipo);
+        if (empty($t)) return '';
+        if (str_contains($t, 'cedula de ciudadania') || $t === 'cc' || str_contains($t, 'cedula')) return 'CC';
+        if (str_contains($t, 'tarjeta de identidad') || $t === 'ti') return 'TI';
+        if (str_contains($t, 'cedula de extranjeria') || $t === 'ce') return 'CE';
+        if (str_contains($t, 'pasaporte') || $t === 'pas') return 'PAS';
+        return strtoupper(trim((string)$tipo));
     }
 
     /**
@@ -1278,19 +1292,32 @@ class ProyectoProductivoController extends Controller
             // Obtener tipo de documento del principal
             $principalTipoDocumento = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1', 'tipo documento', 'tipo de documento', 'Tipo Documento', 'Tipo de Documento']);
 
-            // Construir el string de estado para caracterización directa
-            $estadoCaracterizacionDirecta = 'Si';
-            if (!empty($principalNombre) || !empty($principalTipoDocumento) || !empty($documento)) {
-                $detalles = array_filter([$principalNombre, $principalTipoDocumento, $documento], function($v) { return !empty($v); });
-                if (!empty($detalles)) {
-                    $estadoCaracterizacionDirecta .= ' - ' . implode(' - ', $detalles);
-                }
+            $estadoCaracterizacionDirecta = 'SI';
+            $items = [];
+            $principalTipoAbbr = $this->abbreviateDocumentType($principalTipoDocumento);
+            $principalItemParts = array_filter([
+                trim((string)$principalNombre),
+                trim((string)($principalTipoAbbr ?: $principalTipoDocumento)),
+                trim((string)$documento),
+            ]);
+            if (!empty($principalItemParts)) {
+                $items[] = implode(' ', $principalItemParts);
             }
             if (!empty($familiaresInfo)) {
-                $familiaresString = implode(', ', array_map(function($familiar) {
-                    return "{$familiar['nombre']}, {$familiar['tipo']}, {$familiar['numero']}";
-                }, $familiaresInfo));
-                $estadoCaracterizacionDirecta .= ', ' . $familiaresString;
+                foreach ($familiaresInfo as $familiar) {
+                    $tipoAbbr = $this->abbreviateDocumentType($familiar['tipo'] ?? '');
+                    $fItemParts = array_filter([
+                        trim((string)($familiar['nombre'] ?? '')),
+                        trim((string)($tipoAbbr ?: ($familiar['tipo'] ?? ''))),
+                        trim((string)($familiar['numero'] ?? '')),
+                    ]);
+                    if (!empty($fItemParts)) {
+                        $items[] = implode(' ', $fItemParts);
+                    }
+                }
+            }
+            if (!empty($items)) {
+                $estadoCaracterizacionDirecta .= ', ' . implode(', ', $items);
             }
 
             // Agregar al mapa de caracterizaciones directas
@@ -1433,49 +1460,53 @@ class ProyectoProductivoController extends Controller
             $familiar['nombre'] = $nombre;
 
             // 2. Buscar TIPO DE DOCUMENTO del familiar i
-            // La indicación del usuario sugiere un desfase o numeración específica.
-            // Probamos patrones comunes y el patrón "i+1" mencionado indirectamente ("Tipo de documento1" es main, "Nombres y apellidos1" es familiar 1)
-            // Si Main usa "Tipo de documento1", entonces Familiar 1 podría usar "Tipo de documento2".
-            // Pero también buscamos "Tipo de documento1" si no fuera main.
-            // Prioridad:
-            // - "Tipo de documento familiar X" (Explícito)
-            // - "Tipo de documento X+1" (Posible patrón secuencial si Main es 1)
-            // - "Tipo de documento X" (Patrón estándar)
+            // Convención:
+            //   Principal: "Tipo de documento1"
+            //   Familiar 1: "Tipo de documento2"
+            //   Familiar 2: "Tipo de documento3"
+            //   ...
+            $typeIndex = $i + 1;
             $typePatterns = [
-                "Tipo de documento familiar {$i}", 
-                "Tipo de documento de identidad {$i}", "Tipo de documento de identidad{$i}",
-                "Tipo de documento" . ($i + 1), "Tipo de documento " . ($i + 1), // Si Main es 1, Fam 1 es 2
-                "Tipo de documento{$i}", "Tipo de documento {$i}"
+                "Tipo de documento familiar {$i}",
+                "Tipo de documento{$typeIndex}", "Tipo de documento {$typeIndex}",
+                "Tipo de documento de identidad{$typeIndex}", "Tipo de documento de identidad {$typeIndex}",
+                // Compatibilidad con esquemas anteriores
+                "Tipo de documento{$i}", "Tipo de documento {$i}",
+                "Tipo de documento de identidad{$i}", "Tipo de documento de identidad {$i}"
             ];
-            
             if ($i === 1) {
                 $typePatterns[] = "Tipo de documento familiar";
+                // Algunas bases usan la columna sin sufijo para el primer familiar
+                $typePatterns[] = "Tipo de documento";
             }
             
             $familiar['tipo'] = $this->findColumnValue($row, $headers, $typePatterns);
 
             // 3. Buscar NÚMERO DE DOCUMENTO del familiar i
-            // Patrones: "Número de documentoX", "Número de documento X"
+            // Convención:
+            //   Caracterizado (principal): "Numero de documento de identidad"
+            //   Familiar 1: "Numero de documento de identidad1"
+            //   Familiar 2: "Numero de documento de identidad2"
+            //   ...
+            $numeroIndex = (string)$i;
             $numPatterns = [
-                "Número de documento{$i}", "Número de documento {$i}",
-                "Numero de documento{$i}", "Numero de documento {$i}",
+                "Número de documento de identidad{$numeroIndex}", "Número de documento de identidad {$numeroIndex}",
+                "Numero de documento de identidad{$numeroIndex}", "Numero de documento de identidad {$numeroIndex}",
+                // Compatibilidad con variantes usadas en algunas bases
                 "Número de documento familiar {$i}", "Numero de documento familiar {$i}",
-                "Número de documento de identidad {$i}", "Número de documento de identidad{$i}"
             ];
-            
-            if ($i === 1) {
-                $numPatterns[] = "Número de documento";
-                $numPatterns[] = "Numero de documento";
-                $numPatterns[] = "Número de documento familiar";
-                $numPatterns[] = "Numero de documento familiar";
-            }
-            
+
             // Para el primer familiar, excluir el documento del encuestado
             // Además, excluir específicamente el campo "Numero de documento de identidad del encuestado"
             $excludeValues = $mainDocumentValue ? [$mainDocumentValue] : [];
             
-            // Buscar el valor del campo "Numero de documento de identidad del encuestado" y excluirlo también
-            $encuestadoDocumentColumn = $this->findColumnValue($row, $headers, ['Numero de documento de identidad del encuestado', 'Número de documento de identidad del encuestado']);
+            // Buscar el valor del campo del documento del encuestado (principal) y excluirlo también
+            $encuestadoDocumentColumn = $this->findColumnValue($row, $headers, [
+                'Numero de documento de identidad',
+                'Número de documento de identidad',
+                'Numero de documento de identidad del encuestado',
+                'Número de documento de identidad del encuestado'
+            ]);
             if (!empty($encuestadoDocumentColumn)) {
                 $excludeValues[] = $encuestadoDocumentColumn;
             }

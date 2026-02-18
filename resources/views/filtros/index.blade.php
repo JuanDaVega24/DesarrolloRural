@@ -472,6 +472,23 @@
         </span>
     </div>
                 </a>
+
+                {{-- Nuevo panel: Actividades Pecuarias por Corregimientos y Veredas --}}
+                <a href="{{ route('filtros.pecuarios-corregimiento') }}" class="filtros-panel">
+                    <div class="validacion-icon">
+                      <i class="fa-solid fa-cow"></i>
+                    </div>
+                    <h3 class="validacion-title">Actividades pecuarias por corregimientos y veredas de la cz</h3>
+                    <p class="validacion-description">
+                        Visualizar gráficos y datos cuantitativos sobre las actividades pecuarias existentes por cada corregimiento y vereda.
+                    </p>
+                      <div class="card-footer">
+        <span class="card-link btn px-4 py-2 text-white  ">
+            Acceder al módulo
+            <i class="fas fa-arrow-right ms-2"></i>
+        </span>
+    </div>
+                </a>
             </div>
 
         </div>

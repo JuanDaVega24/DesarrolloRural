@@ -336,7 +336,7 @@ class FormularioController extends Controller
     {
         // Estrategia 1: Buscar por nombres de columna específicos
         $documentKeywords = [
-            ['cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
+            ['numero de documento de identidad', 'número de documento de identidad', 'cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
             ['cédula', 'cedula', 'cc', 'ced'],
             ['documento identidad', 'documento nacional', 'numero documento', 'número documento'],
             ['documento', 'doc', 'id', 'identificación', 'identificacion', 'dni'],

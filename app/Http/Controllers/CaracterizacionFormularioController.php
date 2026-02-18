@@ -249,7 +249,7 @@ class CaracterizacionFormularioController extends Controller
     private function findDocumentColumn($headers, $rows)
     {
         $priority = [
-            ['numero de documento de identidad del encuestado', 'numero documento identidad', 'número documento identidad', 'documento de identidad', 'numero de documento', 'número de documento'],
+            ['numero de documento de identidad', 'número de documento de identidad', 'numero de documento de identidad del encuestado', 'numero documento identidad', 'número documento identidad', 'documento de identidad', 'numero de documento', 'número de documento'],
             ['cedula de ciudadania', 'cédula de ciudadanía', 'cedula', 'cédula', 'dni'],
             ['documento', 'identidad', 'id']
         ];

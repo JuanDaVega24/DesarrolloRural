@@ -1075,7 +1075,7 @@ class ReporteController extends Controller
 
         foreach ($row as $key => $value) {
             if (!is_string($value)) continue;
-            
+
             $header = is_numeric($key) && isset($headers[$key]) ? $headers[$key] : $key;
             $headerLower = strtolower($header);
             $valueLower = strtolower($value);
@@ -1104,5 +1104,133 @@ class ReporteController extends Controller
         }
 
         return array_unique($cultivos);
+    }
+
+    /**
+     * Mostrar actividades pecuarias por corregimientos y veredas
+     */
+    public function pecuariosPorCorregimiento()
+    {
+        try {
+            $caracterizacion = Caracterizacion::find(1);
+            if (!$caracterizacion || !$caracterizacion->data) {
+                return redirect()->route('filtros.index')->with('error', 'No hay datos de caracterización disponibles');
+            }
+
+            $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
+            $rows = $data['rows'] ?? [];
+            $headers = $data['headers'] ?? [];
+
+            $pecuariosData = [];
+            $totalPecuarios = 0;
+
+            // Columnas separadas según el formulario de CZ actual
+            $binaryColumns = [
+                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)",
+                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices",
+                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales",
+                "Caninos", "Felinos", "Tortuga / morrocoy"
+            ];
+            $openColumns = [
+                "Acuicultura", "Especie diferente a las anteriores"
+            ];
+
+            foreach ($rows as $row) {
+                $corregimientoValue = $this->findColumnValue($row, $headers, ['corregimiento', 'corregimientos', 'corregimiento_cz', 'Corregimiento', 'Corregimiento_CZ']);
+                $corregimiento = $this->normalizeCorregimiento($corregimientoValue) ?? 'Sin especificar';
+                $vereda = $this->findColumnValue($row, $headers, ['vereda', 'veredas', 'vereda_cz', 'Vereda', 'Vereda_CZ']) ?? 'Sin especificar';
+
+                // 1) Columnas binarias: contar si dicen "Si" (o cualquier valor distinto de "No")
+                foreach ($binaryColumns as $col) {
+                    $valor = $this->findColumnValue($row, $headers, [$col]);
+                    if ($valor === '') continue;
+                    $valLower = strtolower(trim((string)$valor));
+                    if ($valLower === 'no' || $valLower === '') continue;
+
+                    $especie = $col; // la especie es el nombre de la columna
+                    if (!isset($pecuariosData[$especie])) {
+                        $pecuariosData[$especie] = [
+                            'total' => 0,
+                            'corregimientos' => []
+                        ];
+                    }
+                    $pecuariosData[$especie]['total']++;
+                    $totalPecuarios++;
+
+                    if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento])) {
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento] = [
+                            'total' => 0,
+                            'veredas' => []
+                        ];
+                    }
+                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['total']++;
+                    if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda])) {
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] = 0;
+                    }
+                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda]++;
+                }
+
+                // 2) Columnas abiertas: agregar por cada valor específico (ej: Mojarra, Cachama)
+                foreach ($openColumns as $col) {
+                    $valor = $this->findColumnValue($row, $headers, [$col]);
+                    if ($valor === '') continue;
+                    $parts = array_map('trim', preg_split('/[,;]/', (string)$valor));
+                    foreach ($parts as $rawVal) {
+                        if ($rawVal === '') continue;
+                        $valLower = strtolower($rawVal);
+                        if ($valLower === 'no') continue;
+
+                        $especie = $rawVal;
+                        // Normalización para caninos/felinos si aparecen en "Especie diferente..."
+                        if ($col === 'Especie diferente a las anteriores') {
+                            if (in_array($valLower, ['caninos hembra','caninos macho'])) {
+                                $especie = 'Caninos';
+                            } elseif (in_array($valLower, ['felinos hembra','felinos macho'])) {
+                                $especie = 'Felinos';
+                            }
+                        }
+
+                        if (!isset($pecuariosData[$especie])) {
+                            $pecuariosData[$especie] = [
+                                'total' => 0,
+                                'corregimientos' => []
+                            ];
+                        }
+                        $pecuariosData[$especie]['total']++;
+                        $totalPecuarios++;
+
+                        if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento])) {
+                            $pecuariosData[$especie]['corregimientos'][$corregimiento] = [
+                                'total' => 0,
+                                'veredas' => []
+                            ];
+                        }
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['total']++;
+                        if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda])) {
+                            $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] = 0;
+                        }
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda]++;
+                    }
+                }
+            }
+
+            // Ordenar actividades pecuarias por total descendente
+            uasort($pecuariosData, function($a, $b) {
+                return $b['total'] <=> $a['total'];
+            });
+
+            // Ordenar corregimientos y veredas
+            foreach ($pecuariosData as &$pData) {
+                ksort($pData['corregimientos']);
+                foreach ($pData['corregimientos'] as &$corrData) {
+                    arsort($corrData['veredas']);
+                }
+            }
+
+            return view('filtros.pecuarios-por-corregimiento', compact('pecuariosData', 'totalPecuarios'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('filtros.index')->with('error', 'Error al procesar los datos: ' . $e->getMessage());
+        }
     }
 }

@@ -76,7 +76,7 @@
                         'Realiza actividades agroindustriales'=> ['Si', 'No'],                    
                         'Realiza actividades pecuarias'=> ['Si', 'No'],
                         'Orientación de la actividad'=> ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otro'],
-                        'Qué entidad lo gestionó'=> ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
+                        'Que entidad lo gestionó'=> ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
                         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias'=> ['Si', 'No'],
                         'Qué hace con los envases de plaguicidas vacíos'=> ['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
                         'Fuente de la electricidad'=> ['Redes eléctricas', 'Generador', 'Panel solar', 'Otro'],
@@ -93,8 +93,9 @@
         'Actividad productiva'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
                         'Afectación'=> ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
                         'Acuicultura'=> ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
-                        'Otras especies'=> ['Cerdos (traspatio)', 'Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'Picos o pavos', 'Patos y gansos', 'Codornices', 'Avestruces', 'Cuyes', 'Conejos', 'Colmenas de abejas para producción de miel', 'Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'Aves ornamentales', 'Caninos hembra', 'Caninos macho', 'Felinos hembra','Felinos macho', 'Tortuga / Morrocoy', 'No'],      
-                        'Búfalos, equinos, ovinos o caprinos'=> ['Caballos', 'Yeguas','Mulos', 'Mulas', 'Burros', 'Burras', 'Cabros', 'Cabras','Ovejos', 'Ovejas','Búfalos machos', 'Búfalos hembras', 'No'],
+                        'Gallos'=> ['Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'No'],
+                        'Colmenas'=> ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
+     
 
 
                         ];
@@ -296,34 +297,112 @@
                             [
                                 'trigger_field' => 'Acuicultura', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
-                                'skip_to_field' => 'Búfalos, equinos, ovinos o caprinos'              // Campo donde se reanuda el formulario
+                                'skip_to_field' => 'Búfalos'              // Campo donde se reanuda el formulario
                             ],
 
                             [
-                                'trigger_field' => 'Búfalos, equinos, ovinos o caprinos', // Campo que dispara la acción
+                                'trigger_field' => 'Búfalos', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
-                                'skip_to_field' => 'Otras especies'              // Campo donde se reanuda el formulario
+                                'skip_to_field' => 'Equinos'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Equinos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Ovinos'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Ovinos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Caprinos'              // Campo donde se reanuda el formulario
                             ],
 
                             [
-                                'trigger_field' => 'Otras especies', // Campo que dispara la acción
+                                'trigger_field' => 'Caprinos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Cerdos (traspatio)'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Cerdos (traspatio)', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Gallos'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Gallos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Piscos o pavos'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Piscos o pavos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Patos y gansos'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Patos y gansos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Codornices'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Codornices', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Avestruces'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Avestruces', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Cuyes'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Cuyes', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Conejos'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Conejos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Colmenas'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Colmenas', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Aves ornamentales'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Aves ornamentales', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Caninos'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Caninos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Felinos'              // Campo donde se reanuda el formulario
+                            ],
+
+                             [
+                                'trigger_field' => 'Felinos', // Campo que dispara la acción
+                                'trigger_value' => 'No',                                        // Valor que activa el salto
+                                'skip_to_field' => 'Tortuga / morrocoy'              // Campo donde se reanuda el formulario
+                            ],
+
+                            [
+                                'trigger_field' => 'Tortuga / morrocoy', // Campo que dispara la acción
                                 'trigger_value' => 'No',                                        // Valor que activa el salto
                                 'skip_to_field' => 'Especie diferente a las anteriores'              // Campo donde se reanuda el formulario
                             ],
                             
                            
-
-
-                          
-                            // EJEMPLO 2: DEPENDENCIA INDIVIDUAL
-                            // Muestra campos específicos SOLO si la respuesta es la indicada (ej: "Si")
-                            /*
-                            [
-                                'trigger_field' => '¿Tiene vehículo?',
-                                'trigger_value' => 'Si',
-                                'dependent_fields' => ['Placa', 'Modelo']
-                            ],
-                            */
                         ];
 
                         // Combinar reglas manuales con las existentes
@@ -449,9 +528,7 @@
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
                                             str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') ||
                                             str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva') ||
-                                            str_contains($columnaLower, 'acuicultura') ||
-                                            str_contains($columnaLower, 'búfalos, equinos, ovinos o caprinos') ||
-                                            str_contains($columnaLower, 'otras especies')
+                                            str_contains($columnaLower, 'acuicultura') ||  str_contains($columnaLower, 'otras especies') ||  str_contains($columnaLower, 'que entidad lo gestiono')
                                             ) {
                                                 $tipoCampo = 'checkbox';
                                             } else {
@@ -481,9 +558,12 @@
                                                 str_contains($columnaLower, 'ha realizado control de plagas y enfermedades en la unidad productiva') || str_contains($columnaLower, 'conoce y aplica buenas prácticas agrícolas ganaderas en la unidad productiva') ||
                                                 str_contains($columnaLower, 'ingresan al cultivo nuevamente después de la aplicación de plaguicidas') || str_contains($columnaLower, 'lleva registros de las actividades que desarrolla en la unidad productiva') ||
                                                 str_contains($columnaLower, 'la mayor parte del terreno que conforma esta unidad productiva agropecuaria es:') || 
-                                                str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') || str_contains($columnaLower, 'comercialización') || str_contains($columnaLower, 'autoconsumo') ||
-                                                str_contains($columnaLower, 'búfalos, equinos, ovinos o caprinos') ||
-                                            str_contains($columnaLower, 'acuicultura') || str_contains($columnaLower, 'otras especies')
+                                                str_contains($columnaLower, 'principales fuentes de ingresos del hogar actividades agricolas') || str_contains($columnaLower, 'comercialización') || str_contains($columnaLower, 'autoconsumo') || str_contains($columnaLower, 'cerdos (traspatio)') ||
+                                                str_contains($columnaLower, 'búfalos') || str_contains($columnaLower, 'equinos') || str_contains($columnaLower, 'ovinos') || str_contains($columnaLower, 'caprinos') ||
+                                            str_contains($columnaLower, 'acuicultura') || str_contains($columnaLower, 'otras especies') || str_contains($columnaLower, 'gallos') || str_contains($columnaLower, 'piscos o pavos') || str_contains($columnaLower, 'patos y gansos') || str_contains($columnaLower, 'avestruces') ||
+                                                 str_contains($columnaLower, 'codornices') || str_contains($columnaLower, 'colmenas') || str_contains($columnaLower, 'caninos') || str_contains($columnaLower, 'felinos') || str_contains($columnaLower, 'aves ornamentales') || str_contains($columnaLower, 'tortuga / morrocoy') || str_contains($columnaLower, 'cuyes') || str_contains($columnaLower, 'conejos')
+
+
 
                                                  ) {
                                             $tipoCampo = 'select';
@@ -557,7 +637,7 @@
                                     <label class="form-label">
                                         <i class="fas fa-tag"></i>
                                         {{ $columna }}
-                                        <span class="required-indicator">*</span>
+                                    <span class="required-indicator">*</span>
                                         @if($esCampoAutomatico)
                                             <span style="color: var(--verde); font-size: 0.8rem;">(Automático)</span>
                                         @endif
@@ -804,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'Realiza actividades agroindustriales': ['Si', 'No'],                    
         'Realiza actividades pecuarias': ['Si', 'No'],
         'Orientación de la actividad': ['Cría', 'Levante','Ceba',  'Ciclo completo', 'Genética', 'Engorde', 'Producción de huevo', 'Ornamentales', 'Mascotas', 'Otro'],
-        'Qué entidad lo gestionó': ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
+        'Que entidad lo gestionó': ['Alcaldía', 'Gobernación','Ministerio de Agricultura',  'Agencia de Desarrollo Rural', 'Entidad prestadora de Extensión Agropecuaria (EPSEA)', 'Otro'],
         'Ha solicitado crédito para el desarrollo de las actividades agropecuarias': ['Si', 'No'],
         'Qué hace con los envases de plaguicidas vacíos':['Triple lavado', 'Los entierra', 'Los quema', 'Los tira en el lote', 'Los reutiliza', 'Los rompe o perfora y los entrega a la empresa de aseo municipal'],
         'Fuente de la electricidad': ['Redes eléctricas', 'Generador', 'Panel solar', 'Otro'],
@@ -820,10 +900,15 @@ document.addEventListener('DOMContentLoaded', function () {
         'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
         'Actividad productiva': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
         'Afectación': ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
-        'Búfalos, equinos, ovinos o caprinos': ['Caballos', 'Yeguas','Mulos', 'Mulas', 'Burros', 'Burras', 'Cabros', 'Cabras','Ovejos', 'Ovejas','Búfalos machos', 'Búfalos hembras', 'No'],
+        'Búfalos': ['Búfalos machos', 'Búfalos hembras', 'No'],
+        'Equinos': ['Equinos machos', 'Equinos hembras', 'No'],
+        'Ovinos': ['Ovinos machos', 'Ovinos hembras', 'No'],
+        'Caprinos': ['Caprinos machos', 'Caprinos hembras', 'No'],
         'Acuicultura': ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
-        'Otras especies': ['Cerdos (traspatio)', 'Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'Picos o pavos', 'Patos y gansos', 'Codornices', 'Avestruces', 'Cuyes', 'Conejos', 'Colmenas de abejas para producción de miel', 'Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'Aves ornamentales', 'Caninos hembra', 'Caninos macho', 'Felinos hembra','Felinos macho', 'Tortuga / Morrocoy', 'No'],
+        'Colmenas': ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
+      
         
+
     };
 
     // --- LÓGICA DINÁMICA DE VEREDAS ---
@@ -1087,7 +1172,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const exclusiveNoFields = [
             generateFieldId('Acuicultura'),
-            generateFieldId('Búfalos, equinos, ovinos o caprinos'),
+            generateFieldId('Búfalos'),
             generateFieldId('Otras especies')
         ];
 
@@ -1225,7 +1310,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Excluir Hora Final de la validación ya que se llena al enviar
                 $esHoraFinal = str_contains(strtolower($columna), 'hora') && str_contains(strtolower($columna), 'final');
                 $esObservaciones = str_contains(strtolower($columna), 'observacion') || str_contains(strtolower($columna), 'observaciones');
-                $esEvidencia = str_contains(strtolower($columna), 'evidencia fotografica') || str_contains(strtolower($columna), 'evidencia fotografica');
+                $esEvidencia = str_contains(strtolower($columna), 'evidencia fotografica') || str_contains(strtolower($columna), 'evidencia fotográfica');
+                $esCorreo = str_contains(strtolower($columna), 'correo electrónico') || str_contains(strtolower($columna), 'correo electronico');
+                // Normalizar para detectar "Otra ¿Cuál?" sin que afecten tildes ni signos
+                $colNorm = strtolower($columna);
+                $colNorm = str_replace(['á','é','í','ó','ú'], ['a','e','i','o','u'], $colNorm);
+                $colNorm = str_replace(['(', ')', '¿', '?', '¡', '!', ',', '.', ';', ':', '"', "'"], '', $colNorm);
+                $colNorm = preg_replace('/\s+/u', ' ', $colNorm);
+                $esOtra = str_contains($colNorm, 'otra cual') || str_contains($colNorm, 'otro cual') || str_contains($colNorm, 'otras cual') || str_contains($colNorm, 'otros cual');
 
                 
                 // Campos automáticos que no deben bloquear el envío si están vacíos
@@ -1233,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $esNumeroPredial = str_contains(strtolower($columna), 'numero predial') || str_contains(strtolower($columna), 'número predial');
             @endphp
 
-           @if(!$esHoraFinal && !$esObservaciones && !$esCorreoTabulador && !$esNumeroPredial && !$esEvidencia)
+           @if(!$esHoraFinal && !$esObservaciones && !$esCorreoTabulador && !$esNumeroPredial && !$esEvidencia && !$esCorreo && !$esOtra)
     const {{ $fieldId }} = document.getElementById('{{ $fieldId }}');
 
     if ({{ $fieldId }}) {

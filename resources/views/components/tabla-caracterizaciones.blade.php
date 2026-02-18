@@ -16,19 +16,49 @@
             <div class="col-md-12">
                 <div class="d-flex gap-2 justify-content-end align-items-center flex-wrap">
                     {{-- Filtro Tipo de Cultivo --}}
-                    <select class="form-select" id="tipoCultivoFilter" style="max-width: 180px;">
-                        <option value="">Tipo de cultivo</option>
-                    </select>
+                    <div class="dropdown" style="max-width: 250px;">
+                        <button class="btn btn-outline-success dropdown-toggle w-100" type="button" id="dropdownCultivo" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actividades Productivas Agrícolas
+                        </button>
+                        <div class="dropdown-menu p-3" style="min-width: 250px; max-height: 300px; overflow-y: auto;">
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" id="searchCultivo" placeholder="Buscar cultivo...">
+                            </div>
+                            <div id="cultivoCheckboxes">
+                                <!-- Checkboxes se generarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Filtro Producto --}}
-                    <select class="form-select" id="productoFilter" style="max-width: 180px;">
-                        <option value="">Producto</option>
-                    </select>
+                    <div class="dropdown" style="max-width: 215px;">
+                        <button class="btn btn-outline-success dropdown-toggle w-100" type="button" id="dropdownProducto" data-bs-toggle="dropdown" aria-expanded="false">
+                           Actividades Agroindustriales
+                        </button>
+                        <div class="dropdown-menu p-3" style="min-width: 250px; max-height: 300px; overflow-y: auto;">
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" id="searchProducto" placeholder="Buscar producto...">
+                            </div>
+                            <div id="productoCheckboxes">
+                                <!-- Checkboxes se generarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Filtro Especie --}}
-                    <select class="form-select" id="especieFilter" style="max-width: 180px;">
-                        <option value="">Especie</option>
-                    </select>
+                    <div class="dropdown" style="max-width: 180px;">
+                        <button class="btn btn-outline-success dropdown-toggle w-100" type="button" id="dropdownEspecie" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actividades Pecuarias
+                        </button>
+                        <div class="dropdown-menu p-3" style="min-width: 250px; max-height: 300px; overflow-y: auto;">
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" id="searchEspecie" placeholder="Buscar especie...">
+                            </div>
+                            <div id="especieCheckboxes">
+                                <!-- Checkboxes se generarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="input-group" style="max-width: 300px;">
                         <span class="input-group-text bg-white">

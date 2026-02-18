@@ -213,6 +213,10 @@ Route::middleware([
         Route::get('filtros/cultivos-corregimiento', [ReporteController::class, 'cultivosPorCorregimiento'])
             ->name('filtros.cultivos-corregimiento');
 
+        // Ruta para pecuarios por corregimiento
+        Route::get('filtros/pecuarios-corregimiento', [ReporteController::class, 'pecuariosPorCorregimiento'])
+            ->name('filtros.pecuarios-corregimiento');
+
         // API routes for validation
         Route::get('api/proyectos-excel', [ProyectoProductivoController::class, 'getProyectosExcel']);
         Route::get('api/anios-disponibles', [ProyectoProductivoController::class, 'getAniosDisponibles']);

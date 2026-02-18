@@ -81,12 +81,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Aplicar filtros agrupados (OR entre columnas del grupo)
         Object.keys(activeFiltersGroups).forEach(groupKey => {
             const group = activeFiltersGroups[groupKey];
-            if (group && group.values && group.values.length > 0 && Array.isArray(group.columns) && group.columns.length > 0) {
-                filteredData = filteredData.filter(row => {
-                    return group.values.some(val =>
-                        group.columns.some(col => String(row[col] || '').trim() === val)
-                    );
-                });
+            if (group && Array.isArray(group.columns) && group.columns.length > 0) {
+                if (group.values && group.values.length > 0) {
+                    // Filter by specific values
+                    filteredData = filteredData.filter(row => {
+                        return group.values.some(val =>
+                            group.columns.some(col => String(row[col] || '').trim() === val)
+                        );
+                    });
+                } else {
+                    // Filter by any non-empty value in the columns
+                    filteredData = filteredData.filter(row => {
+                        return group.columns.some(col => String(row[col] || '').trim() !== '');
+                    });
+                }
             }
         });
 
@@ -287,52 +295,379 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Unir valores de todas las columnas del grupo y deduplicar
-        const set = new Set();
-        columns.forEach(col => {
-            const vals = filterData[col] || [];
-            vals.forEach(v => set.add(String(v)));
-        });
-        const values = Array.from(set);
+        // Determinar si es un grupo de especies pecuarias
+        const isPecuariaGroup = groupKey === 'especie';
+        
+        // Para especies pecuarias, manejar columnas binarias (Si/No) y no binarias
+        if (isPecuariaGroup) {
+            // Columnas que contienen datos binarios (Si/No)
+            const binaryColumns = [
+                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", 
+                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", 
+                "Caninos", "Felinos", "Tortuga / morrocoy"
+            ];
+            
+            // Columnas que NO son binarias (contienen valores específicos)
+            const nonBinaryColumns = ["Acuicultura", "Especie diferente a las anteriores"];
+            
+            // Crear opciones para el dropdown
+            let options = [];
+            
+            // Para columnas binarias: agregar el nombre de la columna como opción
+            binaryColumns.forEach(col => {
+                if (columns.includes(col)) {
+                    options.push({ value: col, label: col, type: 'binary' });
+                }
+            });
+            
+            // Para columnas no binarias: agregar los valores únicos de esas columnas
+            nonBinaryColumns.forEach(col => {
+                if (columns.includes(col)) {
+                    const vals = filterData[col] || [];
+                    vals.forEach(val => {
+                        if (val && val !== 'No') { // Excluir "No" de las opciones
+                            options.push({ value: val, label: val, type: 'non-binary', column: col });
+                        }
+                    });
+                }
+            });
+            
+            // Eliminar duplicados manteniendo el primer encontrado
+            const uniqueOptions = [];
+            const seen = new Set();
+            options.forEach(opt => {
+                const key = opt.type === 'binary' ? opt.value : opt.value;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueOptions.push(opt);
+                }
+            });
+            
+            // Ordenar alfabéticamente
+            uniqueOptions.sort((a, b) => a.label.localeCompare(b.label));
+            
+            // Generar HTML
+            let html = `<option value="">${placeholder}</option>`;
+            uniqueOptions.forEach(opt => {
+                html += `<option value="${opt.value}" data-type="${opt.type}" ${opt.column ? `data-column="${opt.column}"` : ''}>${opt.label}</option>`;
+            });
+            selectEl.innerHTML = html;
 
-        let html = `<option value="">${placeholder}</option>`;
-        values.forEach(val => {
-            html += `<option value="${val}">${val}</option>`;
-        });
-        selectEl.innerHTML = html;
+            selectEl.addEventListener('change', function() {
+                const value = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const optionType = selectedOption ? selectedOption.getAttribute('data-type') : null;
+                const optionColumn = selectedOption ? selectedOption.getAttribute('data-column') : null;
 
-        selectEl.addEventListener('change', function() {
-            const value = this.value;
-            if (value) {
-                activeFiltersGroups[groupKey] = { columns, values: [value] };
-            } else {
-                delete activeFiltersGroups[groupKey];
-            }
-            applyClientFilters();
-        });
+                if (value) {
+                    if (optionType === 'binary') {
+                        // Para columnas binarias: filtrar por "Si" en la columna específica
+                        activeFiltersGroups[groupKey] = { 
+                            columns: [value], // El valor es el nombre de la columna
+                            values: ['Si'],
+                            isBinary: true 
+                        };
+                    } else {
+                        // Para columnas no binarias: filtrar por el valor específico
+                        const targetColumn = optionColumn || value;
+                        activeFiltersGroups[groupKey] = { 
+                            columns: [targetColumn],
+                            values: [value],
+                            isBinary: false 
+                        };
+                    }
+                } else {
+                    delete activeFiltersGroups[groupKey];
+                }
+                applyClientFilters();
+            });
+
+        } else {
+            // Comportamiento original para otros grupos (cultivo, producto)
+            // Unir valores de todas las columnas del grupo y deduplicar
+            const set = new Set();
+            columns.forEach(col => {
+                const vals = filterData[col] || [];
+                vals.forEach(v => set.add(String(v)));
+            });
+            const values = Array.from(set);
+
+            let html = `<option value="">${placeholder}</option>`;
+            values.forEach(val => {
+                html += `<option value="${val}">${val}</option>`;
+            });
+            selectEl.innerHTML = html;
+
+            selectEl.addEventListener('change', function() {
+                const value = this.value;
+                if (value) {
+                    activeFiltersGroups[groupKey] = { columns, values: [value] };
+                } else {
+                    delete activeFiltersGroups[groupKey];
+                }
+                applyClientFilters();
+            });
+        }
 
         return { selectEl, columns };
     }
 
-    const cultivoFilter = setupDropdownFilter(
-        'tipoCultivoFilter',
+    // Función para crear checkboxes en dropdowns
+    function createCheckboxDropdown(containerId, searchId, checkboxesId, placeholder, matchFn, groupKey) {
+        const container = document.getElementById(containerId);
+        const searchInput = document.getElementById(searchId);
+        const checkboxesContainer = document.getElementById(checkboxesId);
+        
+        if (!container || !searchInput || !checkboxesContainer) {
+            console.warn(`No se encontró contenedor para ${placeholder}`);
+            return;
+        }
+
+        const columns = headers.filter(h => matchFn(normalize(h)));
+        if (!columns || columns.length === 0) {
+            container.style.display = 'none';
+            console.warn(`No se encontró columna para filtro ${placeholder}`);
+            return;
+        }
+
+        // Determinar si es un grupo de especies pecuarias
+        const isPecuariaGroup = groupKey === 'especie';
+        
+        // Para especies pecuarias, manejar columnas binarias (Si/No) y no binarias
+        if (isPecuariaGroup) {
+            // Columnas que contienen datos binarios (Si/No)
+            const binaryColumns = [
+                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", 
+                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", 
+                "Caninos", "Felinos", "Tortuga / morrocoy"
+            ];
+            
+            // Columnas que NO son binarias (contienen valores específicos)
+            const nonBinaryColumns = ["Acuicultura", "Especie diferente a las anteriores"];
+            
+            // Crear opciones para el dropdown
+            let options = [];
+            
+            // Para columnas binarias: agregar el nombre de la columna como opción
+            binaryColumns.forEach(col => {
+                if (columns.includes(col)) {
+                    options.push({ value: col, label: col, type: 'binary' });
+                }
+            });
+            
+            // Para columnas no binarias: agregar los valores únicos de esas columnas
+            nonBinaryColumns.forEach(col => {
+                if (columns.includes(col)) {
+                    const vals = filterData[col] || [];
+                    vals.forEach(val => {
+                        if (val && val !== 'No') { // Excluir "No" de las opciones
+                            options.push({ value: val, label: val, type: 'non-binary', column: col });
+                        }
+                    });
+                }
+            });
+            
+            // Eliminar duplicados manteniendo el primer encontrado
+            const uniqueOptions = [];
+            const seen = new Set();
+            options.forEach(opt => {
+                const key = opt.type === 'binary' ? opt.value : opt.value;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueOptions.push(opt);
+                }
+            });
+            
+            // Ordenar alfabéticamente
+            uniqueOptions.sort((a, b) => a.label.localeCompare(b.label));
+            
+            // Generar HTML de checkboxes
+            let html = '';
+            uniqueOptions.forEach(opt => {
+                const id = `${groupKey}_${opt.value.replace(/\s+/g, '_')}`;
+                html += `
+                    <div class="form-check">
+                        <input class="form-check-input dropdown-checkbox" type="checkbox" 
+                               id="${id}" data-group="${groupKey}" data-type="${opt.type}" 
+                               ${opt.column ? `data-column="${opt.column}"` : ''} value="${opt.value}">
+                        <label class="form-check-label" for="${id}">
+                            ${opt.label}
+                        </label>
+                    </div>
+                `;
+            });
+            checkboxesContainer.innerHTML = html;
+
+            // Event listener para búsqueda
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                const checkboxes = checkboxesContainer.querySelectorAll('.form-check');
+                checkboxes.forEach(checkbox => {
+                    const label = checkbox.querySelector('label').textContent.toLowerCase();
+                    if (label.includes(term)) {
+                        checkbox.style.display = 'block';
+                    } else {
+                        checkbox.style.display = 'none';
+                    }
+                });
+            });
+
+            // Event listener para checkboxes
+            checkboxesContainer.addEventListener('change', function(e) {
+                if (e.target.classList.contains('dropdown-checkbox')) {
+                    const checkbox = e.target;
+                    const group = checkbox.getAttribute('data-group');
+                    const optionType = checkbox.getAttribute('data-type');
+                    const optionColumn = checkbox.getAttribute('data-column');
+                    const value = checkbox.value;
+                    const isChecked = checkbox.checked;
+
+                    if (!activeFiltersGroups[group]) {
+                        activeFiltersGroups[group] = { columns: [], values: [], isBinary: false };
+                    }
+
+                    if (isChecked) {
+                        if (optionType === 'binary') {
+                            // Para columnas binarias: agregar la columna y el valor "Si"
+                            activeFiltersGroups[group].columns.push(value);
+                            activeFiltersGroups[group].values.push('Si');
+                            activeFiltersGroups[group].isBinary = true;
+                        } else {
+                            // Para columnas no binarias: agregar la columna y el valor específico
+                            const targetColumn = optionColumn || value;
+                            activeFiltersGroups[group].columns.push(targetColumn);
+                            activeFiltersGroups[group].values.push(value);
+                            activeFiltersGroups[group].isBinary = false;
+                        }
+                    } else {
+                        // Remover de los filtros activos
+                        if (optionType === 'binary') {
+                            const index = activeFiltersGroups[group].columns.indexOf(value);
+                            if (index > -1) {
+                                activeFiltersGroups[group].columns.splice(index, 1);
+                                activeFiltersGroups[group].values.splice(index, 1);
+                            }
+                        } else {
+                            const targetColumn = optionColumn || value;
+                            const index = activeFiltersGroups[group].columns.indexOf(targetColumn);
+                            if (index > -1) {
+                                activeFiltersGroups[group].columns.splice(index, 1);
+                                activeFiltersGroups[group].values.splice(index, 1);
+                            }
+                        }
+                    }
+
+                    // Limpiar el grupo si no hay checkboxes seleccionados
+                    if (activeFiltersGroups[group].columns.length === 0) {
+                        delete activeFiltersGroups[group];
+                    }
+
+                    applyClientFilters();
+                }
+            });
+
+        } else {
+            // Comportamiento para otros grupos (cultivo, producto)
+            // Unir valores de todas las columnas del grupo y deduplicar
+            const set = new Set();
+            columns.forEach(col => {
+                const vals = filterData[col] || [];
+                vals.forEach(v => set.add(String(v)));
+            });
+            const values = Array.from(set);
+
+            // Generar HTML de checkboxes
+            let html = '';
+            values.forEach(val => {
+                const id = `${groupKey}_${val.replace(/\s+/g, '_')}`;
+                html += `
+                    <div class="form-check">
+                        <input class="form-check-input dropdown-checkbox" type="checkbox" 
+                               id="${id}" data-group="${groupKey}" value="${val}">
+                        <label class="form-check-label" for="${id}">
+                            ${val}
+                        </label>
+                    </div>
+                `;
+            });
+            checkboxesContainer.innerHTML = html;
+
+            // Event listener para búsqueda
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                const checkboxes = checkboxesContainer.querySelectorAll('.form-check');
+                checkboxes.forEach(checkbox => {
+                    const label = checkbox.querySelector('label').textContent.toLowerCase();
+                    if (label.includes(term)) {
+                        checkbox.style.display = 'block';
+                    } else {
+                        checkbox.style.display = 'none';
+                    }
+                });
+            });
+
+            // Event listener para checkboxes
+            checkboxesContainer.addEventListener('change', function(e) {
+                if (e.target.classList.contains('dropdown-checkbox')) {
+                    const checkbox = e.target;
+                    const group = checkbox.getAttribute('data-group');
+                    const value = checkbox.value;
+                    const isChecked = checkbox.checked;
+
+                    if (!activeFiltersGroups[group]) {
+                        activeFiltersGroups[group] = { columns, values: [] };
+                    }
+
+                    if (isChecked) {
+                        if (!activeFiltersGroups[group].values.includes(value)) {
+                            activeFiltersGroups[group].values.push(value);
+                        }
+                    } else {
+                        activeFiltersGroups[group].values = activeFiltersGroups[group].values.filter(v => v !== value);
+                    }
+
+                    // Limpiar el grupo si no hay checkboxes seleccionados
+                    if (activeFiltersGroups[group].values.length === 0) {
+                        delete activeFiltersGroups[group];
+                    }
+
+                    applyClientFilters();
+                }
+            });
+        }
+    }
+
+    // Inicializar los dropdowns con checkboxes
+    createCheckboxDropdown(
+        'dropdownCultivo',
+        'searchCultivo',
+        'cultivoCheckboxes',
         'Actividades Productivas Agrícolas',
         // Coincidencia exacta base + sufijo numérico opcional: "tipo de cultivo", "tipo de cultivo1", "tipo de cultivo 2"
         norm => /^tipo de cultivo(?:\s*\d+)?$/.test(norm),
         'cultivo'
     );
 
-    const productoFilter = setupDropdownFilter(
-        'productoFilter',
+    createCheckboxDropdown(
+        'dropdownProducto',
+        'searchProducto',
+        'productoCheckboxes',
         'Actividades Agroindustriales',
         norm => /^producto(?:\s*\d+)?$/.test(norm),
         'producto'
     );
 
-    const especieFilter = setupDropdownFilter(
-        'especieFilter',
+    createCheckboxDropdown(
+        'dropdownEspecie',
+        'searchEspecie',
+        'especieCheckboxes',
         'Actividades Pecuarias',
-        norm => /^especie(?:\s*\d+)?$/.test(norm),
+        norm => {
+            const pecuarianColumns = ["Acuicultura", "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", "Caninos", "Felinos", "Tortuga / morrocoy", "Especie diferente a las anteriores"];
+            return pecuarianColumns.some(col => normalize(col) === norm);
+        },
         'especie'
     );
 
@@ -356,10 +691,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 activeFiltersGroups = {};
                 document.querySelectorAll('.column-filter').forEach(cb => cb.checked = false);
                 
-                // Resetear dropdowns
-                if (cultivoFilter?.selectEl) cultivoFilter.selectEl.value = '';
-                if (productoFilter?.selectEl) productoFilter.selectEl.value = '';
-                if (especieFilter?.selectEl) especieFilter.selectEl.value = '';
+                // Resetear dropdowns de checkboxes
+                document.querySelectorAll('.dropdown-checkbox').forEach(cb => cb.checked = false);
 
                 applyClientFilters();
             }
