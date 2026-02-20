@@ -13,7 +13,7 @@ class CaracterizacionController extends Controller
     protected function authorizeCaracterizacionAccess(): void
     {
         $user = Auth::user();
-        if (!$user || (!$user->hasRole('Administrador') && !($user->caracterizacion_permiso))) {
+        if (!$user || (strtolower((string)$user->role) !== 'administrador' && !($user->caracterizacion_permiso))) {
             abort(403);
         }
     }

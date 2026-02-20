@@ -1294,16 +1294,9 @@ class ProyectoProductivoController extends Controller
 
             $estadoCaracterizacionDirecta = 'SI';
             $items = [];
-            $principalTipoAbbr = $this->abbreviateDocumentType($principalTipoDocumento);
-            $principalItemParts = array_filter([
-                trim((string)$principalNombre),
-                trim((string)($principalTipoAbbr ?: $principalTipoDocumento)),
-                trim((string)$documento),
-            ]);
-            if (!empty($principalItemParts)) {
-                $items[] = implode(' ', $principalItemParts);
-            }
+
             if (!empty($familiaresInfo)) {
+                // Si hay familiares, priorizar siempre la lista de familiares
                 foreach ($familiaresInfo as $familiar) {
                     $tipoAbbr = $this->abbreviateDocumentType($familiar['tipo'] ?? '');
                     $fItemParts = array_filter([
@@ -1315,7 +1308,19 @@ class ProyectoProductivoController extends Controller
                         $items[] = implode(' ', $fItemParts);
                     }
                 }
+            } else {
+                // Si no hay familiares, usar los datos del principal
+                $principalTipoAbbr = $this->abbreviateDocumentType($principalTipoDocumento);
+                $principalItemParts = array_filter([
+                    trim((string)$principalNombre),
+                    trim((string)($principalTipoAbbr ?: $principalTipoDocumento)),
+                    trim((string)$documento),
+                ]);
+                if (!empty($principalItemParts)) {
+                    $items[] = implode(' ', $principalItemParts);
+                }
             }
+
             if (!empty($items)) {
                 $estadoCaracterizacionDirecta .= ', ' . implode(', ', $items);
             }

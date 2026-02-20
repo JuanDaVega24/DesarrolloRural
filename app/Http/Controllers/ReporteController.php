@@ -867,6 +867,75 @@ class ReporteController extends Controller
         return null;
     }
 
+    /**
+     * Buscar índice de una columna en headers usando coincidencia normalizada
+     */
+    private function findColumnIndex($headers, $name)
+    {
+        if (empty($headers) || !$name) {
+            return null;
+        }
+
+        $target = $this->normalizeText($name);
+        if ($target === '') {
+            return null;
+        }
+
+        // Coincidencia exacta primero
+        foreach ($headers as $index => $header) {
+            if ($this->normalizeText($header) === $target) {
+                return $index;
+            }
+        }
+
+        // Luego coincidencia parcial
+        foreach ($headers as $index => $header) {
+            if (str_contains($this->normalizeText($header), $target)) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Buscar la cantidad asociada a una columna pecuaria (generalmente la columna contigua "Cantidad (total)")
+     */
+    private function findCantidadForColumn($row, $headers, $baseColumnName)
+    {
+        if (!is_array($row) || empty($headers) || !$baseColumnName) {
+            return null;
+        }
+
+        $cantidad = null;
+
+        // 1. Intentar con la columna vecina a la base (la que está a la derecha)
+        $colIndex = $this->findColumnIndex($headers, $baseColumnName);
+        if ($colIndex !== null) {
+            $neighborIndex = $colIndex + 1;
+            if (isset($headers[$neighborIndex])) {
+                $neighborHeader = $headers[$neighborIndex];
+                if (isset($row[$neighborHeader]) && trim((string)$row[$neighborHeader]) !== '') {
+                    $cantidad = trim((string)$row[$neighborHeader]);
+                }
+            }
+        }
+
+        // 2. Fallback: buscar por nombres genéricos de cantidad
+        if ($cantidad === null) {
+            $generic = $this->findColumnValue($row, $headers, ['Cantidad (total)', 'Cantidad total', 'Cantidad']);
+            if ($generic !== null && trim((string)$generic) !== '') {
+                $cantidad = trim((string)$generic);
+            }
+        }
+
+        if ($cantidad !== null && is_numeric($cantidad)) {
+            return (int)$cantidad;
+        }
+
+        return null;
+    }
+
     private function normalizeCorregimiento($value)
     {
         if (!$value) return null;
@@ -1140,7 +1209,7 @@ class ReporteController extends Controller
                 $corregimiento = $this->normalizeCorregimiento($corregimientoValue) ?? 'Sin especificar';
                 $vereda = $this->findColumnValue($row, $headers, ['vereda', 'veredas', 'vereda_cz', 'Vereda', 'Vereda_CZ']) ?? 'Sin especificar';
 
-                // 1) Columnas binarias: contar si dicen "Si" (o cualquier valor distinto de "No")
+                // 1) Columnas binarias: contar si dicen "Si" y sumar la cantidad total de animales
                 foreach ($binaryColumns as $col) {
                     $valor = $this->findColumnValue($row, $headers, [$col]);
                     if ($valor === '') continue;
@@ -1148,14 +1217,22 @@ class ReporteController extends Controller
                     if ($valLower === 'no' || $valLower === '') continue;
 
                     $especie = $col; // la especie es el nombre de la columna
+
+                    // Buscar la cantidad total de animales para esta especie
+                    $cantidad = $this->findCantidadForColumn($row, $headers, $col);
+                    if ($cantidad === null || $cantidad <= 0) {
+                        // Fallback: si no hay cantidad numérica, contar al menos 1 registro
+                        $cantidad = 1;
+                    }
+                    
                     if (!isset($pecuariosData[$especie])) {
                         $pecuariosData[$especie] = [
                             'total' => 0,
                             'corregimientos' => []
                         ];
                     }
-                    $pecuariosData[$especie]['total']++;
-                    $totalPecuarios++;
+                    $pecuariosData[$especie]['total'] += $cantidad;
+                    $totalPecuarios += $cantidad;
 
                     if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento])) {
                         $pecuariosData[$especie]['corregimientos'][$corregimiento] = [
@@ -1163,11 +1240,11 @@ class ReporteController extends Controller
                             'veredas' => []
                         ];
                     }
-                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['total']++;
+                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['total'] += $cantidad;
                     if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda])) {
                         $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] = 0;
                     }
-                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda]++;
+                    $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] += $cantidad;
                 }
 
                 // 2) Columnas abiertas: agregar por cada valor específico (ej: Mojarra, Cachama)
@@ -1175,6 +1252,13 @@ class ReporteController extends Controller
                     $valor = $this->findColumnValue($row, $headers, [$col]);
                     if ($valor === '') continue;
                     $parts = array_map('trim', preg_split('/[,;]/', (string)$valor));
+
+                    // Cantidad asociada a esta columna abierta (ej. Acuicultura -> Cantidad total de peces)
+                    $cantidadBase = $this->findCantidadForColumn($row, $headers, $col);
+                    if ($cantidadBase === null || $cantidadBase <= 0) {
+                        $cantidadBase = 1;
+                    }
+
                     foreach ($parts as $rawVal) {
                         if ($rawVal === '') continue;
                         $valLower = strtolower($rawVal);
@@ -1196,8 +1280,8 @@ class ReporteController extends Controller
                                 'corregimientos' => []
                             ];
                         }
-                        $pecuariosData[$especie]['total']++;
-                        $totalPecuarios++;
+                        $pecuariosData[$especie]['total'] += $cantidadBase;
+                        $totalPecuarios += $cantidadBase;
 
                         if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento])) {
                             $pecuariosData[$especie]['corregimientos'][$corregimiento] = [
@@ -1205,11 +1289,11 @@ class ReporteController extends Controller
                                 'veredas' => []
                             ];
                         }
-                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['total']++;
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['total'] += $cantidadBase;
                         if (!isset($pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda])) {
                             $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] = 0;
                         }
-                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda]++;
+                        $pecuariosData[$especie]['corregimientos'][$corregimiento]['veredas'][$vereda] += $cantidadBase;
                     }
                 }
             }

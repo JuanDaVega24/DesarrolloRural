@@ -95,7 +95,8 @@
                         'Acuicultura'=> ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
                         'Gallos'=> ['Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'No'],
                         'Colmenas'=> ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
-     
+             'Equinos'=> ['Caballos', 'Burros', 'Mulos', 'No'],
+
 
 
                         ];
@@ -528,7 +529,9 @@
                                             if (str_contains($columnaLower, 'fuente de la electricidad') || str_contains($columnaLower, 'medios de comunicación') || str_contains($columnaLower, 'maquinaria') || str_contains($columnaLower, 'infraestructura') ||
                                             str_contains($columnaLower, 'cual') || str_contains($columnaLower, 'combustible y o fuente energética para cocinar') ||
                                             str_contains($columnaLower, 'que afectación o daño hubo en la unidad productiva') ||
-                                            str_contains($columnaLower, 'acuicultura') ||  str_contains($columnaLower, 'otras especies') ||  str_contains($columnaLower, 'que entidad lo gestiono')
+                                            str_contains($columnaLower, 'acuicultura') ||  str_contains($columnaLower, 'otras especies') ||  str_contains($columnaLower, 'que entidad lo gestiono') ||  str_contains($columnaLower, 'equinos')
+
+
                                             ) {
                                                 $tipoCampo = 'checkbox';
                                             } else {
@@ -900,13 +903,14 @@ document.addEventListener('DOMContentLoaded', function () {
         'Qué porcentaje representa los ingresos de esta actividad frente al total de los ingresos del hogar': ['0%', '10%-20%', '30%-40%', '50%-60%', '70%-80%', '90%-100%'],
         'Actividad productiva': ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
         'Afectación': ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
-        'Búfalos': ['Búfalos machos', 'Búfalos hembras', 'No'],
-        'Equinos': ['Equinos machos', 'Equinos hembras', 'No'],
-        'Ovinos': ['Ovinos machos', 'Ovinos hembras', 'No'],
-        'Caprinos': ['Caprinos machos', 'Caprinos hembras', 'No'],
-        'Acuicultura': ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
-        'Colmenas': ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
-      
+        
+             'Equinos': ['Caballos', 'Burros', 'Mulos', 'No'],
+        
+         'Acuicultura': ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
+                        'Gallos': ['Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'No'],
+                        'Colmenas': ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
+            
+
         
 
     };

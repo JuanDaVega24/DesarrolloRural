@@ -13,8 +13,8 @@ class CaracterizacionFormularioController extends Controller
      */
     public function show()
     {
-        $user = Auth::user();
-        if (!$user || (!($user->hasRole('Administrador')) && !($user->caracterizacion_permiso))) {
+         $user = Auth::user();
+        if (!$user || (strtolower((string)$user->role) !== 'administrador' && !($user->caracterizacion_permiso))) {
             abort(403);
         }
         // Obtener la caracterización global (ID=1)
