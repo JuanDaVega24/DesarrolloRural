@@ -312,6 +312,9 @@
         <button class="increase-font-size" aria-label="Aumentar letra" data-increase-limit="5">
             <span class="govco-font-maximize"></span>
         </button>
+         <button class="sign-language" aria-label="Lenguaje de señas" onclick="window.open('https://ticsinbarreras.mintic.gov.co/791/w3-propertyvalue-339742.html', '_blank')">
+                 <span class="govco-sign-language"></span>
+            </button>
     </div>
 </div>
 
@@ -372,6 +375,9 @@
     .barra-accesibilidad-govco button span.govco-font-maximize {
         background-image: url('{{ asset('assets/icons/font-maximize.svg') }}');
     }
+     .barra-accesibilidad-govco button span.govco-sign-language {
+            background-image: url(/assets/icons/channels-616_icon_centro_relevo.svg);
+        }
 
     .barra-accesibilidad-govco button::before {
         position: absolute;
@@ -411,6 +417,10 @@
     .barra-accesibilidad-govco button.increase-font-size::before {
         content: "Aumentar letra";
     }
+    .barra-accesibilidad-govco button.sign-language::before {
+            content: "Lenguaje de señas";
+        }
+
 
     .barra-accesibilidad-govco button:hover,
     .barra-accesibilidad-govco button:focus-visible {

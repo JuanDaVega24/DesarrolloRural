@@ -1195,13 +1195,13 @@ class ReporteController extends Controller
 
             // Columnas separadas según el formulario de CZ actual
             $binaryColumns = [
-                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)",
-                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices",
-                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales",
+                "Búfalos",  "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+                "Piscos o pavos", "Patos y gansos", "Codornices",
+                "Avestruces", "Cuyes", "Conejos", "Aves ornamentales",
                 "Caninos", "Felinos", "Tortuga / morrocoy"
             ];
             $openColumns = [
-                "Acuicultura", "Especie diferente a las anteriores"
+                "Acuicultura","Gallos", "Colmenas", "Equinos", "Especie diferente a las anteriores"
             ];
 
             foreach ($rows as $row) {

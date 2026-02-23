@@ -16,7 +16,7 @@
                             <span><strong class="text-dark">Columnas:</strong> {{ $proyecto->data['total_columns'] ?? 0 }}</span>
                             <span><strong class="text-dark">Filas:</strong> {{ $proyecto->data['total_rows'] ?? 0 }}</span>
                             @if(isset($proyecto->data['uploaded_at']))
-                                <span> <strong class="text-dark">Actualizado:</strong> {{ \Carbon\Carbon::parse($proyecto->data['uploaded_at'])->setTimezone('America/Bogota')->format('d/m/Y H:i:s') }}</span>
+                                <span> <strong class="text-dark">Actualizado:</strong> {{ \Carbon\Carbon::parse($proyecto->data['uploaded_at'])->format('d/m/Y H:i:s') }}</span>
                             @endif
                             @if(isset($proyecto->data['uploaded_by']))
                                 <span><i class="bi bi-person-circle text-dark"></i> <strong class="text-dark">Por:</strong> {{ $proyecto->data['uploaded_by'] }}</span>

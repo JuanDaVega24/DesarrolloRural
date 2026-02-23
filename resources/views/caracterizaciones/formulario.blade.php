@@ -93,7 +93,7 @@
         'Actividad productiva'=> ['Café', 'Cacao', 'Aguacate', 'Banano','Platano', 'Yuca','Mango','Mango Tomy','Citricos','Limón','Limón Tahiti', 'Naranja','Mandarina','Uva','Mora','Maíz', 'Guanabana','Guayaba', 'Zapote','Maracuya','Pitahaya', 'Hortalizas','Apio','Pimentón', 'Tomate', 'Frijol','Habichuela','Hierbas aromáticas','Otro'],
                         'Afectación'=> ['Plantas secas por estrés hidrico', 'Golpe de calor en animales','Perdida de la floración', 'Pasma o aborto de frutos', 'Escasez de alimento por perdida de forrajes', 'Plantas muertas por sequía', 'Muerte de animales', 'Pudrición por exceso de agua','Pérdida de cultivos por deslizamiento', 'Pérdida de animales por deslizamiento','Inundaciones', 'Pérdida de cultivos por heladas', 'Proliferación de enfermedades en animales por ola invernal', 'Proliferación de hongos y enfermedades fitosanitarias en plantas por ola invernal', 'Otro'],
                         'Acuicultura'=> ['Mojarra', 'Cachama','Bocachico', 'Trucha invernal', 'No'],
-                        'Gallos'=> ['Gallos, pollos y gallinas de traspatio','Gallos de pelea', 'No'],
+                        'Gallos'=> ['Gallos - pollos y gallinas de traspatio','Gallos de pelea', 'No'],
                         'Colmenas'=> ['Colmenas de abejas para producción de miel','Colmenas de abejas para produccción de polen','Colmenas de abejas para subproductos', 'Colmenas de abejas meliponas', 'No'],
              'Equinos'=> ['Caballos', 'Burros', 'Mulos', 'No'],
 

@@ -703,6 +703,9 @@ function backGoToUp() {
       </li>
       <li>
         <p>Horario de atención: Lunes a jueves de 7:30 a.m. a 12:00 m y de 1:00 p.m. a 5:00 p.m. / Viernes</p>
+       
+        
+
         <p>jornada continua en el horario de 7:00 a.m. a 4:00 p.m., con 30 minutos de descanso al medio día.</p>
       </li>
       <li>

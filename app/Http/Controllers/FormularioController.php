@@ -124,7 +124,7 @@ class FormularioController extends Controller
                 'uploaded_by' => Auth::user()->name,
                 'headers' => array_unique($headers), // Eliminar duplicados
                 'rows' => $rows,
-                'uploaded_at' => now()->toISOString(),
+                'uploaded_at' => now()->timezone('America/Bogota')->format('Y-m-d H:i:s'),
                 'total_rows' => count($rows),
                 'total_columns' => count($headers)
             ];

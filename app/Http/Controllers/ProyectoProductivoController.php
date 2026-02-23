@@ -66,7 +66,7 @@ class ProyectoProductivoController extends Controller
                 'uploaded_by' => Auth::user()->name,
                 'headers' => array_keys($validated['data']),
                 'rows' => [$validated['data']], // Un solo registro
-                'uploaded_at' => now()->toISOString(),
+                'uploaded_at' => now()->timezone('America/Bogota')->format('Y-m-d H:i:s'),
                 'total_rows' => 1,
                 'total_columns' => count($validated['data'])
             ];
@@ -247,7 +247,7 @@ class ProyectoProductivoController extends Controller
                 'uploaded_by' => Auth::user()->name,
                 'headers' => $headers,
                 'rows' => $processedRows,
-                'uploaded_at' => now()->toISOString(),
+                'uploaded_at' => now()->timezone('America/Bogota')->format('Y-m-d H:i:s'),
                 'total_rows' => count($processedRows),
                 'total_columns' => count($headers)
             ];
@@ -1280,7 +1280,7 @@ class ProyectoProductivoController extends Controller
             $familiaresInfo = $this->extractFamiliaresInfo($row, $headers, $documento);
 
             // Obtener nombre del principal
-            $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
+            $principalNombre = $this->findColumnValue($row, $headers, ['Nombre Completo', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo']);
             if (empty($principalNombre)) {
                 $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
                 $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
@@ -1430,288 +1430,293 @@ class ProyectoProductivoController extends Controller
 
     /**
      * Extraer información de familiares de la fila de caracterización
+     * Nueva estrategia: Buscar nombre principal y familiares por separado, emparejando por sufijo
      */
     private function extractFamiliaresInfo($row, $headers, $mainDocumentValue = null)
     {
         $familiares = [];
         
-        // Iterar posibles índices de familiares (1 a 20)
-        // Según indicación:
-        // Familiar 1: "Nombres y apellidos1"
-        // Familiar 2: "Nombres y apellidos2"
+        // 1. Buscar el nombre principal (encuestado)
+        $nombrePrincipal = $this->encontrarNombrePrincipal($row, $headers);
+        
+        // 2. Buscar nombres, documentos y tipos de familiares emparejando por sufijo numérico
         for ($i = 1; $i <= 20; $i++) {
             $familiar = [];
             
-            // 1. Buscar NOMBRE del familiar i
-            // Patrones: "Nombres y apellidosX", "Nombres y apellidos X", "Nombre familiar X"
-            $namePatterns = [
+            // Buscar nombre del familiar i
+            $nombre = $this->encontrarNombreFamiliarPorIndice($row, $headers, $i);
+            
+            // Buscar documento del familiar i
+            $documento = $this->encontrarDocumentoFamiliarPorIndice($row, $headers, $i, $mainDocumentValue);
+            
+            // Buscar tipo de documento del familiar i
+            $tipo = $this->encontrarTipoDocumentoFamiliarPorIndice($row, $headers, $i);
+            
+            // Solo agregar si hay al menos nombre o documento
+            if (!empty($nombre) || !empty($documento)) {
+                $familiar['nombre'] = $nombre;
+                $familiar['tipo'] = $tipo;
+                $familiar['numero'] = $documento;
+                
+                $familiares[] = $familiar;
+            }
+        }
+
+        // DEBUG: Información detallada para identificar el problema
+        Log::debug("DEBUG Nueva Estrategia Familiares:", [
+            'nombre_principal' => $nombrePrincipal,
+            'familiares_resultado' => $familiares,
+            'documento_encuestado' => $mainDocumentValue,
+            'headers_disponibles' => $headers,
+            'row_data' => $row
+        ]);
+
+        return $familiares;
+    }
+
+    /**
+     * Buscar nombre de familiar por índice específico
+     */
+    private function encontrarNombreFamiliarPorIndice($row, $headers, $indice)
+    {
+        $patterns = [
+            "Nombres y apellidos{$indice}", "Nombres y apellidos {$indice}",
+            "Nombres y apellidos familiar {$indice}", "Nombre familiar {$indice}",
+            "Nombre{$indice}", "Nombre {$indice}"
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value)) {
+                    return $value;
+                }
+            }
+        }
+        
+        return '';
+    }
+
+    /**
+     * Buscar documento de familiar por índice específico
+     */
+    private function encontrarDocumentoFamiliarPorIndice($row, $headers, $indice, $mainDocumentValue = null)
+    {
+        $patterns = [
+            "Número de documento de identidad{$indice}", "Número de documento de identidad {$indice}",
+            "Numero de documento de identidad{$indice}", "Numero de documento de identidad {$indice}",
+            "Número de documento familiar {$indice}", "Numero de documento familiar {$indice}"
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value) && is_numeric($value)) {
+                    // Excluir el documento del encuestado
+                    if ($mainDocumentValue && (string)$value === (string)$mainDocumentValue) {
+                        return '';
+                    }
+                    return $value;
+                }
+            }
+        }
+        
+        return '';
+    }
+
+    /**
+     * Buscar tipo de documento de familiar por índice específico
+     */
+    private function encontrarTipoDocumentoFamiliarPorIndice($row, $headers, $indice)
+    {
+        $patterns = [
+            "Tipo de documento familiar {$indice}",
+            "Tipo de documento{$indice}", "Tipo de documento {$indice}",
+            "Tipo de documento de identidad{$indice}", "Tipo de documento de identidad {$indice}"
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value)) {
+                    return $value;
+                }
+            }
+        }
+        
+        return '';
+    }
+
+    /**
+     * Buscar el nombre principal (encuestado) en la fila
+     */
+    private function encontrarNombrePrincipal($row, $headers)
+    {
+        // Patrones para nombre principal
+        $namePatterns = [
+            'Nombre Completo', 'nombre completo',
+            'Nombre completo', 'nombre Completo',
+            'Nombres y apellidos', 'nombres y apellidos',
+            'Nombre', 'nombre'
+        ];
+        
+        foreach ($namePatterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value)) {
+                    return $value;
+                }
+            }
+        }
+        
+        return '';
+    }
+
+    /**
+     * Buscar todos los nombres de familiares en la fila
+     */
+    private function encontrarTodosLosNombresFamiliares($row, $headers)
+    {
+        $nombres = [];
+        
+        // Patrones para nombres de familiares
+        $namePatterns = [
+            'Nombres y apellidos', 'nombres y apellidos',
+            'Nombre familiar', 'nombre familiar',
+            'Nombre', 'nombre'
+        ];
+        
+        // Buscar nombres con sufijos numéricos (1, 2, 3, etc.)
+        for ($i = 1; $i <= 20; $i++) {
+            $patterns = [
                 "Nombres y apellidos{$i}", "Nombres y apellidos {$i}",
                 "Nombres y apellidos familiar {$i}", "Nombre familiar {$i}",
                 "Nombre{$i}", "Nombre {$i}"
             ];
             
-            // Para el primer familiar, a veces no tiene el sufijo "1"
-            if ($i === 1) {
-                $namePatterns[] = "Nombres y apellidos familiar";
-                $namePatterns[] = "Nombre familiar";
+            foreach ($patterns as $pattern) {
+                if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                    $value = trim((string)$row[$pattern]);
+                    if (!empty($value)) {
+                        $nombres[] = $value;
+                        break; // Encontramos el nombre para este índice
+                    }
+                }
             }
-            
-            $nombre = $this->findColumnValue($row, $headers, $namePatterns);
-            
-            // Si no hay nombre, saltamos este índice (asumiendo que el nombre es obligatorio para que exista el familiar)
-            if (empty($nombre)) {
-                continue;
+        }
+        
+        // Buscar nombres sin sufijos (para compatibilidad)
+        foreach ($namePatterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value)) {
+                    $nombres[] = $value;
+                }
             }
-            $familiar['nombre'] = $nombre;
+        }
+        
+        return $nombres;
+    }
 
-            // 2. Buscar TIPO DE DOCUMENTO del familiar i
-            // Convención:
-            //   Principal: "Tipo de documento1"
-            //   Familiar 1: "Tipo de documento2"
-            //   Familiar 2: "Tipo de documento3"
-            //   ...
-            $typeIndex = $i + 1;
-            $typePatterns = [
+    /**
+     * Buscar todos los documentos de familiares en la fila
+     */
+    private function encontrarTodosLosDocumentosFamiliares($row, $headers, $mainDocumentValue = null)
+    {
+        $documentos = [];
+        
+        // Patrones para documentos de familiares
+        $docPatterns = [
+            'Numero de documento de identidad', 'numero de documento de identidad',
+            'Número de documento de identidad', 'número de documento de identidad',
+            'Numero de documento familiar', 'numero de documento familiar',
+            'Número de documento familiar', 'número de documento familiar'
+        ];
+        
+        // Buscar documentos con sufijos numéricos (1, 2, 3, etc.)
+        for ($i = 1; $i <= 20; $i++) {
+            $patterns = [
+                "Número de documento de identidad{$i}", "Número de documento de identidad {$i}",
+                "Numero de documento de identidad{$i}", "Numero de documento de identidad {$i}",
+                "Número de documento familiar {$i}", "Numero de documento familiar {$i}"
+            ];
+            
+            foreach ($patterns as $pattern) {
+                if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                    $value = trim((string)$row[$pattern]);
+                    if (!empty($value) && is_numeric($value)) {
+                        // Excluir el documento del encuestado
+                        if ($mainDocumentValue && (string)$value === (string)$mainDocumentValue) {
+                            continue;
+                        }
+                        $documentos[] = $value;
+                        break; // Encontramos el documento para este índice
+                    }
+                }
+            }
+        }
+        
+        // Buscar documentos sin sufijos (para compatibilidad)
+        foreach ($docPatterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value) && is_numeric($value)) {
+                    // Excluir el documento del encuestado
+                    if ($mainDocumentValue && (string)$value === (string)$mainDocumentValue) {
+                        continue;
+                    }
+                    $documentos[] = $value;
+                }
+            }
+        }
+        
+        return $documentos;
+    }
+
+    /**
+     * Buscar todos los tipos de documento de familiares en la fila
+     */
+    private function encontrarTodosLosTiposDocumentoFamiliares($row, $headers)
+    {
+        $tipos = [];
+        
+        // Patrones para tipos de documento de familiares
+        $typePatterns = [
+            'Tipo de documento', 'tipo de documento',
+            'Tipo de documento de identidad', 'tipo de documento de identidad'
+        ];
+        
+        // Buscar tipos con sufijos numéricos (2, 3, 4, etc. para familiares)
+        // El principal tiene "Tipo de documento1", los familiares tienen "Tipo de documento2", "Tipo de documento3", etc.
+        for ($i = 2; $i <= 21; $i++) {
+            $patterns = [
                 "Tipo de documento familiar {$i}",
-                "Tipo de documento{$typeIndex}", "Tipo de documento {$typeIndex}",
-                "Tipo de documento de identidad{$typeIndex}", "Tipo de documento de identidad {$typeIndex}",
-                // Compatibilidad con esquemas anteriores
                 "Tipo de documento{$i}", "Tipo de documento {$i}",
                 "Tipo de documento de identidad{$i}", "Tipo de documento de identidad {$i}"
             ];
-            if ($i === 1) {
-                $typePatterns[] = "Tipo de documento familiar";
-                // Algunas bases usan la columna sin sufijo para el primer familiar
-                $typePatterns[] = "Tipo de documento";
-            }
             
-            $familiar['tipo'] = $this->findColumnValue($row, $headers, $typePatterns);
-
-            // 3. Buscar NÚMERO DE DOCUMENTO del familiar i
-            // Convención:
-            //   Caracterizado (principal): "Numero de documento de identidad"
-            //   Familiar 1: "Numero de documento de identidad1"
-            //   Familiar 2: "Numero de documento de identidad2"
-            //   ...
-            $numeroIndex = (string)$i;
-            $numPatterns = [
-                "Número de documento de identidad{$numeroIndex}", "Número de documento de identidad {$numeroIndex}",
-                "Numero de documento de identidad{$numeroIndex}", "Numero de documento de identidad {$numeroIndex}",
-                // Compatibilidad con variantes usadas en algunas bases
-                "Número de documento familiar {$i}", "Numero de documento familiar {$i}",
-            ];
-
-            // Para el primer familiar, excluir el documento del encuestado
-            // Además, excluir específicamente el campo "Numero de documento de identidad del encuestado"
-            $excludeValues = $mainDocumentValue ? [$mainDocumentValue] : [];
-            
-            // Buscar el valor del campo del documento del encuestado (principal) y excluirlo también
-            $encuestadoDocumentColumn = $this->findColumnValue($row, $headers, [
-                'Numero de documento de identidad',
-                'Número de documento de identidad',
-                'Numero de documento de identidad del encuestado',
-                'Número de documento de identidad del encuestado'
-            ]);
-            if (!empty($encuestadoDocumentColumn)) {
-                $excludeValues[] = $encuestadoDocumentColumn;
-            }
-            
-            // Buscar el valor del campo "Tipo de documento1" y excluirlo también (para evitar que tome el documento del encuestado)
-            $tipoDocumentoMain = $this->findColumnValue($row, $headers, ['Tipo de documento1', 'tipo de documento1']);
-            if (!empty($tipoDocumentoMain)) {
-                $excludeValues[] = $tipoDocumentoMain;
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos" (principal) y excluirlo también
-            $principalNombre = $this->findColumnValue($row, $headers, ['Nombres y apellidos', 'nombres y apellidos', 'nombre', 'nombres', 'Nombre', 'Nombres', 'nombre completo', 'Nombre Completo']);
-            if (!empty($principalNombre)) {
-                $excludeValues[] = $principalNombre;
-            }
-            
-            // Buscar el valor del campo "primer nombre" y excluirlo también
-            $primerNombre = $this->findColumnValue($row, $headers, ['primer nombre', 'Primer Nombre']);
-            if (!empty($primerNombre)) {
-                $excludeValues[] = $primerNombre;
-            }
-            
-            // Buscar el valor del campo "primer apellido" y excluirlo también
-            $primerApellido = $this->findColumnValue($row, $headers, ['primer apellido', 'Primer Apellido']);
-            if (!empty($primerApellido)) {
-                $excludeValues[] = $primerApellido;
-            }
-            
-            // Buscar el valor del campo "segundo apellido" y excluirlo también
-            $segundoApellido = $this->findColumnValue($row, $headers, ['segundo apellido', 'Segundo Apellido']);
-            if (!empty($segundoApellido)) {
-                $excludeValues[] = $segundoApellido;
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos1" (para el primer familiar) y excluirlo también
-            if ($i === 1) {
-                $nombreFamiliar1 = $this->findColumnValue($row, $headers, ['Nombres y apellidos1', 'nombres y apellidos1', 'Nombres y apellidos 1', 'nombres y apellidos 1']);
-                if (!empty($nombreFamiliar1)) {
-                    $excludeValues[] = $nombreFamiliar1;
+            foreach ($patterns as $pattern) {
+                if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                    $value = trim((string)$row[$pattern]);
+                    if (!empty($value)) {
+                        $tipos[] = $value;
+                        break; // Encontramos el tipo para este índice
+                    }
                 }
             }
-            
-            // Buscar el valor del campo "Nombres y apellidos2" (para el segundo familiar) y excluirlo también
-            if ($i === 2) {
-                $nombreFamiliar2 = $this->findColumnValue($row, $headers, ['Nombres y apellidos2', 'nombres y apellidos2', 'Nombres y apellidos 2', 'nombres y apellidos 2']);
-                if (!empty($nombreFamiliar2)) {
-                    $excludeValues[] = $nombreFamiliar2;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos3" (para el tercer familiar) y excluirlo también
-            if ($i === 3) {
-                $nombreFamiliar3 = $this->findColumnValue($row, $headers, ['Nombres y apellidos3', 'nombres y apellidos3', 'Nombres y apellidos 3', 'nombres y apellidos 3']);
-                if (!empty($nombreFamiliar3)) {
-                    $excludeValues[] = $nombreFamiliar3;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos4" (para el cuarto familiar) y excluirlo también
-            if ($i === 4) {
-                $nombreFamiliar4 = $this->findColumnValue($row, $headers, ['Nombres y apellidos4', 'nombres y apellidos4', 'Nombres y apellidos 4', 'nombres y apellidos 4']);
-                if (!empty($nombreFamiliar4)) {
-                    $excludeValues[] = $nombreFamiliar4;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos5" (para el quinto familiar) y excluirlo también
-            if ($i === 5) {
-                $nombreFamiliar5 = $this->findColumnValue($row, $headers, ['Nombres y apellidos5', 'nombres y apellidos5', 'Nombres y apellidos 5', 'nombres y apellidos 5']);
-                if (!empty($nombreFamiliar5)) {
-                    $excludeValues[] = $nombreFamiliar5;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos6" (para el sexto familiar) y excluirlo también
-            if ($i === 6) {
-                $nombreFamiliar6 = $this->findColumnValue($row, $headers, ['Nombres y apellidos6', 'nombres y apellidos6', 'Nombres y apellidos 6', 'nombres y apellidos 6']);
-                if (!empty($nombreFamiliar6)) {
-                    $excludeValues[] = $nombreFamiliar6;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos7" (para el séptimo familiar) y excluirlo también
-            if ($i === 7) {
-                $nombreFamiliar7 = $this->findColumnValue($row, $headers, ['Nombres y apellidos7', 'nombres y apellidos7', 'Nombres y apellidos 7', 'nombres y apellidos 7']);
-                if (!empty($nombreFamiliar7)) {
-                    $excludeValues[] = $nombreFamiliar7;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos8" (para el octavo familiar) y excluirlo también
-            if ($i === 8) {
-                $nombreFamiliar8 = $this->findColumnValue($row, $headers, ['Nombres y apellidos8', 'nombres y apellidos8', 'Nombres y apellidos 8', 'nombres y apellidos 8']);
-                if (!empty($nombreFamiliar8)) {
-                    $excludeValues[] = $nombreFamiliar8;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos9" (para el noveno familiar) y excluirlo también
-            if ($i === 9) {
-                $nombreFamiliar9 = $this->findColumnValue($row, $headers, ['Nombres y apellidos9', 'nombres y apellidos9', 'Nombres y apellidos 9', 'nombres y apellidos 9']);
-                if (!empty($nombreFamiliar9)) {
-                    $excludeValues[] = $nombreFamiliar9;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos10" (para el décimo familiar) y excluirlo también
-            if ($i === 10) {
-                $nombreFamiliar10 = $this->findColumnValue($row, $headers, ['Nombres y apellidos10', 'nombres y apellidos10', 'Nombres y apellidos 10', 'nombres y apellidos 10']);
-                if (!empty($nombreFamiliar10)) {
-                    $excludeValues[] = $nombreFamiliar10;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos11" (para el undécimo familiar) y excluirlo también
-            if ($i === 11) {
-                $nombreFamiliar11 = $this->findColumnValue($row, $headers, ['Nombres y apellidos11', 'nombres y apellidos11', 'Nombres y apellidos 11', 'nombres y apellidos 11']);
-                if (!empty($nombreFamiliar11)) {
-                    $excludeValues[] = $nombreFamiliar11;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos12" (para el duodécimo familiar) y excluirlo también
-            if ($i === 12) {
-                $nombreFamiliar12 = $this->findColumnValue($row, $headers, ['Nombres y apellidos12', 'nombres y apellidos12', 'Nombres y apellidos 12', 'nombres y apellidos 12']);
-                if (!empty($nombreFamiliar12)) {
-                    $excludeValues[] = $nombreFamiliar12;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos13" (para el decimotercer familiar) y excluirlo también
-            if ($i === 13) {
-                $nombreFamiliar13 = $this->findColumnValue($row, $headers, ['Nombres y apellidos13', 'nombres y apellidos13', 'Nombres y apellidos 13', 'nombres y apellidos 13']);
-                if (!empty($nombreFamiliar13)) {
-                    $excludeValues[] = $nombreFamiliar13;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos14" (para el decimocuarto familiar) y excluirlo también
-            if ($i === 14) {
-                $nombreFamiliar14 = $this->findColumnValue($row, $headers, ['Nombres y apellidos14', 'nombres y apellidos14', 'Nombres y apellidos 14', 'nombres y apellidos 14']);
-                if (!empty($nombreFamiliar14)) {
-                    $excludeValues[] = $nombreFamiliar14;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos15" (para el decimoquinto familiar) y excluirlo también
-            if ($i === 15) {
-                $nombreFamiliar15 = $this->findColumnValue($row, $headers, ['Nombres y apellidos15', 'nombres y apellidos15', 'Nombres y apellidos 15', 'nombres y apellidos 15']);
-                if (!empty($nombreFamiliar15)) {
-                    $excludeValues[] = $nombreFamiliar15;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos16" (para el decimosexto familiar) y excluirlo también
-            if ($i === 16) {
-                $nombreFamiliar16 = $this->findColumnValue($row, $headers, ['Nombres y apellidos16', 'nombres y apellidos16', 'Nombres y apellidos 16', 'nombres y apellidos 16']);
-                if (!empty($nombreFamiliar16)) {
-                    $excludeValues[] = $nombreFamiliar16;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos17" (para el decimoséptimo familiar) y excluirlo también
-            if ($i === 17) {
-                $nombreFamiliar17 = $this->findColumnValue($row, $headers, ['Nombres y apellidos17', 'nombres y apellidos17', 'Nombres y apellidos 17', 'nombres y apellidos 17']);
-                if (!empty($nombreFamiliar17)) {
-                    $excludeValues[] = $nombreFamiliar17;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos18" (para el decimoctavo familiar) y excluirlo también
-            if ($i === 18) {
-                $nombreFamiliar18 = $this->findColumnValue($row, $headers, ['Nombres y apellidos18', 'nombres y apellidos18', 'Nombres y apellidos 18', 'nombres y apellidos 18']);
-                if (!empty($nombreFamiliar18)) {
-                    $excludeValues[] = $nombreFamiliar18;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos19" (para el decimonoveno familiar) y excluirlo también
-            if ($i === 19) {
-                $nombreFamiliar19 = $this->findColumnValue($row, $headers, ['Nombres y apellidos19', 'nombres y apellidos19', 'Nombres y apellidos 19', 'nombres y apellidos 19']);
-                if (!empty($nombreFamiliar19)) {
-                    $excludeValues[] = $nombreFamiliar19;
-                }
-            }
-            
-            // Buscar el valor del campo "Nombres y apellidos20" (para el vigésimo familiar) y excluirlo también
-            if ($i === 20) {
-                $nombreFamiliar20 = $this->findColumnValue($row, $headers, ['Nombres y apellidos20', 'nombres y apellidos20', 'Nombres y apellidos 20', 'nombres y apellidos 20']);
-                if (!empty($nombreFamiliar20)) {
-                    $excludeValues[] = $nombreFamiliar20;
-                }
-            }
-            
-            $familiar['numero'] = $this->findColumnValue($row, $headers, $numPatterns, $excludeValues);
-
-            $familiares[] = $familiar;
         }
-
-        return $familiares;
+        
+        // Buscar tipos sin sufijos (para compatibilidad)
+        foreach ($typePatterns as $pattern) {
+            if (in_array($pattern, $headers) && isset($row[$pattern])) {
+                $value = trim((string)$row[$pattern]);
+                if (!empty($value)) {
+                    $tipos[] = $value;
+                }
+            }
+        }
+        
+        return $tipos;
     }
 
     /**

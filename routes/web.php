@@ -146,7 +146,7 @@ Route::middleware([
         Route::get('caracterizaciones/{caracterizacion}/show', [CaracterizacionController::class, 'show'])
             ->name('caracterizaciones.show');
 
-        Route::get('caracterizaciones/{caracterizacion}/export-excel', [CaracterizacionController::class, 'exportExcel'])
+        Route::match(['GET', 'POST'], 'caracterizaciones/{caracterizacion}/export-excel', [CaracterizacionController::class, 'exportExcel'])
             ->name('caracterizaciones.export-excel');
 
         // Ruta para mostrar caracterizaciones por año

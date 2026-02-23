@@ -157,7 +157,7 @@ class CaracterizacionFormularioController extends Controller
                 'uploaded_by' => $dataActual['uploaded_by'] ?? Auth::user()->name,
                 'headers' => $headers,
                 'rows' => $todosLosRegistros,
-                'uploaded_at' => $dataActual['uploaded_at'] ?? now()->toISOString(),
+                'uploaded_at' => $dataActual['uploaded_at'] ?? now()->timezone('America/Bogota')->format('Y-m-d H:i:s'),
                 'total_rows' => count($todosLosRegistros),
                 'total_columns' => count($headers)
             ];

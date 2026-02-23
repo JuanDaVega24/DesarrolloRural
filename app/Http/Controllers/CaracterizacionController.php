@@ -216,7 +216,7 @@ class CaracterizacionController extends Controller
                 'uploaded_by' => Auth::user()->name,
                 'headers' => $headers,
                 'rows' => $processedRows,
-                'uploaded_at' => now()->toISOString(),
+                'uploaded_at' => now()->timezone('America/Bogota')->format('Y-m-d H:i:s'),
                 'total_rows' => count($processedRows),
                 'total_columns' => count($headers)
             ];
@@ -288,16 +288,22 @@ class CaracterizacionController extends Controller
         $headers = $data['headers'];
         $rows = $data['rows'];
 
-        // Aplicar filtros de columna si existen
-        $activeFilters = $request->get('filters', []);
+        // Obtener filtros del cuerpo de la solicitud (POST) o de la URL (GET)
+        $activeFilters = $request->input('filters', []);
         if (!empty($activeFilters)) {
             $rows = $this->applyFiltersToRows($rows, $headers, $activeFilters);
         }
 
-        // Aplicar filtro de búsqueda de texto si existe
-        $searchTerm = $request->get('search', '');
+        // Obtener filtro de búsqueda del cuerpo de la solicitud o de la URL
+        $searchTerm = $request->input('search', '');
         if (!empty($searchTerm)) {
             $rows = $this->applySearchFilter($rows, $searchTerm);
+        }
+
+        // Obtener filtros agrupados del cuerpo de la solicitud o de la URL
+        $activeFiltersGroups = $this->parseGroupFiltersFromRequest($request);
+        if (!empty($activeFiltersGroups)) {
+            $rows = $this->applyGroupFiltersToRows($rows, $headers, $activeFiltersGroups);
         }
 
         // Convertir filas asociativas a arrays indexados en el mismo orden que los headers
@@ -311,7 +317,8 @@ class CaracterizacionController extends Controller
         }
 
         // Crear nombre de archivo con indicador de filtros/búsqueda
-        $filterSuffix = (!empty($activeFilters) || !empty($searchTerm)) ? '_filtrado' : '';
+        $hasFilters = !empty($activeFilters) || !empty($searchTerm) || !empty($activeFiltersGroups);
+        $filterSuffix = $hasFilters ? '_filtrado' : '';
         $fileName = $caracterizacion->nombre . $filterSuffix . '_' . date('Y-m-d_H-i-s') . '.xlsx';
 
         return Excel::download(new class($headers, $processedRows) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
@@ -493,5 +500,150 @@ class CaracterizacionController extends Controller
         }
 
         return $filterData;
+    }
+
+    /**
+     * Parsear filtros agrupados desde el request (para exportación)
+     */
+    private function parseGroupFiltersFromRequest(Request $request)
+    {
+        $activeFiltersGroups = [];
+
+        // Obtener filtros de cultivo
+        $cultivoValues = $request->get('filters[cultivo]', []);
+        if (!empty($cultivoValues)) {
+            $activeFiltersGroups['cultivo'] = [
+                'columns' => $this->getColumnsByPattern($request->get('headers', []), '/^tipo de cultivo(?:\s*\d+)?$/i'),
+                'values' => is_array($cultivoValues) ? $cultivoValues : [$cultivoValues]
+            ];
+        }
+
+        // Obtener filtros de producto
+        $productoValues = $request->get('filters[producto]', []);
+        if (!empty($productoValues)) {
+            $activeFiltersGroups['producto'] = [
+                'columns' => $this->getColumnsByPattern($request->get('headers', []), '/^producto(?:\s*\d+)?$/i'),
+                'values' => is_array($productoValues) ? $productoValues : [$productoValues]
+            ];
+        }
+
+        // Obtener filtros de especie (pecuaria)
+        $especieValues = $request->get('filters[especie]', []);
+        if (!empty($especieValues)) {
+            $activeFiltersGroups['especie'] = [
+                'columns' => $this->getPecuariaColumns($request->get('headers', [])),
+                'values' => is_array($especieValues) ? $especieValues : [$especieValues]
+            ];
+        }
+
+        return $activeFiltersGroups;
+    }
+
+    /**
+     * Obtener columnas que coincidan con un patrón
+     */
+    private function getColumnsByPattern($headers, $pattern)
+    {
+        $columns = [];
+        foreach ($headers as $header) {
+            if (preg_match($pattern, strtolower(trim($header)))) {
+                $columns[] = $header;
+            }
+        }
+        return $columns;
+    }
+
+    /**
+     * Obtener columnas pecuarias específicas
+     */
+    private function getPecuariaColumns($headers)
+    {
+        $pecuariaColumns = [
+            "Acuicultura", "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+            "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", "Avestruces", 
+            "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", "Caninos", "Felinos", 
+            "Tortuga / morrocoy", "Especie diferente a las anteriores"
+        ];
+        
+        $columns = [];
+        foreach ($headers as $header) {
+            if (in_array(trim($header), $pecuariaColumns)) {
+                $columns[] = $header;
+            }
+        }
+        return $columns;
+    }
+
+    /**
+     * Aplicar filtros agrupados a las filas de datos
+     */
+    private function applyGroupFiltersToRows($rows, $headers, $activeFiltersGroups)
+    {
+        if (empty($activeFiltersGroups)) {
+            return $rows;
+        }
+
+        $filteredRows = [];
+
+        foreach ($rows as $row) {
+            $shouldInclude = false;
+
+            foreach ($activeFiltersGroups as $groupKey => $group) {
+                $columns = $group['columns'] ?? [];
+                $values = $group['values'] ?? [];
+
+                if (empty($columns)) continue;
+
+                // Para especies pecuarias, manejar columnas binarias (Si/No) y no binarias
+                if ($groupKey === 'especie') {
+                    $foundMatch = false;
+                    
+                    foreach ($columns as $column) {
+                        $cellValue = trim($row[$column] ?? '');
+                        
+                        // Verificar si es una columna binaria (contiene "Si")
+                        if (strtolower($cellValue) === 'si') {
+                            // Para columnas binarias, verificar si el nombre de la columna está en los valores seleccionados
+                            if (in_array($column, $values)) {
+                                $foundMatch = true;
+                                break;
+                            }
+                        } else {
+                            // Para columnas no binarias, verificar si el valor está en los valores seleccionados
+                            if (!empty($cellValue) && in_array($cellValue, $values)) {
+                                $foundMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if ($foundMatch) {
+                        $shouldInclude = true;
+                        break; // Con que cumpla un filtro de especie, es suficiente
+                    }
+                } else {
+                    // Para otros grupos (cultivo, producto), aplicar OR entre columnas
+                    $foundMatch = false;
+                    foreach ($columns as $column) {
+                        $cellValue = trim($row[$column] ?? '');
+                        if (!empty($cellValue) && in_array($cellValue, $values)) {
+                            $foundMatch = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($foundMatch) {
+                        $shouldInclude = true;
+                        break; // Con que cumpla un filtro de grupo, es suficiente
+                    }
+                }
+            }
+
+            if ($shouldInclude) {
+                $filteredRows[] = $row;
+            }
+        }
+
+        return $filteredRows;
     }
 }

@@ -302,14 +302,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isPecuariaGroup) {
             // Columnas que contienen datos binarios (Si/No)
             const binaryColumns = [
-                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
-                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", 
-                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", 
+                "Búfalos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+                 "Piscos o pavos", "Patos y gansos", "Codornices", 
+                "Avestruces", "Cuyes", "Conejos", "Aves ornamentales", 
                 "Caninos", "Felinos", "Tortuga / morrocoy"
             ];
             
             // Columnas que NO son binarias (contienen valores específicos)
-            const nonBinaryColumns = ["Acuicultura", "Especie diferente a las anteriores"];
+            const nonBinaryColumns = ["Acuicultura", "Equinos", "Gallos","Colmenas", "Especie diferente a las anteriores"];
             
             // Crear opciones para el dropdown
             let options = [];
@@ -438,14 +438,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isPecuariaGroup) {
             // Columnas que contienen datos binarios (Si/No)
             const binaryColumns = [
-                "Búfalos", "Equinos", "Ovinos", "Caprinos", "Cerdos (traspatio)", 
-                "Gallos", "Piscos o pavos", "Patos y gansos", "Codornices", 
-                "Avestruces", "Cuyes", "Conejos", "Colmenas", "Aves ornamentales", 
+                "Búfalos",  "Ovinos", "Caprinos", "Cerdos (traspatio)", 
+                 "Piscos o pavos", "Patos y gansos", "Codornices", 
+                "Avestruces", "Cuyes", "Conejos", "Aves ornamentales", 
                 "Caninos", "Felinos", "Tortuga / morrocoy"
             ];
             
             // Columnas que NO son binarias (contienen valores específicos)
-            const nonBinaryColumns = ["Acuicultura", "Especie diferente a las anteriores"];
+            const nonBinaryColumns = ["Acuicultura", "Equinos", "Gallos", "Colmenas","Especie diferente a las anteriores"];
             
             // Crear opciones para el dropdown
             let options = [];
@@ -716,42 +716,135 @@ document.addEventListener('DOMContentLoaded', function() {
     // Exportar a Excel
     if (exportBtn) {
         exportBtn.addEventListener('click', function() {
-            // Construir URL con filtros activos del cliente
-            let exportUrl = Config.exportUrl;
-            const params = new URLSearchParams();
+            // Mostrar mensaje de carga
+            const originalHTML = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+            exportBtn.disabled = true;
 
-            // Usar filtros activos del cliente-side
-            for (const [column, values] of Object.entries(activeFilters)) {
-                if (values && values.length > 0) {
-                    values.forEach(value => {
-                        params.append(`filters[${column}][]`, value);
-                    });
+            try {
+                // Crear contenido Excel con los datos filtrados
+                exportToExcel();
+                
+                // Restaurar botón después de un pequeño delay para que se vea el spinner
+                setTimeout(() => {
+                    exportBtn.innerHTML = originalHTML;
+                    exportBtn.disabled = false;
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error en exportación:', error);
+                alert('Error al exportar los datos. Por favor, intente de nuevo.');
+                
+                // Restaurar botón
+                exportBtn.innerHTML = originalHTML;
+                exportBtn.disabled = false;
+            }
+        });
+    }
+
+    // Función para exportar a Excel usando SheetJS
+    function exportToExcel() {
+        // Verificar si SheetJS está disponible
+        if (typeof XLSX === 'undefined') {
+            // Si no está disponible, intentar cargarla dinámicamente
+            loadSheetJS().then(() => {
+                exportToExcel();
+            }).catch(() => {
+                alert('No se pudo cargar la librería de exportación. Por favor, intente de nuevo.');
+            });
+            return;
+        }
+
+        // Encabezados
+        const headers = Config.headers || [];
+        
+        // Datos filtrados
+        const dataToExport = filteredData.length > 0 ? filteredData : allData;
+        
+        // Crear array de arrays para SheetJS
+        const worksheetData = [];
+        
+        // Añadir encabezados
+        worksheetData.push(headers);
+        
+        // Añadir datos
+        dataToExport.forEach(row => {
+            const rowValues = headers.map(header => {
+                let value = row[header] || '';
+                
+                // Convertir valores a string y manejar casos especiales
+                if (value === null || value === undefined) {
+                    return '';
+                }
+                
+                // Si es una URL válida, mantenerla como string
+                if (typeof value === 'string' && value.startsWith('http')) {
+                    return value;
+                }
+                
+                return String(value);
+            });
+            
+            worksheetData.push(rowValues);
+        });
+
+        // Crear workbook y worksheet
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+        // Ajustar el ancho de las columnas automáticamente
+        const columnWidths = [];
+        for (let i = 0; i < headers.length; i++) {
+            let maxWidth = headers[i].length;
+            
+            // Calcular el ancho máximo basado en los datos
+            for (let j = 0; j < dataToExport.length; j++) {
+                const cellValue = String(dataToExport[j][headers[i]] || '');
+                const cellWidth = cellValue.length;
+                if (cellWidth > maxWidth) {
+                    maxWidth = cellWidth;
                 }
             }
+            
+            // Limitar el ancho máximo a 50 caracteres
+            columnWidths.push({ wch: Math.min(maxWidth, 50) });
+        }
+        
+        worksheet['!cols'] = columnWidths;
 
-            // Agregar término de búsqueda si existe
-            if (searchTerm) {
-                params.append('search', searchTerm);
+        // Añadir la hoja al libro
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Caracterizaciones');
+
+        // Nombre del archivo según si hay filtros o no
+        const hasFilters = Object.keys(activeFilters).length > 0 || Object.keys(activeFiltersGroups).length > 0 || searchTerm;
+        const fileName = hasFilters 
+            ? 'caracterizaciones_filtrado_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.xlsx'
+            : 'caracterizaciones_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.xlsx';
+
+        // Exportar el archivo
+        XLSX.writeFile(workbook, fileName);
+    }
+
+    // Función para cargar SheetJS dinámicamente
+    function loadSheetJS() {
+        return new Promise((resolve, reject) => {
+            // Verificar si ya está cargado
+            if (typeof XLSX !== 'undefined') {
+                resolve();
+                return;
             }
 
-            if (params.toString()) {
-                exportUrl += '?' + params.toString();
-            }
-
-            // Redireccionar a la URL de exportación con filtros
-            window.location.href = exportUrl;
-
-            // Feedback visual
-            const originalHTML = exportBtn.innerHTML;
-            exportBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
-            exportBtn.classList.add('btn-success');
-            exportBtn.classList.remove('btn-light');
-
-            setTimeout(() => {
-                exportBtn.innerHTML = originalHTML;
-                exportBtn.classList.remove('btn-success');
-                exportBtn.classList.add('btn-light');
-            }, 2000);
+            // Crear script tag
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            script.onload = () => {
+                resolve();
+            };
+            script.onerror = () => {
+                reject(new Error('No se pudo cargar SheetJS'));
+            };
+            
+            document.head.appendChild(script);
         });
     }
 
