@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -27,12 +28,12 @@ return new class extends Migration
     });
 }
 
-
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('proyectos_productivos');
+        // Usar CASCADE para PostgreSQL para eliminar dependencias (como tablas de preguntas o caracterizaciones)
+        DB::statement('DROP TABLE IF EXISTS proyectos_productivos CASCADE');
     }
 };

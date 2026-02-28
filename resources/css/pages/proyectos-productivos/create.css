@@ -1,132 +1,328 @@
- :root {
-            --verde: #4A7C2F;
-            --verde-hover: #3d6625;
-            --azul-govco: #3366CC;
-            --gris-texto: #333333;
-        }
+/* === CREAR PROYECTO PRODUCTIVO - ESTILO CONSISTENTE === */
 
-        .login-box {
-            background: white;
-            padding: 40px 35px;
-            border-radius: 18px;
-            box-shadow: 0 8px 35px rgba(0,0,0,0.15);
-            animation: floatIn 0.6s ease-out;
-        }
+:root {
+    --verde: #4A7C2F;
+    --verde-hover: #3d6625;
+    --azul-govco: #3366CC;
+    --gris-texto: #333333;
+}
 
-        @keyframes floatIn {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+/* Estilos del login-box (heredados del login y caracterizaciones) */
+.login-box {
+    background: white;
+    padding: 40px 35px;
+    border-radius: 18px;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.15);
+    animation: floatIn 0.6s ease-out;
+}
 
-        .login-title {
-            text-align: center;
-            font-size: 1.7rem;
-            font-weight: 800;
-            color: var(--gris-texto);
-            margin-bottom: 8px;
-        }
+@keyframes floatIn {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
 
-        .login-subtitle {
-            text-align: center;
-            font-size: 0.95rem;
-            color: #555;
-            margin-bottom: 25px;
-        }
+.login-title {
+    text-align: center;
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--gris-texto);
+    margin-bottom: 8px;
+}
 
-        .form-control {
-            border-radius: 12px;
-            padding: 12px 45px;
-            border: 2px solid #ddd;
-            transition: .3s;
-        }
+.login-subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 25px;
+}
 
-        .form-control:focus {
-            border-color: var(--azul-govco);
-            box-shadow: 0 0 10px rgba(51, 102, 204, 0.3);
-        }
+/* Estilos de inputs consistentes */
+.form-control {
+    border-radius: 12px;
+    padding: 12px 45px;
+    border: 2px solid #ddd;
+    transition: .3s;
+}
 
-        .input-icon {
-            position: absolute;
-            top: 50%;
-            left: 14px;
-            transform: translateY(-50%);
-            color: var(--azul-govco);
-            font-size: 1.1rem;
-        }
+.form-control:focus {
+    border-color: var(--azul-govco);
+    box-shadow: 0 0 10px rgba(51, 102, 204, 0.3);
+}
 
-        .btn-login {
-            width: 100%;
-            background: linear-gradient(135deg, var(--verde) 0%, #5a9c3f 100%) !important;
-            border: none;
-            padding: 10px;
-            color: white;
-            font-weight: 500;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            transition: .3s;
-        }
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: var(--azul-govco);
+    font-size: 1.1rem;
+}
 
-        .btn-login:hover {
-            background: var(--verde-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 7px 18px rgba(0,0,0,0.2);
-        }
+/* Estilos de botones consistentes */
+.btn-login {
+    width: 100%;
+    background: linear-gradient(135deg, var(--verde) 0%, #5a9c3f 100%) !important;
+    border: none;
+    padding: 10px;
+    color: white;
+    font-weight: 500;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    transition: .3s;
+}
 
-        .btn-primary {
-            width: 100%;
-            border: none !important;
-            color: white !important;
-            padding: 0.5rem 1.2rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 700 !important;
-            font-size: 0.9rem !important;
-            transition: all 0.3s ease !important;
-        }
+.btn-login:hover {
+    background: var(--verde-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 18px rgba(0,0,0,0.2);
+}
 
-        .btn-primary:hover {
-            transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(74, 124, 47, 0.25) !important;
-        }
+.btn-cancelar {
+    width: 100%;
+    background: #6c757d !important;
+    border: none !important;
+    color: white !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    text-align: center !important;
+    margin-top: 10px !important;
+}
 
-        /* Estilo específico para el botón cancelar */
-        .btn-cancelar {
-            width: 100%;
-            background: #6c757d !important;
-            border: none !important;
-            color: white !important;
-            padding: 0.5rem 1.2rem !important;
-            border-radius: 0.5rem !important;
-            font-weight: 700 !important;
-            font-size: 0.9rem !important;
-            transition: all 0.3s ease !important;
-            text-decoration: none !important;
-            display: inline-block !important;
-            text-align: center !important;
-        }
+.btn-cancelar:hover {
+    background: #5a6268 !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 7px 18px rgba(108, 117, 125, 0.25) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
 
-        .btn-cancelar:hover {
-            background: #5a6268 !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.25) !important;
-            color: white !important;
-            text-decoration: none !important;
-        }
+/* Estilos del escudo */
+.escudo {
+    width: 150px;
+    height: 120px;
+    margin: 0 auto 2%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
 
-        .escudo {
-            width: 150px;
-            height: 120px;
-            margin: 0 auto 2%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
+.escudo img {
+    width: 180px;
+    height: 150px;
+    object-fit: contain;
+    background: transparent !important;
+}
 
-        .escudo img {
-            width: 180px;
-            height: 150px;
-            object-fit: contain;
-            background: transparent !important;
-        }
+/* Estilos de alertas */
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Estilos de radio buttons */
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: var(--azul-govco);
+    border-color: var(--azul-govco);
+}
+
+.form-check-label {
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    margin-left: 10px;
+    display: block;
+}
+
+.form-check-label strong {
+    color: var(--gris-texto);
+    font-weight: 700;
+}
+
+.form-check-label small {
+    color: #666;
+    font-weight: 400;
+}
+
+/* Espaciado y márgenes */
+.mb-3 {
+    margin-bottom: 1.5rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 2rem !important;
+}
+
+.mt-2 {
+    margin-top: 1rem !important;
+}
+
+.mt-4 {
+    margin-top: 2rem !important;
+}
+
+.mb-5 {
+    margin-bottom: 3rem !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .login-box {
+        padding: 30px 25px;
+        margin: 20px;
+    }
+    
+    .login-title {
+        font-size: 1.5rem;
+    }
+    
+    .form-control {
+        padding: 12px 40px;
+    }
+    
+    .btn-login, .btn-cancelar {
+        padding: 12px !important;
+        font-size: 1rem !important;
+    }
+    
+    .escudo {
+        margin-bottom: 15px;
+    }
+    
+    .escudo img {
+        width: 150px;
+        height: 120px;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-check {
+    animation: fadeIn 0.3s ease;
+    animation-delay: calc(0.1s * var(--index));
+}
+
+/* Utilidades */
+.d-flex {
+    display: flex !important;
+}
+
+.justify-content-center {
+    justify-content: center !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.position-relative {
+    position: relative !important;
+}
+
+.w-100 {
+    width: 100% !important;
+}
+
+.d-grid {
+    display: grid !important;
+}
+
+.gap-2 {
+    gap: 1rem !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.fw-bold {
+    font-weight: 700 !important;
+}
+
+.d-block {
+    display: block !important;
+}
+
+.me-2 {
+    margin-right: 0.5rem !important;
+}
+
+.me-1 {
+    margin-right: 0.25rem !important;
+}
+
+/* Bootstrap classes que se usan en el formulario */
+.bi {
+    font-size: 1.2rem;
+}
+
+.bi-exclamation-triangle-fill {
+    color: #dc3545;
+}
+
+.fa-solid {
+    font-size: 1.1rem;
+}
+
+.fa-tag, .fa-calendar, .fa-align-left, .fa-cogs, .fa-plus, .fa-arrow-left {
+    color: var(--azul-govco);
+}
+
+/* Asegurar que los inputs de texto tengan el mismo padding que los de login */
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+    padding: 12px 45px;
+}
+
+/* Mejorar la apariencia de los radio buttons */
+.form-check {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.form-check:hover {
+    background: #e9ecef;
+    border-color: #ddd;
+}
+
+.form-check-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(51, 102, 204, 0.25);
+}

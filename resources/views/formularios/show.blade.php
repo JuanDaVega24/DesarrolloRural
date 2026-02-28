@@ -1,7 +1,7 @@
 <x-app-layout>
 
         
-@vite(['resources/css/pages/formularios/show.css'])
+@vite(['resources/css/pages/formularios/show.css', 'resources/css/pages/formularios/imagenes.css', 'resources/js/formularios-imagenes.js'])
 
     <div class="form-container">
         <div class="form-card">
@@ -19,6 +19,20 @@
                 @csrf
                 @method('PUT')
 
+                @if ($errors->any())
+                    <div class="alert alert-danger" style="grid-column: 1 / -1; margin-bottom: 2rem; border-radius: 8px; padding: 1rem; background-color: #fee2e2; border: 1px solid #ef4444; color: #b91c1c;">
+                        <h5 style="margin-top: 0; margin-bottom: 0.5rem; font-weight: 600;">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Por favor corrija los siguientes errores:
+                        </h5>
+                        <ul style="margin-bottom: 0; padding-left: 1.5rem;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 {{-- Información adicional --}}
                 <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 2rem;">
                     <label for="descripcion" class="form-label">
@@ -29,8 +43,52 @@
                               placeholder="Describe brevemente el proyecto productivo...">{{ old('descripcion', $proyecto->descripcion) }}</textarea>
                 </div>
 
+                {{-- Filtros de comparación (Nuevo) --}}
+                <div class="comparison-filters-section" style="grid-column: 1 / -1;">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Año de Proyectos a Comparar
+                        </label>
+                        <select class="form-control form-select" id="comparison-year-filter">
+                            <option value="">Todos los años</option>
+                            @foreach($anos as $ano)
+                                <option value="{{ $ano }}">{{ $ano }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-search-plus"></i>
+                            Proyectos a Comparar
+                        </label>
+                        <div class="multiselect-container">
+                            <div class="multiselect-display" id="multiselect-display">
+                                <span id="multiselect-text">Todos los proyectos</span>
+                                <span class="selected-count-badge" id="selected-count" style="display: none;">0</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="multiselect-dropdown" id="multiselect-dropdown">
+                                <div class="multiselect-option select-all-option">
+                                    <input type="checkbox" id="select-all-projects" checked>
+                                    <label for="select-all-projects">Seleccionar Todos</label>
+                                </div>
+                                <div id="projects-list-container">
+                                    @foreach($proyectosParaComparar as $pComp)
+                                        <div class="multiselect-option project-option" data-year="{{ $pComp->ano }}">
+                                            <input type="checkbox" id="proj-{{ $pComp->id }}" value="{{ $pComp->id }}" checked>
+                                            <label for="proj-{{ $pComp->id }}">{{ $pComp->nombre }} ({{ $pComp->ano }})</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Sistema de beneficiarios acumulativo --}}
-                @if(count($columnasReferencia) > 0)
+                @if($preguntasPersonalizadas->count() > 0 || $proyecto->preguntas->count() > 0)
                     <div class="form-header">
                         <h2 class="form-title">Datos de los Inscritos</h2>
                         <p class="form-subtitle">Complete el formulario para cada beneficiario. Use "Agregar Beneficiario" para incluir múltiples personas.</p>
@@ -65,9 +123,11 @@
                         </div>
                     </div>
 
-                    {{-- Formulario estático simple para beneficiario actual --}}
+                    {{-- Formulario dinámico para beneficiario actual --}}
                     <div id="beneficiario-form" class="beneficiario-form-section">
                         <div class="form-grid">
+                            {{-- CAMPOS ESTÁTICOS (siempre presentes) --}}
+                            
                             {{-- # DEL SORTEO --}}
                             <div class="form-group">
                                 <label class="form-label">
@@ -133,59 +193,6 @@
 
                             </div>
 
-                            {{-- CONDICIÓN --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user-tag"></i>
-                                    CONDICIÓN
-                                    <span class="required-indicator">*</span>
-                                </label>
-                                <select id="condicion" class="form-control form-select">
-                                    <option value="">Seleccione condición</option>
-                                    <option value="Ninguno" selected>Ninguno</option>
-                                    <option value="Afrocolombiano">Afrocolombiano</option>
-                                    <option value="Campesino">Campesino</option>
-                                    <option value="Indígena">Indígena</option>
-                                    <option value="LGBTIQ+">LGBTIQ+</option>
-                                    <option value="Persona mayor">Persona mayor</option>
-                                    <option value="Cabeza de familia">Cabeza de familia</option>
-                                    <option value="Mujer rural">Mujer rural</option>
-                                    <option value="Desmovilizado">Desmovilizado</option>
-                                    <option value="Reinsertado">Reinsertado</option>
-                                    <option value="joven rural">Joven rural</option>
-                                    <option value="persona con discapacidad">Persona con discapacidad</option>
-                                    <option value="victima del conflicto (RUV)">Victima del conflicto (RUV)</option>
-                                    <option value="cuidador/a">Cuidador/a</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                                <div id="error-condicion" class="field-error"></div>
-
-                            </div>
-
-                            {{-- FECHA DE NACIMIENTO --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-birthday-cake"></i>
-                                    FECHA DE NACIMIENTO
-                                    <span class="required-indicator">*</span>
-                                </label>
-                                <input type="date" id="fecha_nacimiento" class="form-control">
-                           <div id="error-fecha_nacimiento" class="field-error"></div>
-
-                            </div>
-
-                            {{-- FECHA DE EXPEDICIÓN --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    FECHA DE EXPEDICIÓN
-                                    <span class="required-indicator">*</span>
-                                </label>
-                                <input type="date" id="fecha_expedicion" class="form-control">
-                          <div id="error-fecha_expedicion" class="field-error"></div>
-
-                            </div>
-
                             {{-- CORREGIMIENTO --}}
                             <div class="form-group">
                                 <label class="form-label">
@@ -216,91 +223,109 @@
                                 </select>
                             <div id="error-vereda" class="field-error"></div>
 
-                            
                                     </div>
 
-                            {{-- SISBEN --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-chart-line"></i>
-                                    SISBEN (Consultado por la Alcaldía)
-                                </label>
-                                <input type="text" id="sisben" class="form-control"
-                                       placeholder="Ingrese SISBEN" readonly>
-                            </div>
-
-                            {{-- FINCA --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-home"></i>
-                                    FINCA
-                                    <span class="required-indicator">*</span>
-                                </label>
-                                <input type="text" id="finca" class="form-control"
-                                       placeholder="Ingrese finca">
-                            <div id="error-finca" class="field-error"></div>
-
-                                    </div>
-
-                            {{-- TELÉFONO --}}
+                            {{-- TELÉFONO (Nuevo campo estático para coincidir con tabla) --}}
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-phone"></i>
                                     TELÉFONO
                                     <span class="required-indicator">*</span>
                                 </label>
-                                <input type="tel" id="telefono" class="form-control"
-                                       placeholder="Ingrese teléfono">
-                           <div id="error-telefono" class="field-error"></div>
+                                <input type="number" id="telefono" class="form-control"
+                                       placeholder="Ingrese número de teléfono">
+                                <div id="error-telefono" class="field-error"></div>
+                            </div>
 
-                                    </div>
+                            {{-- CAMPOS DINÁMICOS (personalizados por el usuario) --}}
+                            @foreach($preguntasPersonalizadas as $index => $pregunta)
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <i class="fas fa-question-circle"></i>
+                                        {{ $pregunta->pregunta }}
+                                        @if($pregunta->es_obligatorio)
+                                            <span class="required-indicator">*</span>
+                                        @endif
+                                    </label>
 
-                            {{-- LUGAR DE ENTREGA --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-truck"></i>
-                                    LUGAR DE ENTREGA
-                                    <span class="required-indicator">*</span>
-                                </label>
-                                <input type="text" id="lugar_entrega" class="form-control"
-                                       placeholder="Ingrese lugar de entrega">
-                            <div id="error-lugar_entrega" class="field-error"></div>
-
-                                    </div>
-
-                            {{-- EVIDENCIA FOTOGRAFICA --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-camera"></i>
-                                    EVIDENCIA FOTOGRAFICA (Consultado por la Alcaldía)
-                                </label>
-                                <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                    <input type="text" id="evidencia_fotografica" class="form-control"
-                                           placeholder="Evidencia Fotográfica" readonly>
+                                    @if($pregunta->subtitulo)
+                                        <p class="field-subtitle" style="margin-top: -0.5rem; margin-bottom: 0.75rem; font-size: 0.95rem; color: #666; font-style: italic;">
+                                            {{ $pregunta->subtitulo }}
+                                        </p>
+                                    @endif
+                                    
+                                    @if($pregunta->tipo_campo === 'texto')
+                                        <input type="text" 
+                                               name="pregunta_{{ $pregunta->id }}" 
+                                               id="pregunta_{{ $pregunta->id }}"
+                                               class="form-control"
+                                               placeholder="Ingrese texto">
+                                        <div id="error-pregunta_{{ $pregunta->id }}" class="field-error"></div>
+                                        
+                                    @elseif($pregunta->tipo_campo === 'numero')
+                                        <input type="number" 
+                                               name="pregunta_{{ $pregunta->id }}" 
+                                               id="pregunta_{{ $pregunta->id }}"
+                                               class="form-control"
+                                               placeholder="Ingrese número">
+                                        <div id="error-pregunta_{{ $pregunta->id }}" class="field-error"></div>
+                                        
+                                    @elseif($pregunta->tipo_campo === 'fecha')
+                                        <input type="date" 
+                                               name="pregunta_{{ $pregunta->id }}" 
+                                               id="pregunta_{{ $pregunta->id }}"
+                                               class="form-control">
+                                        <div id="error-pregunta_{{ $pregunta->id }}" class="field-error"></div>
+                                        
+                                    @elseif($pregunta->tipo_campo === 'select')
+                                        <select name="pregunta_{{ $pregunta->id }}" 
+                                                id="pregunta_{{ $pregunta->id }}"
+                                                class="form-control form-select">
+                                            <option value="">Seleccione una opción</option>
+                                            @if($pregunta->opciones)
+                                                @foreach($pregunta->opciones as $opcion)
+                                                    <option value="{{ $opcion['texto'] ?? $opcion }}" data-imagen="{{ $opcion['imagen'] ?? '' }}">
+                                                        @if($opcion['imagen'] ?? false)
+                                                            <span class="option-with-image">
+                                                                <img src="{{ $opcion['imagen'] }}" alt="Imagen" class="option-image">
+                                                                <span class="option-text">{{ $opcion['texto'] ?? $opcion }}</span>
+                                                            </span>
+                                                        @else
+                                                            {{ $opcion['texto'] ?? $opcion }}
+                                                        @endif
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div id="error-pregunta_{{ $pregunta->id }}" class="field-error"></div>
+                                        
+                                    @elseif($pregunta->tipo_campo === 'checkbox')
+                                        <div class="checkbox-options">
+                                            @if($pregunta->opciones)
+                                                @foreach($pregunta->opciones as $opcion)
+                                                    <label class="checkbox-label">
+                                                        <input type="checkbox" 
+                                                               name="pregunta_{{ $pregunta->id }}[]" 
+                                                               value="{{ $opcion['texto'] ?? $opcion }}"
+                                                               data-imagen="{{ $opcion['imagen'] ?? '' }}">
+                                                        @if($opcion['imagen'] ?? false)
+                                                            <span class="option-with-image">
+                                                                <img src="{{ $opcion['imagen'] }}" alt="Imagen" class="option-image">
+                                                                <span class="option-text">{{ $opcion['texto'] ?? $opcion }}</span>
+                                                            </span>
+                                                        @else
+                                                            {{ $opcion['texto'] ?? $opcion }}
+                                                        @endif
+                                                    </label>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                        <div id="error-pregunta_{{ $pregunta->id }}" class="field-error"></div>
+                                        
+                                    @endif
                                 </div>
-                                <div id="error-evidencia_fotografica" class="field-error"></div>
-                            </div>
 
-                            {{-- CONSULTA BD --}}
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-database"></i>
-                                    CONSULTA BD (Consultado por la Alcaldía)
-                                </label>
-                                <input type="text" id="consulta_bd" class="form-control"
-                                       placeholder="Ingrese consulta BD" readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Lista de beneficiarios agregados --}}
-                    <div id="beneficiarios-agregados" class="beneficiarios-agregados" style="display: none;">
-                        <h4 class="agregados-title">
-                            <i class="fas fa-users"></i>
-                            Beneficiarios Agregados
-                        </h4>
-                        <div id="lista-beneficiarios" class="lista-beneficiarios">
-                            <!-- Los beneficiarios agregados se mostrarán aquí -->
+                            @endforeach
                         </div>
                     </div>
 
@@ -318,13 +343,30 @@
                         </div>
                     </div>
 
+                    {{-- Lista de beneficiarios agregados --}}
+                    <div id="beneficiarios-agregados" class="beneficiarios-agregados" style="display: none;">
+                        <h4 class="agregados-title">
+                            <i class="fas fa-users"></i>
+                            Beneficiarios Agregados
+                        </h4>
+                        <div id="lista-beneficiarios" class="lista-beneficiarios">
+                            <!-- Los beneficiarios agregados se mostrarán aquí -->
+                        </div>
+                    </div>
+
                     {{-- Campo oculto para datos acumulados --}}
-                    <input type="hidden" name="beneficiarios_acumulados" id="beneficiarios_acumulados" value="[]">
+                    <input type="hidden" name="beneficiarios_acumulados" id="beneficiarios_acumulados" value="{{ old('beneficiarios_acumulados', '[]') }}">
 
                 @else
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        No se encontraron columnas de referencia. Complete al menos la descripción.
+                        Este proyecto no tiene preguntas configuradas. Por favor, configure las preguntas del formulario primero.
+                    </div>
+                    <div class="form-actions">
+                        <a href="{{ route('formularios.index') }}" class="btn-cancel">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver a proyectos
+                        </a>
                     </div>
                 @endif
 
@@ -356,7 +398,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const contenedorAgregados = document.getElementById('beneficiarios-agregados');
 
     let beneficiarios = [];
-    let contador = 1;
+    try {
+        beneficiarios = JSON.parse(inputAcumulados.value || '[]');
+    } catch (e) {
+        console.error('Error al parsear beneficiarios:', e);
+        beneficiarios = [];
+    }
+    
+    let contador = beneficiarios.length + 1;
+
+    // Inicializar lista si hay beneficiarios previos (ej. después de un error de validación)
+    if (beneficiarios.length > 0) {
+        actualizarLista();
+        actualizarEstado();
+    }
 
     // --- LÓGICA DINÁMICA DE VEREDAS ---
     const veredasMap = @json(json_decode(file_get_contents(resource_path('js/veredas.json')), true));
@@ -405,6 +460,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // --- PREGUNTAS PERSONALIZADAS ---
+    const preguntasPersonalizadas = @json($preguntasPersonalizadas);
+    
     /* =========================
        UTILIDADES DE ERRORES
     ========================== */
@@ -442,43 +501,51 @@ document.addEventListener('DOMContentLoaded', function () {
        RECOPILAR DATOS
     ========================== */
     function obtenerDatos() {
-        const numero_sorteo = document.getElementById('numero_sorteo');
-        const cedula = document.getElementById('cedula');
-        const nombre_completo = document.getElementById('nombre_completo');
-        const genero = document.getElementById('genero');
-        const condicion = document.getElementById('condicion');
-        const fecha_nacimiento = document.getElementById('fecha_nacimiento');
-        const fecha_expedicion = document.getElementById('fecha_expedicion');
-        const corregimiento = document.getElementById('corregimiento');
-        const vereda = document.getElementById('vereda');
-        const sisben = document.getElementById('sisben');
-        const finca = document.getElementById('finca');
-        const telefono = document.getElementById('telefono');
-        const lugar_entrega = document.getElementById('lugar_entrega');
-        const evidencia_fotografica = document.getElementById('evidencia_fotografica');
-        const evidencia_file = document.getElementById('evidencia_file');
-        const consulta_bd = document.getElementById('consulta_bd');
+    const numero_sorteo = document.getElementById('numero_sorteo');
+    const cedula = document.getElementById('cedula');
+    const nombre_completo = document.getElementById('nombre_completo');
+    const genero = document.getElementById('genero');
+    const corregimiento = document.getElementById('corregimiento');
+    const vereda = document.getElementById('vereda');
+    const telefono = document.getElementById('telefono');
+    
+    // Contenedor del formulario dinámico
+    const container = document.getElementById('beneficiario-form');
 
-        return {
-            '# NUMERO': numero_sorteo.value.trim(),
-            'CÉDULA': cedula.value.trim(),
-            'NOMBRE COMPLETO': nombre_completo.value.trim(),
-            'GENERO': genero.value.trim(),
-            'CONDICIÓN': condicion.value.trim(),
-            'FECHA DE NACIMIENTO': fecha_nacimiento.value.trim(),
-            'FECHA DE EXPEDICIÓN': fecha_expedicion.value.trim(),
-            'CORREGIMIENTO': corregimiento.value.trim(),
-            'VEREDA': vereda.value.trim(),
-            'SISBEN': sisben.value.trim(),
-            'FINCA': finca.value.trim(),
-            'TELÉFONO': telefono.value.trim(),
-            'LUGAR DE ENTREGA': lugar_entrega.value.trim(),
-            'EVIDENCIA FOTOGRAFICA': (evidencia_file && evidencia_file.files && evidencia_file.files[0])
-                ? evidencia_file.files[0].name
-                : evidencia_fotografica.value.trim(),
-            'CONSULTA BD': consulta_bd.value.trim()
-        };
-    }
+    const datos = {
+        '# NUMERO': numero_sorteo.value.trim(),
+        'CÉDULA': cedula.value.trim(),
+        'NOMBRE COMPLETO': nombre_completo.value.trim(),
+        'GENERO': genero.value.trim(),
+        'CORREGIMIENTO': corregimiento.value.trim(),
+        'VEREDA': vereda.value.trim(),
+        'TELÉFONO': telefono ? telefono.value.trim() : ''
+    };
+
+    preguntasPersonalizadas.forEach(pregunta => {
+        const campoId = `pregunta_${pregunta.id}`;
+        
+        if (pregunta.tipo_campo === 'checkbox') {
+            // Buscar checkboxes marcados solo dentro del contenedor del formulario
+            const checkboxes = container.querySelectorAll(`input[name="${campoId}[]"]:checked`);
+            const valores = Array.from(checkboxes).map(cb => 
+                cb.value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+            );
+
+            // 🔥 Guardar como texto separado por coma con la llave de la pregunta
+            datos[pregunta.pregunta] = valores.join(', ');
+
+        } else {
+            const campo = document.getElementById(campoId);
+            if (campo) {
+                datos[pregunta.pregunta] = campo.value.trim();
+            }
+        }
+    });
+
+    return datos;
+}
+
 
     /* =========================
        VALIDACIÓN
@@ -487,37 +554,45 @@ document.addEventListener('DOMContentLoaded', function () {
         limpiarTodosErrores();
         let valido = true;
 
+        // Validar campos estáticos requeridos (solo los que existen en el formulario)
         const requeridos = [
             'numero_sorteo',
             'cedula',
             'nombre_completo',
             'genero',
-            'condicion',
-            'fecha_nacimiento',
-            'fecha_expedicion',
             'corregimiento',
             'vereda',
-            'finca',
-            'telefono',
-            'lugar_entrega'
+            'telefono'
         ];
 
         requeridos.forEach(id => {
             const campo = document.getElementById(id);
-            if (!campo.value.trim()) {
+            if (!campo || !campo.value.trim()) {
                 mostrarErrorCampo(id, 'Este campo es obligatorio');
                 valido = false;
             }
         });
 
-        const evidenciaFile = document.getElementById('evidencia_file');
-        const evidenciaNombre = document.getElementById('evidencia_fotografica');
-        if (evidenciaFile && evidenciaFile.files && evidenciaFile.files[0]) {
-            if (evidenciaNombre) {
-                evidenciaNombre.value = evidenciaFile.files[0].name;
-                limpiarErrorCampo('evidencia_fotografica');
+        // Validar campos dinámicos requeridos
+        preguntasPersonalizadas.forEach(pregunta => {
+            const campoId = `pregunta_${pregunta.id}`;
+            const campo = document.getElementById(campoId);
+            
+            if (pregunta.es_obligatorio) {
+                if (pregunta.tipo_campo === 'checkbox') {
+                    const checkboxes = document.querySelectorAll(`input[name="${campoId}[]"]:checked`);
+                    if (checkboxes.length === 0) {
+                        mostrarErrorCampo(campoId, 'Este campo es obligatorio');
+                        valido = false;
+                    }
+                } else {
+                    if (!campo || !campo.value.trim()) {
+                        mostrarErrorCampo(campoId, 'Este campo es obligatorio');
+                        valido = false;
+                    }
+                }
             }
-        }
+        });
 
         return valido;
     }
@@ -526,8 +601,27 @@ document.addEventListener('DOMContentLoaded', function () {
        LIMPIAR FORMULARIO
     ========================== */
     function limpiarFormulario() {
-        document.querySelectorAll('#beneficiario-form input, #beneficiario-form select')
-            .forEach(c => c.value = '');
+        // Limpiar campos estáticos
+        const campos = [
+            'numero_sorteo', 'cedula', 'nombre_completo', 
+            'genero', 'corregimiento', 'vereda', 'telefono'
+        ];
+        
+        campos.forEach(id => {
+            const campo = document.getElementById(id);
+            if (campo) campo.value = '';
+        });
+        
+        // Limpiar checkboxes
+        document.querySelectorAll('#beneficiario-form input[type="checkbox"]')
+            .forEach(c => c.checked = false);
+        
+        // Limpiar inputs dinámicos (texto, número, fecha, select)
+        preguntasPersonalizadas.forEach(p => {
+            const campo = document.getElementById(`pregunta_${p.id}`);
+            if (campo) campo.value = '';
+        });
+
         const evidenciaFile = document.getElementById('evidencia_file');
         if (evidenciaFile) evidenciaFile.value = '';
         
@@ -615,8 +709,12 @@ document.addEventListener('DOMContentLoaded', function () {
        VALIDAR CÉDULA EXISTENTE
     ========================== */
     function validarCedulaExistente(cedula, callback) {
-        // Obtener el año del proyecto actual desde la URL o variable global
+        // Obtener el año del proyecto actual
         const currentYear = {{ $proyecto->ano }};
+        
+        // Obtener proyectos seleccionados en el multiselect
+        const selectedCheckboxes = document.querySelectorAll('.project-option input[type="checkbox"]:checked');
+        const proyectosIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
         fetch('{{ route("formularios.validar-cedula") }}', {
             method: 'POST',
@@ -626,7 +724,8 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify({
                 cedula: cedula,
-                current_year: currentYear
+                current_year: currentYear,
+                proyectos_ids: proyectosIds
             })
         })
         .then(response => response.json())
@@ -678,12 +777,15 @@ document.addEventListener('DOMContentLoaded', function () {
         beneficiarios.forEach((b, i) => {
             const div = document.createElement('div');
             div.className = 'beneficiario-item';
+            
             div.innerHTML = `
-                <div>
-                    <div class="beneficiario-nombre">${b['NOMBRE COMPLETO']}</div>
-                    <div class="beneficiario-detalles">Cédula: ${b['CÉDULA']}</div>
+                <div class="beneficiario-content">
+                    <div class="beneficiario-main">
+                        <div class="beneficiario-nombre">${b['NOMBRE COMPLETO']}</div>
+                        <div class="beneficiario-detalles">Cédula: ${b['CÉDULA']}</div>
+                    </div>
                 </div>
-                <button class="btn-remove-item" onclick="eliminar(${i})">
+                <button type="button" class="btn-remove-item" onclick="eliminar(${i})">
                     <i class="fas fa-trash"></i>
                 </button>
             `;
@@ -719,6 +821,72 @@ document.addEventListener('DOMContentLoaded', function () {
             ocultarMensajeAdvertencia();
             limpiarFormulario();
         });
+    }
+
+    // --- LÓGICA DE MULTISELECT PARA COMPARACIÓN ---
+    const msDisplay = document.getElementById('multiselect-display');
+    const msDropdown = document.getElementById('multiselect-dropdown');
+    const msText = document.getElementById('multiselect-text');
+    const msBadge = document.getElementById('selected-count');
+    const selectAllCb = document.getElementById('select-all-projects');
+    const projectCheckboxes = document.querySelectorAll('.project-option input[type="checkbox"]');
+    const yearFilter = document.getElementById('comparison-year-filter');
+
+    // Abrir/Cerrar dropdown
+    msDisplay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        msDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => msDropdown.classList.remove('show'));
+    msDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    // Filtrar proyectos por año
+    yearFilter.addEventListener('change', function() {
+        const year = this.value;
+        const options = document.querySelectorAll('.project-option');
+        
+        options.forEach(opt => {
+            if (!year || opt.dataset.year === year) {
+                opt.style.display = 'flex';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    });
+
+    // Seleccionar todos
+    selectAllCb.addEventListener('change', function() {
+        const isChecked = this.checked;
+        const visibleOptions = document.querySelectorAll('.project-option:not([style*="display: none"]) input[type="checkbox"]');
+        visibleOptions.forEach(cb => cb.checked = isChecked);
+        updateMultiselectText();
+    });
+
+    // Cambio individual
+    projectCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateMultiselectText);
+    });
+
+    function updateMultiselectText() {
+        const total = projectCheckboxes.length;
+        const selected = document.querySelectorAll('.project-option input[type="checkbox"]:checked').length;
+
+        if (selected === 0) {
+            msText.textContent = "Ningún proyecto seleccionado";
+            msBadge.style.display = 'none';
+        } else if (selected === total) {
+            msText.textContent = "Todos los proyectos";
+            msBadge.style.display = 'none';
+        } else {
+            msText.textContent = "Proyectos seleccionados";
+            msBadge.textContent = selected;
+            msBadge.style.display = 'inline-block';
+        }
+        
+        // Actualizar checkbox de "seleccionar todos"
+        selectAllCb.checked = (selected === total);
+        selectAllCb.indeterminate = (selected > 0 && selected < total);
     }
 
     form.addEventListener('submit', function (e) {
@@ -768,6 +936,60 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 });
-</script>
+
+    </script>
+
+    <!-- Script para manejar imágenes en opciones -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Función para manejar errores de carga de imágenes
+        function handleImageError(img) {
+            img.style.display = 'none';
+            // Podrías reemplazar con una imagen por defecto si lo deseas
+            // img.src = '/path/to/default-image.png';
+        }
+
+        // Añadir manejadores de error a todas las imágenes en opciones
+        const optionImages = document.querySelectorAll('.option-image');
+        optionImages.forEach(img => {
+            img.addEventListener('error', function() {
+                handleImageError(this);
+            });
+        });
+
+        // Mejorar la visualización de imágenes en selects (para navegadores que lo soporten)
+        const selectElements = document.querySelectorAll('.form-control.form-select');
+        selectElements.forEach(select => {
+            // Añadir estilos para mejorar la visualización en el select abierto
+            select.addEventListener('focus', function() {
+                this.style.backgroundColor = '#f8fafc';
+            });
+            
+            select.addEventListener('blur', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+
+        // Mejorar la accesibilidad de las opciones con imágenes
+        const checkboxLabels = document.querySelectorAll('.checkbox-options .checkbox-label');
+        checkboxLabels.forEach(label => {
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            const image = label.querySelector('.option-image');
+            
+            if (checkbox && image) {
+                // Sincronizar el estado visual del checkbox con el label
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        label.style.backgroundColor = '#f0f9ff';
+                        label.style.borderColor = '#bfdbfe';
+                    } else {
+                        label.style.backgroundColor = '';
+                        label.style.borderColor = '';
+                    }
+                });
+            }
+        });
+    });
+    </script>
 
 </x-app-layout>

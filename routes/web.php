@@ -9,6 +9,8 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CaracterizacionController;
 use App\Http\Controllers\CaracterizacionFormularioController;
 use App\Http\Controllers\FormularioController;
+use App\Http\Controllers\ImagenController;
+use App\Http\Controllers\ConstructorImagenController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -91,6 +93,10 @@ Route::middleware([
         Route::post('proyectos/update-all-automatic-columns', [ProyectoProductivoController::class, 'updateAllProjectsColumns'])
             ->name('proyectos.update-all-automatic-columns');
 
+        // Rutas para subir y gestionar imágenes en el constructor de formularios
+        Route::post('/formularios/constructor/imagenes', [ConstructorImagenController::class, 'upload']);
+        Route::delete('/formularios/constructor/imagenes', [ConstructorImagenController::class, 'destroy']);
+
         /*
         |----------------------------------------------------------------------
         | FORMULARIOS DE PROYECTOS
@@ -110,6 +116,17 @@ Route::middleware([
 
         /*
         |----------------------------------------------------------------------
+        | CONSTRUCTOR DE FORMULARIOS
+        |----------------------------------------------------------------------
+        */
+        Route::get('proyectos/{proyecto}/constructor', [ProyectoProductivoController::class, 'constructor'])
+            ->name('proyectos.constructor');
+
+        Route::post('proyectos/{proyecto}/guardar-preguntas', [ProyectoProductivoController::class, 'guardarPreguntas'])
+            ->name('proyectos.guardar-preguntas');
+
+        /*
+        |----------------------------------------------------------------------
         | FORMULARIOS DE PROYECTOS
         |----------------------------------------------------------------------
         */
@@ -126,8 +143,7 @@ Route::middleware([
             ->name('formularios.destroy');
 
         // AJAX route para validar cédula
-        Route::post('formularios/validar-cedula', [FormularioController::class, 'validarCedula'])
-            ->name('formularios.validar-cedula');
+        Route::post('formularios/check-cedula', [FormularioController::class, 'validarCedula'])->name('formularios.validar-cedula');
 
         /*
         |----------------------------------------------------------------------
@@ -235,4 +251,5 @@ Route::middleware([
 
 
     });
+
 });

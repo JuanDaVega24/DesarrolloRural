@@ -114,10 +114,10 @@ class ProyectoProductivoController extends Controller
 
         // Redirigir según el método de creación seleccionado
         if ($data['metodo_creacion'] === 'manual') {
-            // Crear proyecto con origen manual y redirigir al index de formularios
+            // Crear proyecto con origen manual y redirigir al constructor de formularios
             $proyecto->update(['origen' => 'manual']);
-            return redirect()->route('formularios.index')
-                           ->with('success', 'Proyecto creado. Ahora puedes completar el formulario.');
+            return redirect()->route('proyectos.constructor', $proyecto)
+                           ->with('success', 'Proyecto creado. Configura tu formulario personalizado.');
         } else {
             // Para Excel, redirigir al upload de Excel
             return redirect()->route('proyectos.upload-excel', $proyecto)
@@ -148,13 +148,21 @@ class ProyectoProductivoController extends Controller
             'origen' => $data['metodo_creacion'],
         ]);
 
-        // Si el proyecto es o cambió a Manual, redirigir a la gestión de formularios
+        // Si el proyecto es o cambió a Manual, redirigir al constructor de formularios
         if ($data['metodo_creacion'] === 'manual') {
-            return redirect()->route('formularios.index')->with('success', 'Proyecto actualizado. Puede gestionarlo en la sección de Formularios.');
+            // Si cambió de Excel a Manual, redirigir al constructor para que configure las preguntas
+            if ($origenAnterior === 'excel') {
+                return redirect()->route('proyectos.constructor', $proyecto)
+                               ->with('success', 'Proyecto cambiado a Manual. Configure su formulario personalizado.');
+            } else {
+                // Si ya era manual, redirigir al constructor para editar las preguntas existentes
+                return redirect()->route('proyectos.constructor', $proyecto)
+                               ->with('success', 'Proyecto actualizado. Puede editar su formulario personalizado.');
+            }
         }
 
         // Si cambió de Manual a Excel, redirigir a la carga del archivo
-        if ($origenAnterior !== 'excel' && $data['metodo_creacion'] === 'excel') {
+        if ($origenAnterior === 'manual' && $data['metodo_creacion'] === 'excel') {
             return redirect()->route('proyectos.upload-excel', $proyecto)->with('success', 'Proyecto cambiado a Excel. Por favor cargue el archivo correspondiente.');
         }
 
@@ -165,6 +173,93 @@ class ProyectoProductivoController extends Controller
     {
         $proyecto->delete();
         return back()->with('success','¡Proyecto eliminado Correctamente!');
+    }
+
+    /**
+     * Mostrar el constructor de formularios para un proyecto manual
+     */
+    public function constructor(ProyectoProductivo $proyecto)
+    {
+        // Verificar que sea un proyecto manual
+        if ($proyecto->origen !== 'manual') {
+            abort(404, 'Proyecto no encontrado');
+        }
+
+        return view('proyectos_productivos.constructor', compact('proyecto'));
+    }
+
+    /**
+     * Guardar las preguntas del formulario personalizado
+     */
+    public function guardarPreguntas(Request $request, ProyectoProductivo $proyecto)
+    {
+        Log::info('Guardando preguntas para proyecto ' . $proyecto->id);
+        
+        // Si recibimos datos en formato JSON, decodificarlos
+        if ($request->has('preguntas_json') && !empty($request->preguntas_json)) {
+            $preguntasDecoded = json_decode($request->preguntas_json, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request->merge(['preguntas' => $preguntasDecoded]);
+            }
+        }
+
+        Log::info('Datos procesados:', $request->all());
+
+        // Verificar que sea un proyecto manual
+        if ($proyecto->origen !== 'manual') {
+            abort(404, 'Proyecto no encontrado');
+        }
+
+        // Validar datos del formulario
+        $validated = $request->validate([
+            'preguntas' => 'required|array',
+            'preguntas.*.pregunta' => 'required|string|max:1000',
+            'preguntas.*.subtitulo' => 'nullable|string|max:2000',
+            'preguntas.*.tipo_campo' => 'required|in:texto,numero,fecha,select,checkbox',
+            'preguntas.*.es_obligatorio' => 'required|boolean',
+            'preguntas.*.opciones' => 'nullable|array',
+            'preguntas.*.opciones.*.texto' => 'required_with:preguntas.*.opciones|string|max:1000',
+            'preguntas.*.opciones.*.imagen' => 'nullable|string|max:1000',
+        ]);
+
+        // Eliminar preguntas existentes para este proyecto
+        $proyecto->preguntas()->delete();
+
+        // Guardar las nuevas preguntas
+        foreach ($validated['preguntas'] as $index => $preguntaData) {
+            // Procesar opciones para selects y checkboxes
+            $opciones = null;
+            if (($preguntaData['tipo_campo'] === 'select' || $preguntaData['tipo_campo'] === 'checkbox') && 
+                !empty($preguntaData['opciones'])) {
+                
+                // Procesar el nuevo formato de opciones con imágenes
+                $opcionesArray = [];
+                foreach ($preguntaData['opciones'] as $opcion) {
+                    if (isset($opcion['texto']) && !empty(trim($opcion['texto']))) {
+                        $opcionesArray[] = [
+                            'texto' => trim($opcion['texto']),
+                            'imagen' => $opcion['imagen'] ?? null
+                        ];
+                    }
+                }
+                
+                if (!empty($opcionesArray)) {
+                    $opciones = $opcionesArray;
+                }
+            }
+
+            $proyecto->preguntas()->create([
+                'pregunta' => $preguntaData['pregunta'],
+                'subtitulo' => $preguntaData['subtitulo'] ?? null,
+                'tipo_campo' => $preguntaData['tipo_campo'],
+                'opciones' => $opciones,
+                'es_obligatorio' => $preguntaData['es_obligatorio'],
+                'orden' => $index + 1,
+            ]);
+        }
+
+        return redirect()->route('formularios.index')
+                       ->with('success', '¡Formulario personalizado guardado exitosamente! Ahora puedes completar el proyecto.');
     }
 
     public function uploadExcel(ProyectoProductivo $proyecto)
@@ -719,7 +814,7 @@ class ProyectoProductivoController extends Controller
         // Estrategia 1: Buscar por nombres de columna específicos (prioridad alta)
         $documentKeywords = [
             // Alta prioridad - términos muy específicos colombianos
-            ['numero de documento de identidad', 'número de documento de identidad', 'número de documento', 'numero de documento','cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
+            ['Numero de documento de identidad1', 'número de documento de identidad', 'número de documento', 'numero de documento','cédula de ciudadanía', 'cedula de ciudadania', 'cedula ciudadanía', 'cedula ciudadania', 'número cédula', 'numero cedula'],
 
             // Media-alta prioridad - términos específicos
             ['cédula', 'cedula', 'cc', 'ced'],

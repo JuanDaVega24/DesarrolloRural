@@ -1,0 +1,476 @@
+/* Estilos para subida de imágenes en formularios */
+
+/* Contenedor principal de imágenes */
+.imagenes-container {
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 2px dashed #e5e7eb;
+    border-radius: 8px;
+    background-color: #fafafa;
+    transition: all 0.3s ease;
+  
+}
+
+.imagenes-container:hover {
+    border-color: #93c5fd;
+    background-color: #f0f9ff;
+}
+
+.imagenes-container.drag-over {
+    border-color: #3b82f6;
+    background-color: #dbeafe;
+    transform: scale(1.02);
+}
+
+/* Área de arrastre y soltar */
+.drop-zone {
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.drop-zone:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+}
+
+.drop-zone-icon {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin-bottom: 1rem;
+}
+
+.drop-zone-text {
+    color: #6b7280;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.drop-zone-subtext {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Input de archivo oculto */
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Miniaturas de imágenes */
+.imagenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.imagen-preview {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.imagen-preview:hover {
+    transform: scale(1.05);
+}
+
+.imagen-preview img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Botón de eliminar imagen */
+.eliminar-imagen-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.eliminar-imagen-btn:hover {
+    background: #ef4444;
+    transform: scale(1.1);
+}
+
+/* Estado de carga */
+.cargando-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.cargando-overlay .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mensajes de estado */
+.mensaje-estado {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.mensaje-estado.exito {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.mensaje-estado.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.mensaje-estado.advertencia {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+/* Contador de imágenes */
+.contador-imagenes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.contador-imagenes .max-imagenes {
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Botones de acción */
+.acciones-imagenes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-imagenes {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-imagenes:hover {
+    transform: translateY(-1px);
+}
+
+.btn-subir {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.btn-subir:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-limpiar {
+    background-color: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.btn-limpiar:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .imagenes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .imagen-preview img {
+        height: 100px;
+    }
+    
+    .drop-zone {
+        padding: 1.5rem 1rem;
+    }
+    
+    .drop-zone-icon {
+        font-size: 2rem;
+    }
+}
+
+/* Efectos de transición para imágenes */
+.imagen-preview {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilos para el formulario de subida */
+.formulario-subida-imagenes {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Texto de ayuda */
+.texto-ayuda {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+/* Estilos para el botón de subida cuando hay imágenes seleccionadas */
+.drop-zone.con-imagenes {
+    border-color: #22c55e;
+    background-color: #f0fdf4;
+}
+
+.drop-zone.con-imagenes .drop-zone-icon {
+    color: #22c55e;
+}
+
+/* Animación para el botón de eliminar */
+.eliminar-imagen-btn {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+}
+
+.imagen-preview:hover .eliminar-imagen-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Estilos para mostrar imágenes en el formulario de llenado */
+.option-with-image {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: normal;
+    padding: 4px 0;
+    object-fit: cover;
+   
+}
+
+.option-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #e5e7eb;
+    background-color: #f9fafb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    object-fit: contain;
+}
+
+.option-image:hover {
+    border-color: #3b82f6;
+    transform: scale(1.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.option-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+/* Mejoras para checkboxes con imágenes */
+.checkbox-options .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-right: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: normal;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-options .checkbox-label:hover {
+    background-color: #f3f4f6;
+}
+
+.checkbox-options .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Mejoras para selects con imágenes */
+.form-control.form-select option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Asegurar que las imágenes en selects se vean correctamente */
+option .option-with-image {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+option .option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+}
+
+option .option-text {
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Mejoras para el select desplegable */
+.form-control.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+.form-control.form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Estilos para el contenedor de opciones con imágenes */
+.form-group .form-control.form-select {
+    min-height: 42px;
+}
+
+/* Mejoras para la visualización en móviles */
+@media (max-width: 768px) {
+    .option-with-image {
+        gap: 10px;
+    }
+    
+    .option-image {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .checkbox-options .checkbox-label {
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .form-control.form-select option {
+        gap: 10px;
+        padding: 6px 10px;
+    }
+    
+    option .option-image {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Efectos de hover para opciones seleccionables */
+option:hover {
+    background-color: #f3f4f6;
+}
+
+/* Estilos para el texto de ayuda en opciones con imágenes */
+.option-with-image .option-text {
+    flex: 1;
+    white-space: normal !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Mejoras para la accesibilidad */
+.option-image {
+    vertical-align: middle;
+}
+
+.checkbox-options .checkbox-label {
+    user-select: none;
+}
+
+/* Estilos para el estado activo de las opciones */
+option:checked {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+/* Mejoras para el contraste y legibilidad */
+.option-text {
+    color: #1f2937;
+}
+
+.checkbox-options .checkbox-label input[type="checkbox"]:checked + .option-with-image .option-text {
+    color: #1f2937;
+    font-weight: 600;
+}

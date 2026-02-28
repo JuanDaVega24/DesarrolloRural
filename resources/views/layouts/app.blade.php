@@ -66,7 +66,7 @@
 
     
     <!-- Bootstrap -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
         <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -75,7 +75,7 @@
 
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css">
 
     <!-- App CSS / JS -->
     @vite(['resources/css/app.css', 'resources/css/custom-theme.css', 'resources/js/app.js'])
@@ -474,8 +474,7 @@
 
 <body class="font-sans antialiased">
   <div class="barra-superior-govco">
-  <a href="https://www.gov.co/" target="_blank" rel=noopener
-    aria-label="Portal del Estado Colombiano - GOV.CO"><img src="{{ asset('images/logo.svg') }}" alt="logo"></a> 
+  <a href="https://www.gov.co/" target="_blank" rel="noopener" aria-label="Portal del Estado Colombiano - GOV.CO"><img src="{{ asset('images/logo.svg') }}" alt="logo"></a> 
 </div>
 
 

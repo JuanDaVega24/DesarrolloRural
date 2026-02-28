@@ -52,22 +52,36 @@
                            max="{{ date('Y') + 10 }}">
                 </div>
 
-                {{-- Método de creación --}}
+                {{-- Descripción del proyecto --}}
                 <div class="mb-3 position-relative">
-                    <i class="fa-solid fa-cog input-icon"></i>
-                    <select name="metodo_creacion" class="form-control" required>
-                        <option value="">Seleccione método de creación</option>
+                    <i class="fa-solid fa-align-left input-icon"></i>
+                    <textarea name="descripcion"
+                              class="form-control"
+                              placeholder="Descripción del proyecto (opcional)"
+                              rows="3">{{ old('descripcion', $proyecto->descripcion) }}</textarea>
+                </div>
 
-                        <option value="manual"
-                            {{ old('metodo_creacion', $proyecto->metodo_creacion) == 'manual' ? 'selected' : '' }}>
-                            Manual - Llenar formulario individual
-                        </option>
+                {{-- Método de creación --}}
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Método de Creación</label>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="metodo_creacion" id="metodo_manual" value="manual"
+                               {{ old('metodo_creacion', $proyecto->origen) == 'manual' ? 'checked' : '' }} required>
+                        <label class="form-check-label" for="metodo_manual">
+                            <strong>Manual</strong>
+                            <small class="text-muted">Crear formulario personalizado con preguntas específicas</small>
+                        </label>
+                    </div>
 
-                        <option value="excel"
-                            {{ old('metodo_creacion', $proyecto->metodo_creacion) == 'excel' ? 'selected' : '' }}>
-                            Excel - Subir archivo masivo
-                        </option>
-                    </select>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="metodo_creacion" id="metodo_excel" value="excel"
+                               {{ old('metodo_creacion', $proyecto->origen) == 'excel' ? 'checked' : '' }} required>
+                        <label class="form-check-label" for="metodo_excel">
+                            <strong>Excel</strong>
+                            <small class="text-muted">Subir archivo Excel con datos masivos</small>
+                        </label>
+                    </div>
                 </div>
 
                 {{-- Botón Guardar --}}

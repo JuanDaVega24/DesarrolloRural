@@ -24,5 +24,8 @@ class ProyectoProductivo extends Model
         'data' => 'array',
     ];
 
-    
+    public function preguntas()
+    {
+        return $this->hasMany(FormularioPregunta::class, 'proyecto_id');
+    }
 }

@@ -57,3 +57,20 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Guia de Despliegue
+
+Requerimientos y versiones: 
+php 8.3
+Apache24
+postgreSQL 18.0
+laravel 11
+
+Url: SistemaDeInformacion.bucaramanga.gov.co
+
+Base de datos:
+PostgreSQL01 8.0
+
+Credenciales:
+Archivo .env

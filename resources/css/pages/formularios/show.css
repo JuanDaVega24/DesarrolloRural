@@ -15,6 +15,16 @@
             --naranja: #FF6B35;
         }
 
+        * {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
         body {
             background: linear-gradient(135deg, var(--beige) 0%, var(--gris-claro) 100%);
             min-height: 100vh;
@@ -24,6 +34,9 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Evitar scroll horizontal global */
         }
 
         .form-card {
@@ -32,6 +45,9 @@
             padding: 2.5rem;
             box-shadow: 0 10px 25px rgba(0,0,0,.1);
             border: 1px solid rgba(0,0,0,.05);
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
         }
 
         .form-header {
@@ -86,9 +102,10 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Reducido de 300px a 250px */
             gap: 1.5rem;
             margin-bottom: 2rem;
+            width: 100%;
         }
 
         .form-group {
@@ -104,8 +121,23 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
-            align-items: center;
+            align-items: flex-start; /* Cambiado de center a flex-start */
             gap: 0.5rem;
+            word-wrap: break-word; /* Permitir que las palabras largas se rompan */
+            overflow-wrap: break-word;
+            white-space: normal; /* Asegurar que el texto haga wrap */
+        }
+
+        .form-label i {
+            margin-top: 0.2rem; /* Alinear icono con la primera línea de texto */
+            flex-shrink: 0; /* Evitar que el icono se encoja */
+        }
+
+        .field-subtitle {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.4;
         }
 
         .required-indicator {
@@ -120,6 +152,14 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             background: var(--blanco);
+            width: 100%;
+            box-sizing: border-box; /* Asegurar que el padding no aumente el ancho total */
+        }
+
+        /* Asegurar que los placeholders no se corten */
+        .form-control::placeholder {
+            white-space: normal;
+            line-height: 1.2;
         }
 
         .form-control:focus {
@@ -224,39 +264,187 @@
 
             .form-card {
                 padding: 1.5rem;
+                border-radius: 0.75rem;
+            }
+             .form-label {
+                font-size: 0.85rem;
+                  word-wrap: break-word;
+            overflow-wrap: break-word;
+            }
+
+            .form-header {
+                margin-bottom: 2rem;
+                padding-bottom: 1.5rem;
             }
 
             .form-title {
-                font-size: 2rem;
+                font-size: 1.75rem;
+                line-height: 1.2;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
-
-            .btn-submit, .btn-cancel {
-                width: 100%;
+            .form-subtitle {
+                font-size: 1rem;
+                word-wrap: break-word
             }
 
             .project-info {
                 flex-direction: column;
                 text-align: center;
                 gap: 0.75rem;
+                padding: 1.25rem;
+            }
+
+            .project-info i {
+                font-size: 1.75rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+
+            .comparison-filters-section {
+                grid-template-columns: 1fr;
+                padding: 1.25rem;
+                gap: 1rem;
+            }
+
+            .beneficiario-info {
+                flex-direction: column;
+                gap: 0.75rem;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .beneficiario-form-section {
+                padding: 1.25rem;
+                border-radius: 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.75rem;
+            }
+
+            .btn-add-beneficiario, 
+            .btn-clean-form,
+            .btn-submit, 
+            .btn-cancel {
+                width: 100%;
+                justify-content: center;
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+                gap: 0.75rem;
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+            }
+
+            .beneficiarios-agregados {
+                padding: 1rem;
+            }
+
+            .beneficiario-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .beneficiario-content {
+                width: 100%;
+            }
+
+            .btn-remove-item {
+                align-self: flex-end;
+                width: 100%;
+                justify-content: center;
+                display: flex;
+                padding: 0.625rem;
+                font-size: 0.9rem;
+            }
+
+            .mensaje-advertencia-content {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+            }
+
+            .mensaje-advertencia-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-aceptar {
+                width: 100%;
+                margin-left: 0;
+                justify-content: center;
             }
         }
 
         @media (max-width: 480px) {
+           
+           
+           
+            .form-container {
+                padding: 0.5rem;
+            }
+
+            .form-card {
+                padding: 1rem;
+                border-radius: 0.5rem;
+            }
+
             .form-title {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
+            }
+
+            .field-subtitle {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          
+        }
+
+            .form-control {
+                font-size: 12px; /* Evita zoom en iOS */
+                padding: 0.75rem;
+            }
+
+            .form-label {
+                font-size: 0.85rem;
+                  word-wrap: break-word;
+            overflow-wrap: break-word;
+            }
+
+            .beneficiario-current span, 
+            .beneficiarios-total {
+                font-size: 0.85rem;
+            }
+
+            .option-image {
+                width: 60px; /* Reducido para dar más espacio al texto en móviles pequeños */
+                height: 60px;
+            }
+
+            .checkbox-label {
+                padding: 0.5rem;
+            }
+
+            .option-with-image {
+                gap: 8px;
             }
         }
 
-        /* Animations */
+        /* Forzar que el formulario no se desborde */
+        #completarForm {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         .form-card {
             animation: fadeInUp 0.6s ease-out;
         }
@@ -452,6 +640,9 @@
             padding: 2rem;
             margin-bottom: 2rem;
             border: 1px solid var(--gris-medio);
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden; /* Asegurar que nada salga de esta sección */
         }
 
         .beneficiarios-agregados {
@@ -486,16 +677,188 @@
             background: white;
             border: 1px solid var(--gris-medio);
             border-radius: 0.5rem;
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.05);
         }
 
+        .beneficiario-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
         .beneficiario-nombre {
             font-weight: 600;
             color: var(--negro);
+            font-size: 1rem;
+        }
+
+        .beneficiario-detalles {
+            color: var(--gris);
+            font-size: 0.9rem;
+            background: var(--gris-claro);
+            padding: 0.2rem 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid var(--gris-medio);
+        }
+
+        @media (max-width: 768px) {
+            .beneficiario-main {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+            
+            .beneficiario-item {
+                padding: 1rem;
+            }
+        }
+
+        /* === COMPARACIÓN DE PROYECTOS EN FORMULARIO === */
+        .comparison-filters-section {
+            background: var(--azul-claro);
+            border: 1px solid var(--azul);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            animation: slideInDown 0.5s ease-out both;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .comparison-filters-section .form-group {
+            margin-bottom: 0;
+        }
+
+        .multiselect-container {
+            position: relative;
+        }
+
+        .multiselect-display {
+            background: white;
+            border: 2px solid var(--gris-medio);
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .multiselect-display:hover {
+            border-color: var(--azul);
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--gris-medio);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 0.25rem;
+        }
+
+        .multiselect-dropdown.show {
+            display: block;
+        }
+
+        .multiselect-option {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid var(--gris-claro);
+        }
+
+        .multiselect-option:hover {
+            background: var(--gris-claro);
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            margin: 0;
+            width: 1.1rem;
+            height: 1.1rem;
+            cursor: pointer;
+        }
+
+        .multiselect-option label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9rem;
+            user-select: none;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+        .option-with-image {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: normal;
+            padding: 4px 0;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .option-with-image .option-text {
+            flex: 1;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0; /* Importante para flexbox y wrap de texto */
+        }
+
+        .select-all-option {
+            background: var(--gris-claro);
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            border-bottom: 2px solid var(--gris-medio);
+        }
+
+        .selected-count-badge {
+            background: var(--azul);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-filters-section {
+                grid-template-columns: 1fr;
+            }
         }
 
         .beneficiario-detalles {
@@ -527,7 +890,7 @@
         .beneficiario-actions-section {
             display: flex;
             justify-content: center;
-            margin: 2rem 0;
+            margin: 1.5rem 0; /* Reducido de 2rem */
         }
 
         .action-buttons {
@@ -692,21 +1055,7 @@
     justify-content: flex-end;
 }
 
-.btn-aceptar {
-    background: linear-gradient(135deg, var(--verde) 0%, #5a9c3f 100%) !important;
-    border: 2px solid #1e7e34;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    margin-left: 9rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+
 
 .btn-aceptar:hover {
     background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
@@ -741,4 +1090,8 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+html, body {
+    overflow-x: hidden;
 }
