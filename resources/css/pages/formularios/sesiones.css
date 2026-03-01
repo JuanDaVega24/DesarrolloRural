@@ -1,0 +1,546 @@
+/* Estilos para Formularios Concurrentes */
+
+/* Contenedor principal */
+.form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+/* Información de la sesión */
+.session-info-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.sesion-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sesion-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.sesion-details {
+    margin-top: 0.5rem;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Usuarios activos */
+.users-active-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.users-active-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: #1e293b;
+}
+
+.users-active-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.users-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.user-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.user-item:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.user-actual {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.user-info {
+    margin-bottom: 0.5rem;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1e293b;
+    display: block;
+}
+
+.user-time {
+    font-size: 0.85rem;
+    color: #64748b;
+    display: block;
+}
+
+.user-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.badge-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #22c55e;
+}
+
+.beneficiarios-count {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.no-users {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Beneficiarios agregados */
+.beneficiarios-agregados {
+    margin-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 2rem;
+}
+
+.agregados-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.lista-beneficiarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.beneficiario-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.beneficiario-item:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.beneficiario-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.beneficiario-main {
+    flex: 1;
+}
+
+.beneficiario-nombre {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.beneficiario-detalles {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.beneficiario-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-remove-item {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.btn-remove-item:hover {
+    background: #dc2626;
+}
+
+.no-beneficiarios {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 2rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+}
+
+/* Botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-add-beneficiario,
+.btn-clean-form,
+.btn-complete-session,
+.btn-fusionar-sesiones {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.btn-add-beneficiario {
+    background: #22c55e;
+    color: white;
+}
+
+.btn-add-beneficiario:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+}
+
+.btn-clean-form {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-clean-form:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+.btn-complete-session {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-complete-session:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-fusionar-sesiones {
+    background: #8b5cf6;
+    color: white;
+}
+
+.btn-fusionar-sesiones:hover {
+    background: #7c3aed;
+    transform: translateY(-1px);
+}
+
+/* Beneficiario info */
+.beneficiario-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f1f5f9;
+    border-radius: 6px;
+}
+
+.beneficiario-current {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.beneficiarios-total {
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Mensaje de advertencia */
+.mensaje-advertencia {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.mensaje-advertencia-content {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.mensaje-advertencia-text {
+    flex: 1;
+}
+
+.mensaje-advertencia-text h4 {
+    margin: 0 0 0.5rem 0;
+    color: #f59e0b;
+    font-size: 1.1rem;
+}
+
+.mensaje-advertencia-text p {
+    margin: 0.5rem 0 0 0;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.mensaje-advertencia-actions {
+    display: flex;
+    align-items: flex-start;
+}
+
+.btn-aceptar {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.btn-aceptar:hover {
+    background: #d97706;
+}
+
+/* Toast personalizado para sesiones */
+.toast-container-sesiones {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.toast-sesiones {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+    pointer-events: auto;
+    animation: slideInDown 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 300px;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.toast-sesiones.success {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.toast-sesiones.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.toast-sesiones.warning {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.toast-icon {
+    font-size: 1.25rem;
+}
+
+.toast-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1rem;
+    }
+    
+    .form-card {
+        padding: 1.5rem;
+    }
+    
+    .users-list,
+    .lista-beneficiarios {
+        grid-template-columns: 1fr;
+    }
+    
+    .beneficiario-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .mensaje-advertencia {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* Animaciones de carga */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Indicador de actividad */
+.activity-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #e2e8f0;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.activity-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}

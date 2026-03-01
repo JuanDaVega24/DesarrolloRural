@@ -107,9 +107,10 @@ class FormularioController extends Controller
      */
     public function show(ProyectoProductivo $proyecto)
     {
-        // Verificar que sea un proyecto manual
+        // Verificar si el proyecto ya fue finalizado
         if ($proyecto->origen !== 'manual') {
-            abort(404, 'Proyecto no encontrado');
+            return redirect()->route('formularios.index')
+                ->with('warning', 'Este proyecto ya ha sido finalizado y los datos han sido consolidados.');
         }
 
         // Obtener preguntas personalizadas del proyecto

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProyectoProductivo;
+use App\Models\FormularioSesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -384,6 +385,29 @@ class ProyectoProductivoController extends Controller
     }
 
     /**
+     * Obtener veredas únicas presentes en el proyecto
+     */
+    private function getVeredasFromProject($rows, $headers)
+    {
+        $uniqueVeredas = [];
+        
+        // Priorizar Vereda_CZ que es la columna automática, sino buscar manual
+        $veredaColumn = in_array('Vereda_CZ', $headers) ? 'Vereda_CZ' : $this->findVeredaColumn($headers);
+        
+        if ($veredaColumn) {
+            foreach ($rows as $row) {
+                $value = trim((string)($row[$veredaColumn] ?? ''));
+                if (!empty($value) && !in_array($value, $uniqueVeredas)) {
+                    $uniqueVeredas[] = $value;
+                }
+            }
+        }
+        
+        sort($uniqueVeredas);
+        return $uniqueVeredas;
+    }
+
+    /**
      * Preparar datos únicos para los filtros de cada columna
      */
     private function prepareFilterData($rows, $headers)
@@ -419,49 +443,86 @@ class ProyectoProductivoController extends Controller
     }
 
     /**
-     * Obtener veredas únicas del proyecto actual (solo las que aparecen en Vereda_CZ)
-     */
-    private function getVeredasFromProject($rows, $headers)
-    {
-        $veredas = [];
-
-        // Verificar si existe la columna Vereda_CZ
-        if (!in_array('Vereda_CZ', $headers)) {
-            return $veredas;
-        }
-
-        // Extraer valores únicos de Vereda_CZ
-        foreach ($rows as $row) {
-            $veredaValue = trim($row['Vereda_CZ'] ?? '');
-            if (!empty($veredaValue) && !in_array($veredaValue, $veredas)) {
-                $veredas[] = $veredaValue;
-            }
-        }
-
-        sort($veredas);
-        return $veredas;
-    }
-
-    /**
-     * Buscar columna de género con variaciones de nombre
+     * Buscar columna de género en los headers
      */
     public function findGenderColumn($headers)
     {
-        $genderVariations = [
-            'genero', 'género', 'sexo', 'gender', 'sex',
-            'gen', 'genero_persona', 'género_persona'
-        ];
-
+        $genderKeywords = ['genero', 'sexo', 'gender', 'sex'];
         foreach ($headers as $header) {
-            $headerNormalized = $this->normalizeText($header);
-            foreach ($genderVariations as $variation) {
-                if (str_contains($headerNormalized, $variation)) {
+            $headerLower = $this->normalizeText($header);
+            foreach ($genderKeywords as $keyword) {
+                if (str_contains($headerLower, $keyword)) {
                     return $header;
                 }
             }
         }
-
         return null;
+    }
+
+    /**
+     * Buscar columna de corregimiento en los headers
+     */
+    public function findCorregimientoColumn($headers)
+    {
+        $keywords = ['corregimiento', 'correg'];
+        foreach ($headers as $header) {
+            $headerLower = $this->normalizeText($header);
+            foreach ($keywords as $keyword) {
+                if (str_contains($headerLower, $keyword)) {
+                    return $header;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Buscar columna de vereda en los headers
+     */
+    public function findVeredaColumn($headers)
+    {
+        $keywords = ['vereda', 'sector', 'comunidad'];
+        foreach ($headers as $header) {
+            $headerLower = $this->normalizeText($header);
+            foreach ($keywords as $keyword) {
+                if (str_contains($headerLower, $keyword)) {
+                    return $header;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Muestra el formulario de sesiones concurrentes
+     */
+    public function formularioSesiones(ProyectoProductivo $proyecto)
+    {
+        // Verificar que el proyecto sea manual
+        if ($proyecto->origen !== 'manual') {
+            return redirect()->route('proyectos.show', $proyecto)
+                ->with('error', 'Este proyecto no permite formularios concurrentes.');
+        }
+
+        // Verificar que el proyecto tenga datos
+        if (!$proyecto->data || !isset($proyecto->data['rows']) || count($proyecto->data['rows']) === 0) {
+            return redirect()->route('proyectos.show', $proyecto)
+                ->with('error', 'Este proyecto no tiene datos para formularios concurrentes.');
+        }
+
+        // Verificar si hay sesiones activas y limitar el acceso
+        $sesionesActivas = FormularioSesion::where('proyecto_id', $proyecto->id)
+                                         ->where('estado', 'activa')
+                                         ->where('ultima_actividad', '>', now()->subMinutes(30))
+                                         ->count();
+
+        // Limitar a máximo 5 usuarios simultáneos
+        if ($sesionesActivas >= 5) {
+            return redirect()->route('proyectos.show', $proyecto)
+                ->with('error', 'Lo sentimos, el formulario está siendo utilizado por el número máximo de usuarios simultáneos. Por favor, intente de nuevo en unos minutos.');
+        }
+
+        return view('formularios.sesiones', compact('proyecto'));
     }
 
     /**

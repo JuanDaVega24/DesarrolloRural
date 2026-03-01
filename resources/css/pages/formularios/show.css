@@ -445,6 +445,61 @@ img {
             max-width: 100%;
             overflow-x: hidden;
         }
+        /* Collaborative Dashboard */
+        .collaborative-dashboard .card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .collaborative-dashboard .card-header {
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            border-bottom: none;
+        }
+
+        #usuarios-activos-list .list-group-item {
+            border-left: none;
+            border-right: none;
+            padding: 0.75rem 1.25rem;
+            border-color: #f1f3f5;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-name {
+            font-weight: 600;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .user-time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+        }
+
+        .user-actual {
+            background-color: #f0f7ff !important;
+        }
+
+        .badge-active {
+            background-color: #2ecc71;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .all-beneficiarios-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
         .form-card {
             animation: fadeInUp 0.6s ease-out;
         }

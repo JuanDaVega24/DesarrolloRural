@@ -11,6 +11,7 @@ use App\Http\Controllers\CaracterizacionFormularioController;
 use App\Http\Controllers\FormularioController;
 use App\Http\Controllers\ImagenController;
 use App\Http\Controllers\ConstructorImagenController;
+use App\Http\Controllers\FormularioSesionController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -92,6 +93,10 @@ Route::middleware([
         // Ruta para actualizar columnas automáticas de todos los proyectos
         Route::post('proyectos/update-all-automatic-columns', [ProyectoProductivoController::class, 'updateAllProjectsColumns'])
             ->name('proyectos.update-all-automatic-columns');
+
+        // Ruta para formulario de sesiones concurrentes
+        Route::get('proyectos/{proyecto}/sesiones', [ProyectoProductivoController::class, 'formularioSesiones'])
+            ->name('proyectos.sesiones');
 
         // Rutas para subir y gestionar imágenes en el constructor de formularios
         Route::post('/formularios/constructor/imagenes', [ConstructorImagenController::class, 'upload']);
@@ -247,6 +252,30 @@ Route::middleware([
 | RUTA PARA CARGAR VEREDAS SEGÚN CORREGIMIENTO (AJAX)
 |--------------------------------------------------------------------------
 */
+
+// Rutas para sesiones de formulario concurrente
+Route::prefix('sesiones')->name('sesiones.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/{proyecto}', [FormularioSesionController::class, 'obtenerSesion'])
+        ->name('obtener');
+    
+    Route::put('/{proyecto}/actualizar', [FormularioSesionController::class, 'actualizarDatos'])
+        ->name('actualizar');
+    
+    Route::post('/{proyecto}/validar-cedula', [FormularioSesionController::class, 'validarCedulaConcurrente'])
+        ->name('validar-cedula');
+    
+    Route::get('/{proyecto}/usuarios-activos', [FormularioSesionController::class, 'obtenerUsuariosActivos'])
+        ->name('usuarios-activos');
+    
+    Route::post('/{proyecto}/completar', [FormularioSesionController::class, 'completarSesion'])
+        ->name('completar');
+    
+    Route::post('/{proyecto}/fusionar', [FormularioSesionController::class, 'fusionarSesiones'])
+        ->name('fusionar');
+    
+    Route::get('/{proyecto}/beneficiarios-todos', [FormularioSesionController::class, 'obtenerBeneficiariosTodasSesiones'])
+        ->name('beneficiarios-todos');
+});
 
 
 

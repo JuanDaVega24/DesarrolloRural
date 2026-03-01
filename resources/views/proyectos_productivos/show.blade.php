@@ -32,6 +32,12 @@
                         <a href="{{ route('proyectos.por-ano', $proyecto->ano) }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i> Volver
                         </a>
+                        
+                        @if($proyecto->origen === 'manual')
+                            <a href="{{ route('proyectos.sesiones', $proyecto) }}" class="btn btn-success ms-2">
+                                <i class="fas fa-users me-1"></i> Formulario Concurrido
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -79,6 +85,9 @@
                         <table class="table table-hover mb-0" id="dataTable">
                             <thead class="table-header sticky-header">
                                 {{-- Fila de filtros --}}
+                                @php
+                                    $genderColumn = isset($filterData['Genero']) ? app('App\Http\Controllers\ProyectoProductivoController')->findGenderColumn($proyecto->data['headers'] ?? []) : null;
+                                @endphp
                                 <tr class="filter-row">
                                     <th class="text-center column-index filter-header">
                                         <i class="bi bi-funnel text-white"></i>
@@ -86,9 +95,6 @@
                                     @if(isset($proyecto->data['headers']))
                                         @foreach($proyecto->data['headers'] as $header)
                                             <th class="text-center filter-header">
-                                                @php
-                                                    $genderColumn = isset($filterData['Genero']) ? app('App\Http\Controllers\ProyectoProductivoController')->findGenderColumn($proyecto->data['headers'] ?? []) : null;
-                                                @endphp
                                                 @if($header === $genderColumn && isset($filterData['Genero']) && !empty($filterData['Genero']))
                                                     <div class="dropdown">
                                                         <button class="btn btn-link text-white p-0 dropdown-toggle" type="button"
@@ -116,15 +122,19 @@
                                                         </button>
                                                         <ul class="dropdown-menu" aria-labelledby="corregimientoFilter">
                                                             <li><h6 class="dropdown-header">Filtrar por Corregimiento</h6></li>
-                                                            @foreach($corregimientos as $id => $nombre)
-                                                            <li>
-                                                                <label class="dropdown-item">
-                                                                    <input type="checkbox" class="form-check-input me-2 column-filter"
-                                                                           data-column="Corregimiento_CZ" value="{{ $id }}">
-                                                                    {{ $nombre }}
-                                                                </label>
-                                                            </li>
-                                                            @endforeach
+                                                            @if(isset($filterData['Corregimiento_CZ']) && !empty($filterData['Corregimiento_CZ']))
+                                                                @foreach($filterData['Corregimiento_CZ'] as $nombre)
+                                                                <li>
+                                                                    <label class="dropdown-item">
+                                                                        <input type="checkbox" class="form-check-input me-2 column-filter"
+                                                                               data-column="Corregimiento_CZ" value="{{ $nombre }}">
+                                                                        {{ $nombre }}
+                                                                    </label>
+                                                                </li>
+                                                                @endforeach
+                                                            @else
+                                                                <li><span class="dropdown-item-text text-muted">No hay datos</span></li>
+                                                            @endif
                                                         </ul>
                                                     </div>
                                                 @elseif($header === 'Vereda_CZ')

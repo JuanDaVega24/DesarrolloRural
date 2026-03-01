@@ -1,9 +1,12 @@
 <x-app-layout>
 
         
-@vite(['resources/css/pages/formularios/show.css', 'resources/css/pages/formularios/imagenes.css', 'resources/js/formularios-imagenes.js'])
+@vite(['resources/css/pages/formularios/show.css', 'resources/css/pages/formularios/imagenes.css', 'resources/js/formularios-imagenes.js', 'resources/js/formularios-sesiones.js'])
 
     <div class="form-container">
+        {{-- Barra de información colaborativa --}}
+        <div id="info-sesion" class="mb-3"></div>
+        
         <div class="form-card">
             {{-- Información del proyecto --}}
             <div class="project-info">
@@ -88,6 +91,42 @@
                 </div>
 
                 {{-- Sistema de beneficiarios acumulativo --}}
+                <div class="collaborative-dashboard mt-4 mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-users-cog me-2"></i>Usuarios Activos</span>
+                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="window.formularioSesiones?.obtenerUsuariosActivos()">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                                    <div id="usuarios-activos-list" class="list-group list-group-flush">
+                                        {{-- Se poblará por JS --}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-chart-line me-2"></i>Progreso Global</span>
+                                    <span class="badge bg-light text-success fs-6" id="total-beneficiarios-todos">0</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <p class="small text-muted mb-2">Beneficiarios registrados por todos los usuarios en sesiones activas.</p>
+                                    <div id="all-beneficiarios-container">
+                                        {{-- Se poblará por JS --}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="proyecto-id" value="{{ $proyecto->id }}">
+
                 @if($preguntasPersonalizadas->count() > 0 || $proyecto->preguntas->count() > 0)
                     <div class="form-header">
                         <h2 class="form-title">Datos de los Inscritos</h2>
@@ -371,10 +410,16 @@
                 @endif
 
                 {{-- Acciones --}}
-                <div class="form-actions">
+                <div class="form-actions d-flex flex-wrap gap-2">
+                    @if(auth()->user()->hasRole('Administrador'))
+                        <button type="button" class="btn btn-success" onclick="window.formularioSesiones?.fusionarSesiones()">
+                            <i class="fas fa-file-import me-2"></i>Finalizar Proyecto y Fusionar Datos
+                        </button>
+                    @endif
+                    
                     <button type="submit" class="btn-submit">
                         <i class="fas fa-save"></i>
-                        Terminar y Guardar Proyecto
+                        Completar mi parte
                     </button>
                     <a href="{{ route('formularios.index') }}" class="btn-cancel">
                         <i class="fas fa-times"></i>
@@ -398,11 +443,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const contenedorAgregados = document.getElementById('beneficiarios-agregados');
 
     let beneficiarios = [];
+    window.beneficiarios = beneficiarios; // Hacerlo global para sincronización
+
+    window.setBeneficiariosLocales = function(datos) {
+        beneficiarios = datos;
+        window.beneficiarios = beneficiarios;
+        inputAcumulados.value = JSON.stringify(beneficiarios);
+        actualizarLista();
+        actualizarEstado();
+    };
+
     try {
         beneficiarios = JSON.parse(inputAcumulados.value || '[]');
+        window.beneficiarios = beneficiarios;
     } catch (e) {
         console.error('Error al parsear beneficiarios:', e);
         beneficiarios = [];
+        window.beneficiarios = beneficiarios;
     }
     
     let contador = beneficiarios.length + 1;
@@ -698,7 +755,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Proceder a agregar el beneficiario
         beneficiarios.push(obtenerDatos());
+        window.beneficiarios = beneficiarios; // Sincronizar global
         inputAcumulados.value = JSON.stringify(beneficiarios);
+        
+        // Guardar en el servidor inmediatamente si estamos en modo colaborativo
+        if (window.formularioSesiones) {
+            window.formularioSesiones.guardarDatos(beneficiarios);
+        }
+
         actualizarLista();
         limpiarFormulario();
         contador++;
@@ -716,7 +780,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedCheckboxes = document.querySelectorAll('.project-option input[type="checkbox"]:checked');
         const proyectosIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
-        fetch('{{ route("formularios.validar-cedula") }}', {
+        // Primero validar contra otros usuarios en tiempo real si estamos en modo colaborativo
+        let pConcurrente = Promise.resolve({ success: true, cedula_encontrada: false });
+        if (window.formularioSesiones) {
+            pConcurrente = fetch(`/sesiones/${document.getElementById('proyecto-id').value}/validar-cedula`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    cedula: cedula,
+                    session_token: window.formularioSesiones.sesion?.session_token
+                })
+            }).then(r => r.json());
+        }
+
+        // Luego validar contra base de datos histórica
+        const pHistorica = fetch('{{ route("formularios.validar-cedula") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -727,25 +808,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 current_year: currentYear,
                 proyectos_ids: proyectosIds
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Error al validar cédula: ' + data.error);
-                return;
-            }
-            
-            const projects = data.projects || [];
+        }).then(r => r.json());
+
+        Promise.all([pConcurrente, pHistorica])
+        .then(([resConcurrente, resHistorica]) => {
+            const projects = resHistorica.projects || [];
             let foundRecent = false;
             let foundOld = false;
             let recentProjects = [];
             let oldProjects = [];
             
+            // Si se encontró en otra sesión activa
+            if (resConcurrente.cedula_encontrada) {
+                foundRecent = true;
+                resConcurrente.usuarios.forEach(u => {
+                    recentProjects.push(`Usuario: ${u.usuario} (Sesión activa)`);
+                });
+            }
+
             projects.forEach(p => {
-                // Si el proyecto es del año actual o anterior -> Reciente
-                // El usuario especificó: "Si existe en proyectos de mas de 1 año anterior mostrar mensaje pero no restringir"
-                // Esto implica: Año < (currentYear - 1) -> Old.
-                // Año >= (currentYear - 1) -> Recent (Restrict).
                 if (p.ano >= currentYear - 1) {
                     foundRecent = true;
                     recentProjects.push(`${p.nombre} (${p.ano})`);
@@ -796,7 +877,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.eliminar = function (i) {
         beneficiarios.splice(i, 1);
+        window.beneficiarios = beneficiarios; // Sincronizar global
         inputAcumulados.value = JSON.stringify(beneficiarios);
+        
+        // Guardar en el servidor inmediatamente si estamos en modo colaborativo
+        if (window.formularioSesiones) {
+            window.formularioSesiones.guardarDatos(beneficiarios);
+        }
+
         contador = beneficiarios.length + 1;
         actualizarLista();
         actualizarEstado();
@@ -889,10 +977,18 @@ document.addEventListener('DOMContentLoaded', function () {
         selectAllCb.indeterminate = (selected > 0 && selected < total);
     }
 
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
         if (beneficiarios.length === 0) {
             e.preventDefault();
             alert('Debe agregar al menos un beneficiario.');
+            return;
+        }
+
+        if (window.formularioSesiones) {
+            e.preventDefault();
+            if (confirm('¿Está seguro de que ha terminado de registrar sus beneficiarios? Esta acción guardará su parte del trabajo.')) {
+                await window.formularioSesiones.completarSesion();
+            }
         }
     });
 
