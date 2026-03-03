@@ -21,9 +21,9 @@ mkdir -p \
 
 # Wait for DB if configured
 if [[ -n "${DB_HOST:-}" ]]; then
-  echo "Waiting for database at ${DB_HOST}:${DB_PORT:-5432}..."
+  echo "Waiting for database at ${DB_HOST}:${DB_PORT_HOST:-5432}..."
   until php -r '
-    $h=getenv("DB_HOST"); $p=getenv("DB_PORT") ?: "5432";
+    $h=getenv("DB_HOST"); $p=getenv("DB_PORT_HOST") ?: "5432";
     $db=getenv("DB_DATABASE"); $u=getenv("DB_USERNAME"); $pw=getenv("DB_PASSWORD");
     $dsn="pgsql:host=$h;port=$p;dbname=$db";
     try { new PDO($dsn,$u,$pw,[PDO::ATTR_TIMEOUT=>2]); echo "ok\n"; }
