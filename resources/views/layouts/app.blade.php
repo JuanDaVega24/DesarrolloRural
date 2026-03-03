@@ -78,7 +78,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css">
 
     <!-- App CSS / JS -->
-    @vite(['resources/css/app.css', 'resources/css/custom-theme.css', 'resources/js/app.js'])
+    @vite(['resources/js/app.js'])
     @livewireStyles
 
     <!-- Modern UI - GOV.CO Styles -->

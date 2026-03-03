@@ -1,6 +1,5 @@
 <x-app-layout>
 
-@vite(['resources/css/pages/dashboard.css'])
 
 
 
