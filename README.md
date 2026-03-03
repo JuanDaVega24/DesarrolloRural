@@ -15,6 +15,13 @@ Permite:
 
 Soporte funcional y operativo: **desarrollorural@bucaramanga.gov.co**
 
+## Acceso administrador por defecto
+
+- Usuario administrador: **desarrollorural@bucaramanga.gov.co**
+- Clave inicial: **12345678**
+
+> ⚠️ Por seguridad, al primer ingreso se debe cambiar la clave de inmediato.
+
 ## Navegación rápida
 
 - [Requerimientos compartidos](#requerimientos-compartidos)
