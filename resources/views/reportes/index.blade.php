@@ -1,5 +1,4 @@
 <x-app-layout>
-   @vite(['resources/css/pages/reportes/index.css'])
 
     <div class="reportes-container">
         <div class="content-wrapper">

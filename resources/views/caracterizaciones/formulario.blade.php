@@ -2,7 +2,6 @@
 <x-app-layout>
     
 
-        @vite(['resources/css/pages/caracterizaciones/formulario.css'])
 
 
 

@@ -1,6 +1,5 @@
 <x-app-layout>
    
-    @vite(['resources/css/pages/caracterizaciones/index.css'])
 
     <div class="caracterizacion-container">
         <div class="content-wrapper">
@@ -149,5 +148,4 @@
     @endif
 
     {{-- Cargar JavaScript de tabla de forma asíncrona --}}
-    @vite(['resources/js/caracterizaciones-table.js', 'resources/js/caracterizaciones-upload.js'])
 </x-app-layout>

@@ -1,5 +1,4 @@
 <x-app-layout>
-    @vite(['resources/css/pages/proyectos-productivos/index.css'])
 
 
 

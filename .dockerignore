@@ -1,0 +1,6 @@
+docker-data/
+.git/
+node_modules/
+vendor/
+storage/logs/
+.env

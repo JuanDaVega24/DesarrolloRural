@@ -1,5 +1,4 @@
 <x-app-layout>
-    @vite(['resources/css/pages/reportes/area-proyectos.css'])
 
     <div class="estadisticas-container">
         <div class="content-wrapper">

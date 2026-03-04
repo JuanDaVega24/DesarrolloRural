@@ -1,6 +1,5 @@
 <x-app-layout>
 
-@vite(['resources/css/pages/proyectos-productivos/create_manual.css'])
 
     <div class="form-container">
         <div class="form-card">

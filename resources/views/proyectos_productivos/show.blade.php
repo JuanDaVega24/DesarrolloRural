@@ -1,6 +1,5 @@
 <x-app-layout>
 
-    @vite(['resources/css/pages/proyectos-productivos/show.css'])
 
     <div class="py-3">
         <div class="container-fluid px-4">

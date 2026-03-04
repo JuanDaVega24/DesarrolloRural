@@ -1,6 +1,5 @@
 <x-app-layout>
 
-    @vite(['resources/css/pages/usuarios/edit.css'])
 
     <div class="d-flex justify-content-center mt-4 mb-5">
 

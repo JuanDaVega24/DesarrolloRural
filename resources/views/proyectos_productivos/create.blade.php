@@ -1,5 +1,4 @@
 <x-app-layout>
-    @vite(['resources/css/pages/proyectos-productivos/create.css'])
 
     <div class="d-flex justify-content-center mt-4 mb-5">
         <div class="login-box" style="max-width: 600px; width: 100%;">

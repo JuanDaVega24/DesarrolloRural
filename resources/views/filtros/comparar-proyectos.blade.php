@@ -1,5 +1,4 @@
 <x-app-layout>
-    @vite(['resources/css/pages/filtros/comparar-proyectos.css'])
 
     <div class="comparison-container">
         <div class="content-wrapper">

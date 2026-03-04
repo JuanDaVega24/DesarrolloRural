@@ -1,5 +1,4 @@
 <x-app-layout>
-    @vite(['resources/css/pages/formularios/index.css'])
 
     <div class="formularios-container">
         <div class="content-wrapper">

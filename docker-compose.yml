@@ -1,0 +1,67 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: desarrollo_rural_app:latest
+    container_name: desarrollo_rural_app
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost:${APP_PORT:-8080}}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      # Puerto interno del contenedor postgres dentro de la red docker (siempre 5432)
+      DB_PORT: ${DB_PORT_INTERNAL:-5432}
+      # Sin defaults para credenciales sensibles, deben ser provistas explícitamente en .env o entorno de despliegue
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # Ejecutar seeders solo cuando sea necesario (no recomendado en cada arranque de prod)
+      RUN_SEEDERS: ${RUN_SEEDERS:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit((int)!@fsockopen(\"127.0.0.1\",80));'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      # Persistencia visible en disco local (uploads, sesiones, logs, cache)
+      - ./docker-data/app-storage:/var/www/html/storage
+      - ./docker-data/public-uploads:/var/www/html/public/uploads
+    restart: unless-stopped
+    networks:
+      - desarrollo_rural_net
+
+  db:
+    image: postgres:17
+    container_name: desarrollo_rural_db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-DesarrolloRural}
+      POSTGRES_USER: ${DB_USERNAME:-desarrollorural_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
+    volumes:
+      # Persistencia visible en disco local de PostgreSQL
+      - ./docker-data/postgres:/var/lib/postgresql/data
+    # Exponer solo a localhost en VPS (evita acceso externo directo)
+    ports:
+      - "${DB_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-desarrollorural_user} -d ${DB_DATABASE:-DesarrolloRural}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - desarrollo_rural_net
+
+networks:
+  desarrollo_rural_net:
+    driver: bridge
