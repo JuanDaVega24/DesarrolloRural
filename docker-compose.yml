@@ -35,6 +35,7 @@ services:
     volumes:
       # Persistencia visible en disco local (uploads, sesiones, logs, cache)
       - ./docker-data/app-storage:/var/www/html/storage
+      - ./docker-data/public-uploads:/var/www/html/public/uploads
     restart: unless-stopped
     networks:
       - desarrollo_rural_net

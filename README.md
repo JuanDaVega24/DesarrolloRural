@@ -113,8 +113,9 @@ Esta ruta usa [`docker-compose.yml`](docker-compose.yml), [`Dockerfile`](Dockerf
 ### A.2 Preparación inicial
 
 ```bash
-mkdir -p docker-data/app-storage docker-data/postgres
-sudo chown -R ${HOST_UID:-1000}:${HOST_GID:-1000} docker-data
+mkdir -p docker-data/app-storage docker-data/postgres docker-data/public-uploads/constructor/temp
+sudo chown -R www-data:www-data docker-data/public-uploads
+sudo chown -R ${HOST_UID:-1000}:${HOST_GID:-1000} docker-data/app-storage docker-data/postgres
 sudo chmod -R 775 docker-data
 ```
 
@@ -296,6 +297,37 @@ php artisan event:cache
 
 - Si `php artisan route:cache` falla por rutas duplicadas, la app puede seguir funcionando sin caché de rutas.
 - Logs de Laravel: `docker-data/app-storage/logs/laravel.log`.
+
+### Permisos para uploads en Docker (`/var/www/html/public/uploads`)
+
+El volumen `./docker-data/public-uploads:/var/www/html/public/uploads` debe permitir escritura del usuario web (`www-data`) para evitar errores en `/var/www/html/public/uploads/constructor/temp`.
+
+Comandos recomendados después de montar volumen o al solucionar errores de permisos:
+
+```bash
+mkdir -p docker-data/public-uploads/constructor/temp
+sudo chown -R www-data:www-data docker-data/public-uploads
+sudo chmod -R 775 docker-data/public-uploads
+sudo find docker-data/public-uploads -type d -exec chmod 775 {} \;
+sudo find docker-data/public-uploads -type f -exec chmod 664 {} \;
+```
+
+Validación dentro del contenedor:
+
+```bash
+docker compose exec app id www-data
+docker compose exec app ls -ld /var/www/html/public/uploads /var/www/html/public/uploads/constructor/temp
+docker compose exec app stat -c "%U:%G %a %n" /var/www/html/public/uploads /var/www/html/public/uploads/constructor/temp
+```
+
+Si persiste el error, reiniciar servicios y volver a aplicar permisos:
+
+```bash
+docker compose restart app
+sudo chown -R www-data:www-data docker-data/public-uploads
+sudo chmod -R 775 docker-data/public-uploads
+```
+
 - En `php.ini`, para producción se recomienda:
 
 ```ini
