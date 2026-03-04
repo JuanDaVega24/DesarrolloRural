@@ -73,9 +73,14 @@
                                 <i class="fas fa-chevron-down"></i>
                             </div>
                             <div class="multiselect-dropdown" id="multiselect-dropdown">
-                                <div class="multiselect-option select-all-option">
-                                    <input type="checkbox" id="select-all-projects" checked>
-                                    <label for="select-all-projects">Seleccionar Todos</label>
+                                <div class="multiselect-option select-all-option d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <input type="checkbox" id="select-all-projects" checked>
+                                        <label for="select-all-projects" class="mb-0">Seleccionar Todos</label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-link p-0 text-primary" onclick="location.reload()" style="font-size: 0.75rem; text-decoration: none;">
+                                        <i class="fas fa-sync-alt me-1"></i>Recargar
+                                    </button>
                                 </div>
                                 <div id="projects-list-container">
                                     @foreach($proyectosParaComparar as $pComp)
@@ -84,6 +89,9 @@
                                             <label for="proj-{{ $pComp->id }}">{{ $pComp->nombre }} ({{ $pComp->ano }})</label>
                                         </div>
                                     @endforeach
+                                    <div id="no-projects-found" class="multiselect-option text-muted" style="display: none; justify-content: center; padding: 1rem;">
+                                        <i class="fas fa-search me-2"></i> No hay proyectos para este año
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -724,14 +732,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function mostrarMensajeAdvertencia(res) {
         const mensajeAdvertencia = document.getElementById('mensaje-advertencia');
         const detallesDiv = document.getElementById('mensaje-advertencia-detalles');
+        const tituloAdvertencia = mensajeAdvertencia.querySelector('h4');
 
         let detalles = '';
-
         if (res.recentProjects && res.recentProjects.length > 0) {
             detalles = '• Inscrito en: ' + res.recentProjects.join(', ');
         }
 
-        detallesDiv.textContent = detalles;
+        // Si el bloqueo es por un familiar, cambiar el título y mostrar quién es
+        if (res.familiar_duplicado) {
+            tituloAdvertencia.innerHTML = '⚠️ Núcleo Familiar ya Inscrito';
+            detalles = `<strong>Familiar ya inscrito: ${res.familiar_duplicado}</strong><br>` + detalles;
+        } else {
+            tituloAdvertencia.innerHTML = '⚠️ Cédula Duplicada';
+        }
+
+        detallesDiv.innerHTML = detalles;
         mensajeAdvertencia.style.display = 'block';
 
         // Hacer scroll al mensaje
@@ -827,12 +843,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             projects.forEach(p => {
+                const projectKey = `${p.nombre} (${p.ano})`;
                 if (p.ano >= currentYear - 1) {
                     foundRecent = true;
-                    recentProjects.push(`${p.nombre} (${p.ano})`);
+                    if (!recentProjects.includes(projectKey)) {
+                        recentProjects.push(projectKey);
+                    }
                 } else {
                     foundOld = true;
-                    oldProjects.push(`${p.nombre} (${p.ano})`);
+                    if (!oldProjects.includes(projectKey)) {
+                        oldProjects.push(projectKey);
+                    }
                 }
             });
             
@@ -841,7 +862,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 foundOld: foundOld,
                 recentProjects: recentProjects,
                 oldProjects: oldProjects,
-                projects: projects
+                projects: projects,
+                tipo_caracterizacion: resHistorica.tipo_caracterizacion,
+                familiar_duplicado: resHistorica.familiar_duplicado
             });
         })
         .catch(error => {
@@ -933,14 +956,25 @@ document.addEventListener('DOMContentLoaded', function () {
     yearFilter.addEventListener('change', function() {
         const year = this.value;
         const options = document.querySelectorAll('.project-option');
+        const noResults = document.getElementById('no-projects-found');
+        let visibleCount = 0;
         
         options.forEach(opt => {
             if (!year || opt.dataset.year === year) {
-                opt.style.display = 'flex';
+                opt.style.setProperty('display', 'flex', 'important');
+                visibleCount++;
             } else {
-                opt.style.display = 'none';
+                opt.style.setProperty('display', 'none', 'important');
             }
         });
+
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'flex' : 'none';
+        }
+
+        // Al filtrar por año, abrimos el dropdown automáticamente para que el usuario vea los cambios
+        msDropdown.classList.add('show');
+        updateMultiselectText();
     });
 
     // Seleccionar todos
@@ -1014,7 +1048,18 @@ document.addEventListener('DOMContentLoaded', function () {
             cedulaDebounce = setTimeout(() => {
                 validarCedulaExistente(val, function(res) {
                     if (res.foundRecent) {
-                        cedulaError.innerHTML = '<i class="fas fa-times-circle"></i> ⛔ Esta persona ya está inscrita en proyectos recientes: ' + res.recentProjects.join(', ');
+                        let msg = '';
+                        if (res.familiar_duplicado) {
+                            msg = `<i class="fas fa-users"></i> ⛔ Un familiar (${res.familiar_duplicado}) ya está en proyectos recientes: ` + res.recentProjects.join(', ');
+                        } else {
+                            msg = '<i class="fas fa-times-circle"></i> ⛔ Esta persona ya está inscrita en proyectos recientes: ' + res.recentProjects.join(', ');
+                        }
+                        
+                        if (res.tipo_caracterizacion) {
+                            msg += `<br><strong>Caracterización: ${res.tipo_caracterizacion}</strong>`;
+                        }
+                        
+                        cedulaError.innerHTML = msg;
                         cedulaError.style.color = '#dc3545'; // Rojo
                         cedulaError.style.display = 'block';
                         

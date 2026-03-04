@@ -1343,19 +1343,19 @@ html.alto-contraste ::selection {
 /* Verdana-Regular */
 @font-face {
   font-family: 'Verdana-Regular';
-  src: url('../assets/fonts/Verdana/static/Verdana-Regular.ttf');
+  src: url('../../public/assets/fonts/Verdana/static/Verdana-Regular.ttf');
 }
 
 /* Nunito_Sans-Bold */
 @font-face {
   font-family: 'Nunito_Sans-Bold';
-  src: url('../assets/fonts/Nunito_Sans/static/NunitoSans-Bold.ttf');
+  src: url('../../public/assets/fonts/Nunito_Sans/static/NunitoSans-Bold.ttf');
 }
 
 /* Fuente iconografica */
 @font-face {
   font-family: "govco-fontv5";
-  src: url("../assets/icons/fonts/gov-co-font.ttf") format("truetype");
+  src: url("../../public/assets/icons/fonts/gov-co-font.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

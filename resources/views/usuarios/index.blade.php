@@ -327,19 +327,19 @@
 
         @font-face {
             font-family: 'Nunito Sans';
-            src: url('../assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf');
+            src: url('{{ asset('assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf') }}');
             font-weight: 400;
         }
 
         @font-face {
             font-family: 'Nunito Sans';
-            src: url('../assets/fonts/Nunito_Sans/static/NunitoSans-Bold.ttf');
+            src: url('{{ asset('assets/fonts/Nunito_Sans/static/NunitoSans-Bold.ttf') }}');
             font-weight: 700;
         }
 
         @font-face {
             font-family: 'Verdana-Regular';
-            src: url('../assets/fonts/Verdana/static/Verdana-Regular.ttf');
+            src: url('{{ asset('assets/fonts/Verdana/static/Verdana-Regular.ttf') }}');
         }
 
        .modal-container-govco {

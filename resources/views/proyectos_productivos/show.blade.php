@@ -33,11 +33,7 @@
                             <i class="bi bi-arrow-left me-1"></i> Volver
                         </a>
                         
-                        @if($proyecto->origen === 'manual')
-                            <a href="{{ route('proyectos.sesiones', $proyecto) }}" class="btn btn-success ms-2">
-                                <i class="fas fa-users me-1"></i> Formulario Concurrido
-                            </a>
-                        @endif
+                       
                     </div>
                 </div>
             </div>

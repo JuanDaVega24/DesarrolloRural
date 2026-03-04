@@ -34,7 +34,7 @@
 /* Nunito_Sans-Regular */
 @font-face {
   font-family: 'Nunito_Sans-Regular';
-  src: url('../assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf');
+  src: url('{{ asset('assets/fonts/Nunito_Sans/static/NunitoSans-Regular.ttf') }}');
 }
 
 
@@ -255,7 +255,7 @@
 
 <div class="barra-superior-govco">
   <a href="https://www.gov.co/" target="_blank" rel=noopener
-    aria-label="Portal del Estado Colombiano - GOV.CO"><img src="{{ asset('images/logo.svg') }}" alt="logo"></a> 
+    aria-label="Portal del Estado Colombiano - GOV.CO"><img src="https://cdn.www.gov.co/layout-govco-v5/assets/images/logo.svg" alt="logo"></a> 
 
 </div>
 

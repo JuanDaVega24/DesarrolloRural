@@ -698,12 +698,14 @@
             async function handleYearChange(event) {
                 const selectedYear = event.target.value;
 
-                // Reset project selection when year changes
+                // Reset project selection when year changes (only clear selection, not content)
                 document.getElementById('project-select').value = '';
-                showInitialState();
 
                 // Reload projects for the selected year
                 await loadProjects(selectedYear);
+                
+                // Do NOT call showInitialState() here - keep the dropdown visible
+                // so the user can see and select the filtered projects
             }
 
             async function handleProjectChange(event) {

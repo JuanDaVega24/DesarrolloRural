@@ -1,6 +1,6 @@
 <x-app-layout>
 
-@vite(['resources/css/pages/dashboard.css'])
+@vite(['resources/css/dashboard.css'])
 
 
 
@@ -13,7 +13,7 @@
                 </div>
 
                     <h2 class="section-title">Sistema de Información</h2>
-                                        <h2 class="section-subtitle">Programa Sector Agricultura y Desarrollo Rural</h2>
+                    <h2 class="section-subtitle">Programa Sector Agricultura y Desarrollo Rural</h2>
 
                 </div>
 
@@ -133,7 +133,7 @@ Iniciativas planificadas que buscan desarrollar actividades agrícolas, pecuaria
                     <a href="{{ route('filtros.index') }}" class="module-card group">
                         <div class="card-accent verde"></div>
                         <div class="card-icon personalizado verde">
-    <img src="{{ asset('images/icono-reportes.png') }}" alt="Icono Reportes" class="icon-img">
+    <img src="{{ asset('images/icono-reportes.png') }}" alt="Icono filtros" class="icon-img">
                         </div>
                         <h3 class="card-title">Filtros y Búsquedas Avanzadas</h3>
                         <p class="card-description">

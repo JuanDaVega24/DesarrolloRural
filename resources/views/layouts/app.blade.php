@@ -100,22 +100,22 @@
         /* Font definitions */
         @font-face {
           font-family: 'Verdana-Regular';
-          src: url('/assets/fonts/Verdana/static/Verdana-Regular.ttf');
+          src: url('{{ asset('assets/fonts/Verdana/static/Verdana-Regular.ttf') }}');
         }
 
         @font-face {
           font-family: 'Verdana-Bold';
-          src: url('/assets/fonts/Verdana/static/Verdana-Bold.ttf');
+          src: url('{{ asset('assets/fonts/Verdana/static/Verdana-Bold.ttf') }}');
         }
 
         @font-face {
             font-family: 'Nunito_Sans-SemiBold';
-            src: url('/assets/fonts/Nunito_Sans/static/NunitoSans-SemiBold.ttf');
+            src: url('{{ asset('assets/fonts/Nunito_Sans/static/NunitoSans-SemiBold.ttf') }}');
         }
 
         @font-face {
             font-family: "govco-fontv5";
-            src: url("/assets/icons/fonts/gov-co-font.ttf") format("truetype");
+            src: url("{{ asset('assets/icons/fonts/gov-co-font.ttf') }}") format("truetype");
             font-weight: normal;
             font-style: normal;
         }
@@ -474,7 +474,7 @@
 
 <body class="font-sans antialiased">
   <div class="barra-superior-govco">
-  <a href="https://www.gov.co/" target="_blank" rel="noopener" aria-label="Portal del Estado Colombiano - GOV.CO"><img src="{{ asset('images/logo.svg') }}" alt="logo"></a> 
+  <a href="https://www.gov.co/" target="_blank" rel="noopener" aria-label="Portal del Estado Colombiano - GOV.CO"><img src="https://cdn.www.gov.co/layout-govco-v5/assets/images/logo.svg" alt="logo"></a> 
 </div>
 
 

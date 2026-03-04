@@ -803,6 +803,7 @@ img {
 
         .multiselect-container {
             position: relative;
+            width: 100%;
         }
 
         .multiselect-display {
@@ -823,19 +824,17 @@ img {
         }
 
         .multiselect-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
+            position: relative; /* Cambiado de absolute para empujar el contenido */
+            width: 100%;
             background: white;
-            border: 1px solid var(--gris-medio);
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            max-height: 250px;
+            border: 2px solid var(--gris-medio);
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            max-height: 300px;
             overflow-y: auto;
             display: none;
-            margin-top: 0.25rem;
+            margin-top: -2px; /* Unir con el campo de arriba */
+            z-index: 10;
         }
 
         .multiselect-dropdown.show {

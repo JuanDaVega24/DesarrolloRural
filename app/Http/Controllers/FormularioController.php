@@ -19,9 +19,9 @@ class FormularioController extends Controller
      */
     public function validarCedula(Request $request)
     {
-        $cedula = $request->input('cedula');
+        $cedula = trim((string)$request->input('cedula'));
         $currentYear = $request->input('current_year');
-        $proyectosSeleccionados = $request->input('proyectos_ids', []); // IDs de proyectos específicos a comparar
+        $proyectosSeleccionados = $request->input('proyectos_ids', []);
 
         if (!$cedula) {
             return response()->json(['error' => 'Cédula es requerida'], 400);
@@ -32,56 +32,86 @@ class FormularioController extends Controller
         }
 
         try {
-            // Base de la consulta
+            // 1. Obtener mapas de caracterización para identificar al grupo familiar
+            $caracterizacionMaps = $this->createCaracterizacionMaps();
+            $mapaDirectos = $caracterizacionMaps['directos'] ?? [];
+            $mapaFamiliares = $caracterizacionMaps['familiares'] ?? [];
+            $mapaGrupos = $caracterizacionMaps['grupos_familiares'] ?? [];
+
+            // 2. Identificar a TODOS los miembros del núcleo familiar (incluyendo al consultado)
+            $miembrosFamilia = [$cedula];
+            if (isset($mapaGrupos[$cedula])) {
+                $miembrosFamilia = $mapaGrupos[$cedula];
+            }
+
+            // 3. Determinar tipo de caracterización de la persona consultada (CORREGIDO: Swap Titular/Familiar)
+            $tipoCaracterizacion = 'Ninguno';
+            if (isset($mapaDirectos[$cedula])) {
+                $tipoCaracterizacion = 'Titular';
+            } elseif (isset($mapaFamiliares[$cedula])) {
+                $tipoCaracterizacion = 'Familiar';
+            }
+
+            // 4. Buscar si ALGUIEN de la familia está en proyectos recientes
             $query = ProyectoProductivo::whereNotNull('data')
                 ->where('data->total_rows', '>', 0);
 
-            // Si hay proyectos seleccionados específicamente, filtrar por ellos
             if (!empty($proyectosSeleccionados)) {
                 $query->whereIn('id', $proyectosSeleccionados);
             } else {
-                // Si no hay selección manual, usar el comportamiento por defecto (años recientes)
                 $query->where('ano', '>=', $currentYear - 1);
             }
 
-            $proyectosConCedula = $query->get();
-
-            $projects = [];
+            $proyectosRecent = $query->get();
+            
+            $projectsFound = [];
+            $proyectosUnicosIds = []; // Para evitar duplicados
             $foundRecent = false;
             $foundOld = false;
+            $familiarDuplicado = null; 
 
-            foreach ($proyectosConCedula as $proyecto) {
+            foreach ($proyectosRecent as $proyecto) {
                 $data = is_string($proyecto->data) ? json_decode($proyecto->data, true) : $proyecto->data;
                 $rows = $data['rows'] ?? [];
-
-                // Buscar columna de documento
                 $documentColumn = $this->findDocumentColumn($data['headers'] ?? [], $rows);
 
                 if ($documentColumn) {
                     foreach ($rows as $row) {
-                        if (isset($row[$documentColumn]) && trim((string)$row[$documentColumn]) === trim((string)$cedula)) {
-                            $projects[] = [
+                        $docEnProyecto = trim((string)($row[$documentColumn] ?? ''));
+                        
+                        if (in_array($docEnProyecto, $miembrosFamilia)) {
+                            // Evitar duplicar el mismo proyecto para la misma persona
+                            $llaveUnica = $proyecto->id . '_' . $docEnProyecto;
+                            if (in_array($llaveUnica, $proyectosUnicosIds)) continue;
+                            $proyectosUnicosIds[] = $llaveUnica;
+
+                            $projectsFound[] = [
                                 'id' => $proyecto->id,
                                 'nombre' => $proyecto->nombre,
-                                'ano' => $proyecto->ano
+                                'ano' => $proyecto->ano,
+                                'persona_inscrita' => $row['NOMBRE COMPLETO'] ?? $docEnProyecto,
+                                'es_mismo' => ($docEnProyecto === $cedula)
                             ];
                             
-                            // Determinar si es reciente o antiguo
                             if ($proyecto->ano >= $currentYear - 1) {
                                 $foundRecent = true;
+                                if ($docEnProyecto !== $cedula) {
+                                    $familiarDuplicado = $row['NOMBRE COMPLETO'] ?? $docEnProyecto;
+                                }
                             } else {
                                 $foundOld = true;
                             }
-                            break; // No necesitamos buscar más en este proyecto
                         }
                     }
                 }
             }
 
             return response()->json([
-                'projects' => $projects,
+                'projects' => $projectsFound,
                 'foundRecent' => $foundRecent,
-                'foundOld' => $foundOld
+                'foundOld' => $foundOld,
+                'tipo_caracterizacion' => $tipoCaracterizacion,
+                'familiar_duplicado' => $familiarDuplicado
             ]);
 
         } catch (\Exception $e) {
@@ -123,9 +153,9 @@ class FormularioController extends Controller
             ->orderBy('ano', 'desc')
             ->pluck('ano');
 
-        // Obtener todos los proyectos para el multiselect (excepto el actual)
+        // Obtener todos los proyectos para el multiselect (excepto el actual) que tengan un año definido
         $proyectosParaComparar = ProyectoProductivo::where('id', '!=', $proyecto->id)
-            ->whereNotNull('data')
+            ->whereNotNull('ano')
             ->orderBy('ano', 'desc')
             ->orderBy('nombre', 'asc')
             ->get(['id', 'nombre', 'ano']);
@@ -538,7 +568,7 @@ class FormularioController extends Controller
     {
         $caracterizacion = \App\Models\Caracterizacion::find(1);
         if (!$caracterizacion || !$caracterizacion->data) {
-            return ['directos' => [], 'familiares' => []];
+            return ['directos' => [], 'familiares' => [], 'grupos_familiares' => []];
         }
 
         $data = is_string($caracterizacion->data) ? json_decode($caracterizacion->data, true) : $caracterizacion->data;
@@ -547,11 +577,12 @@ class FormularioController extends Controller
 
         $documentColumn = $this->findDocumentColumn($headers, $rows);
         if (!$documentColumn) {
-            return ['directos' => [], 'familiares' => []];
+            return ['directos' => [], 'familiares' => [], 'grupos_familiares' => []];
         }
 
         $mapaDirectos = [];
         $mapaFamiliares = [];
+        $mapaGrupos = []; // documento => [lista de todos los documentos del nucleo]
 
         foreach ($rows as $row) {
             if (!is_array($row)) continue;
@@ -563,6 +594,19 @@ class FormularioController extends Controller
             $vereda = $this->findColumnValue($row, $headers, ['vereda', 'vereda_cz']);
 
             $familiares = $this->extractFamiliaresInfo($row, $headers);
+
+            // Crear el grupo familiar
+            $miembros = [$documento];
+            foreach ($familiares as $f) {
+                if (!empty(trim($f['numero']))) {
+                    $miembros[] = trim($f['numero']);
+                }
+            }
+            
+            // Mapear cada miembro al grupo completo
+            foreach ($miembros as $m) {
+                $mapaGrupos[$m] = $miembros;
+            }
 
             $estado = 'Si';
             if (!empty($familiares)) {
@@ -588,7 +632,11 @@ class FormularioController extends Controller
             }
         }
 
-        return ['directos' => $mapaDirectos, 'familiares' => $mapaFamiliares];
+        return [
+            'directos' => $mapaDirectos, 
+            'familiares' => $mapaFamiliares, 
+            'grupos_familiares' => $mapaGrupos
+        ];
     }
 
     /**
