@@ -1,6 +1,7 @@
 <x-app-layout>
 
         
+@vite(['resources/css/pages/formularios/show.css', 'resources/css/pages/formularios/imagenes.css', 'resources/js/formularios-imagenes.js', 'resources/js/formularios-sesiones.js'])
 
     <div class="form-container">
         {{-- Barra de información colaborativa --}}

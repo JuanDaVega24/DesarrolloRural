@@ -1,4 +1,5 @@
 <x-app-layout>
+    @vite(['resources/css/pages/proyectos-productivos/constructor.css', 'resources/css/pages/formularios/imagenes.css', 'resources/css/pages/formularios/opciones-imagenes.css', 'resources/js/constructor-simple.js'])
 
     <div class="constructor-container">
         <div class="content-wrapper">

@@ -1,4 +1,5 @@
 <x-app-layout>
+    @vite(['resources/css/pages/formularios/tabla.css'])
 
     <div class="tabla-container">
         <div class="tabla-header">
